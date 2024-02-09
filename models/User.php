@@ -52,6 +52,7 @@ class User extends \yii\db\ActiveRecord implements IdentityInterface
             'status' => 'Status',
         ];
     }
+
     /**
      * Finds an identity by the given ID.
      *
@@ -106,5 +107,30 @@ class User extends \yii\db\ActiveRecord implements IdentityInterface
     public function validateAuthKey($authKey)
     {
         return $this->getAuthKey() === $authKey;
+    }
+
+    /**
+     * 验证用户名密码
+     *
+     * @return bool 返回用户名密码验证状态
+     */
+    public function login()
+    {
+        $user = User::findOne(['username' => $this->username]);
+
+        if ($user !== null && $user->validatePassword($this->password)) {
+            return Yii::$app->user->login($user);
+        }
+
+        return false;
+    }
+
+    /**
+     * @param $password
+     * @return bool
+     */
+    public function validatePassword($password)
+    {
+        return Yii::$app->security->validatePassword($password, $this->password);
     }
 }

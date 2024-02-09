@@ -5,9 +5,11 @@ namespace app\controllers;
 use app\models\User;
 use app\models\UserSearch;
 use Yii;
+use yii\base\Exception;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
+use yii\web\Response;
 
 /**
  * UserController implements the CRUD actions for User model.
@@ -135,6 +137,8 @@ class UserController extends Controller
 
     /**
      * Displays the login page.
+     * visit via https://devs.chenx221.cyou:8081/index.php?r=user%2Flogin
+     *
      * @return string|\yii\web\Response
      */
     public function actionLogin()
@@ -143,7 +147,7 @@ class UserController extends Controller
             return $this->goHome();
         }
 
-        $model = new User();
+        $model = new User(['scenario' => 'login']);
 
         if ($model->load(Yii::$app->request->post()) && $model->validate()) {
             if ($model->login()) {
@@ -171,11 +175,13 @@ class UserController extends Controller
 
     /**
      * Displays the registration page.
-     * @return string|\yii\web\Response
+     * visit via https://devs.chenx221.cyou:8081/index.php?r=user%2Fregister
+     * @return string|Response
+     * @throws Exception
      */
     public function actionRegister()
     {
-        $model = new User();
+        $model = new User(['scenario' => 'register']);
 
         if ($model->load(Yii::$app->request->post()) && $model->validate()) {
             $model->password = Yii::$app->security->generatePasswordHash($model->password);
