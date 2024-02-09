@@ -17,6 +17,9 @@ use yii\web\IdentityInterface;
  */
 class User extends \yii\db\ActiveRecord implements IdentityInterface
 {
+    public $password2; // 重复密码
+    public $rememberMe; // 记住我
+
     /**
      * {@inheritdoc}
      */
@@ -26,15 +29,27 @@ class User extends \yii\db\ActiveRecord implements IdentityInterface
     }
 
     /**
+     * // rules说明
+     * // 1. username, password, password2, email 必填
+     * // 2. username 长度在3-12之间
+     * // 3. password 长度在6-12之间
+     * // 4. password2 必须和password一致
+     * // 5. email 必须是邮箱格式
+     * // 6. username, email 必须是唯一的
+     * *
      * {@inheritdoc}
      */
     public function rules()
     {
         return [
-            [['username', 'password'], 'required', 'on' => 'login'],
-            [['username', 'password', 'email'], 'required', 'on' => 'register'],
-            [['username', 'password', 'auth_key', 'email'], 'string', 'max' => 255],
-            [['status'], 'integer'],
+            [['username', 'password', 'password2'], 'required', 'on' => 'login'],
+            [['username', 'password', 'email', 'password2'], 'required', 'on' => 'register'],
+            ['username', 'string', 'min' => 3, 'max' => 12],
+            ['password', 'string', 'min' => 6, 'max' => 12],
+            ['password2', 'compare', 'compareAttribute' => 'password', 'on' => 'register'],
+            ['email', 'email', 'on' => 'register'],
+            ['username', 'unique', 'on' => 'register'],
+            ['email', 'unique', 'on' => 'register'],
         ];
     }
 
@@ -110,7 +125,7 @@ class User extends \yii\db\ActiveRecord implements IdentityInterface
     }
 
     /**
-     * 验证用户名密码
+     * 用户登录处理
      *
      * @return bool 返回用户名密码验证状态
      */
@@ -119,13 +134,22 @@ class User extends \yii\db\ActiveRecord implements IdentityInterface
         $user = User::findOne(['username' => $this->username]);
 
         if ($user !== null && $user->validatePassword($this->password)) {
-            return Yii::$app->user->login($user);
+            // check user status
+            if ($user->status == 0) {
+                $this->addError('username', '此用户已被禁用,请联系管理员获取支持');
+                return false;
+            }
+
+            $rememberMe = $this->rememberMe ? 3600 * 24 * 30 : 0;
+            return Yii::$app->user->login($user, $rememberMe);
         }
 
         return false;
     }
 
     /**
+     * 验证密码
+     *
      * @param $password
      * @return bool
      */
