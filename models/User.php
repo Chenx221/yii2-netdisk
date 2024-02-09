@@ -2,73 +2,85 @@
 
 namespace app\models;
 
-class User extends \yii\base\BaseObject implements \yii\web\IdentityInterface
+use Yii;
+use yii\web\IdentityInterface;
+
+/**
+ * This is the model class for table "user".
+ *
+ * @property int $id 用户ID
+ * @property string|null $username 用户名
+ * @property string|null $password 密码
+ * @property string|null $auth_key authkey
+ * @property string|null $email 邮箱
+ * @property int|null $status 用户状态
+ */
+class User extends \yii\db\ActiveRecord implements IdentityInterface
 {
-    public $id;
-    public $username;
-    public $password;
-    public $authKey;
-    public $accessToken;
-
-    private static $users = [
-        '100' => [
-            'id' => '100',
-            'username' => 'admin',
-            'password' => 'admin',
-            'authKey' => 'test100key',
-            'accessToken' => '100-token',
-        ],
-        '101' => [
-            'id' => '101',
-            'username' => 'demo',
-            'password' => 'demo',
-            'authKey' => 'test101key',
-            'accessToken' => '101-token',
-        ],
-    ];
-
+    /**
+     * {@inheritdoc}
+     */
+    public static function tableName()
+    {
+        return 'user';
+    }
 
     /**
      * {@inheritdoc}
+     */
+    public function rules()
+    {
+        return [
+            [['username', 'password'], 'required', 'on' => 'login'],
+            [['username', 'password', 'email'], 'required', 'on' => 'register'],
+            [['username', 'password', 'auth_key', 'email'], 'string', 'max' => 255],
+            [['status'], 'integer'],
+        ];
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function attributeLabels()
+    {
+        return [
+            'id' => 'ID',
+            'username' => 'Username',
+            'password' => 'Password',
+            'auth_key' => 'Auth Key',
+            'email' => 'Email',
+            'status' => 'Status',
+        ];
+    }
+    /**
+     * Finds an identity by the given ID.
+     *
+     * @param string|int $id the ID to be looked for
+     * @return IdentityInterface|null the identity object that matches the given ID.
      */
     public static function findIdentity($id)
     {
-        return isset(self::$users[$id]) ? new static(self::$users[$id]) : null;
+        return static::findOne($id);
     }
 
     /**
-     * {@inheritdoc}
+     * Finds an identity by the given token.
+     *
+     * @param mixed $token the token to be looked for
+     * @param mixed $type the type of the token. The value of this parameter depends on the implementation.
+     * For example, [[\yii\filters\auth\HttpBearerAuth]] will set this parameter to be `yii\filters\auth\HttpBearerAuth`.
+     * @return IdentityInterface|null the identity object that matches the given token.
      */
     public static function findIdentityByAccessToken($token, $type = null)
     {
-        foreach (self::$users as $user) {
-            if ($user['accessToken'] === $token) {
-                return new static($user);
-            }
-        }
-
+        // This method is not needed if you don't use access tokens for authentication.
         return null;
     }
 
     /**
-     * Finds user by username
+     * Returns the ID of the user.
      *
-     * @param string $username
-     * @return static|null
-     */
-    public static function findByUsername($username)
-    {
-        foreach (self::$users as $user) {
-            if (strcasecmp($user['username'], $username) === 0) {
-                return new static($user);
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * {@inheritdoc}
+     * @return string|int the ID of the user
      */
     public function getId()
     {
@@ -76,29 +88,23 @@ class User extends \yii\base\BaseObject implements \yii\web\IdentityInterface
     }
 
     /**
-     * {@inheritdoc}
+     * Returns an auth key used to authenticate cookie-based login.
+     *
+     * @return string the auth key
      */
     public function getAuthKey()
     {
-        return $this->authKey;
+        return $this->auth_key;
     }
 
     /**
-     * {@inheritdoc}
+     * Validates the given auth key.
+     *
+     * @param string $authKey the given auth key
+     * @return bool whether the given auth key is valid.
      */
     public function validateAuthKey($authKey)
     {
-        return $this->authKey === $authKey;
-    }
-
-    /**
-     * Validates password
-     *
-     * @param string $password password to validate
-     * @return bool if password provided is valid for current user
-     */
-    public function validatePassword($password)
-    {
-        return $this->password === $password;
+        return $this->getAuthKey() === $authKey;
     }
 }

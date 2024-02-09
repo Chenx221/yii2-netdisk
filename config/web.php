@@ -9,12 +9,12 @@ $config = [
     'bootstrap' => ['log'],
     'aliases' => [
         '@bower' => '@vendor/bower-asset',
-        '@npm'   => '@vendor/npm-asset',
+        '@npm' => '@vendor/npm-asset',
     ],
     'components' => [
         'request' => [
             // !!! insert a secret key in the following (if it is empty) - this is required by cookie validation
-            'cookieValidationKey' => '',
+            'cookieValidationKey' => '9vuTNyfQqTOWY8fhAajrAhOfX_uaZqZZ',
         ],
         'cache' => [
             'class' => 'yii\caching\FileCache',
@@ -67,7 +67,15 @@ if (YII_ENV_DEV) {
     $config['modules']['gii'] = [
         'class' => 'yii\gii\Module',
         // uncomment the following to add your IP if you are not connecting from localhost.
-        //'allowedIPs' => ['127.0.0.1', '::1'],
+        'allowedIPs' => ['127.0.0.1', '::1', '192.168.1.*'],
+        'generators' => [ //自定义生成器
+            'rest-model' => [ // generator name
+                'class' => 'bestyii\giiRest\generators\model\Generator', // generator class
+            ],
+            'rest-crud' => [ // generator name
+                'class' => 'bestyii\giiRest\generators\crud\Generator', // generator class
+            ]
+        ],
     ];
 }
 

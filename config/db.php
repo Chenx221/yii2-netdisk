@@ -1,11 +1,16 @@
 <?php
 
+use yii\db\Connection;
+
 return [
-    'class' => 'yii\db\Connection',
-    'dsn' => 'mysql:host=localhost;dbname=yii2basic',
+    'class' => Connection::class,
+    'dsn' => 'mysql:host=localhost:3307;dbname=yii2basic',
     'username' => 'root',
-    'password' => '',
+    'password' => 'chenx221',
     'charset' => 'utf8',
+    'schemaMap' => [
+        'mysql' => SamIT\Yii2\MariaDb\Schema::class
+    ]
 
     // Schema cache options (for production environment)
     //'enableSchemaCache' => true,
