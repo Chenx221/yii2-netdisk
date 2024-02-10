@@ -46,7 +46,7 @@ $this->registerLinkTag(['rel' => 'icon', 'type' => 'image/x-icon', 'href' => Yii
             ['label' => '个人设置', 'url' => ['/site/about']],
             ['label' => '系统设置', 'url' => ['/site/contact']],
             ['label' => '应用下载', 'url' => ['/site/contact']],
-            ['label' => 'API文档', 'url' => ['/site/about']],
+            ['label' => 'API', 'url' => ['/site/about']],
             Yii::$app->user->isGuest
                 ? ['label' => '登录', 'url' => ['/user/login']]
                 : '<li class="nav-item">'
