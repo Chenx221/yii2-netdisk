@@ -35,3 +35,4 @@ tests/_support/_generated
 #vagrant folder
 /.vagrant
 /data/*
+/data/1/
