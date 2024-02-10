@@ -156,7 +156,6 @@ class UserController extends Controller
                 Yii::$app->session->setFlash('error', 'Invalid username or password.');
             }
         }
-
         return $this->render('login', [
             'model' => $model,
         ]);
@@ -182,14 +181,15 @@ class UserController extends Controller
     public function actionRegister()
     {
         $model = new User(['scenario' => 'register']);
-
         if ($model->load(Yii::$app->request->post()) && $model->validate()) {
-            $model->password = Yii::$app->security->generatePasswordHash($model->password);
+            $raw_password = $model->password;
+            $model->password = Yii::$app->security->generatePasswordHash($raw_password);
             $model->auth_key = Yii::$app->security->generateRandomString();
-            if ($model->save()) {
+            if ($model->save(false)) { // save without validation
                 Yii::$app->session->setFlash('success', 'Registration successful. You can now log in.');
                 return $this->redirect(['login']);
             } else {
+                $model->password = $raw_password;
                 Yii::$app->session->setFlash('error', 'Failed to register user.');
             }
         }
