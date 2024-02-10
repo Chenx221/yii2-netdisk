@@ -33,16 +33,20 @@ $this->registerLinkTag(['rel' => 'icon', 'type' => 'image/x-icon', 'href' => Yii
 <header id="header">
     <?php
     NavBar::begin([
-        'brandLabel' => '未命名的站点',
+        'brandLabel' => '网盘',
         'brandUrl' => Yii::$app->homeUrl,
         'options' => ['class' => 'navbar-expand-md navbar-dark bg-dark fixed-top']
     ]);
     echo Nav::widget([
         'options' => ['class' => 'navbar-nav'],
         'items' => [
-            ['label' => '主页', 'url' => ['/site/index']],
-            ['label' => 'About', 'url' => ['/site/about']],
-            ['label' => 'Contact', 'url' => ['/site/contact']],
+            ['label' => '首页', 'url' => ['/site/index']],
+            ['label' => '文件', 'url' => ['/site/about']],
+            ['label' => '分享', 'url' => ['/site/about']],
+            ['label' => '个人设置', 'url' => ['/site/about']],
+            ['label' => '系统设置', 'url' => ['/site/contact']],
+            ['label' => '客户端下载', 'url' => ['/site/contact']],
+            ['label' => 'API', 'url' => ['/site/about']],
             Yii::$app->user->isGuest
                 ? ['label' => '登录', 'url' => ['/user/login']]
                 : '<li class="nav-item">'
