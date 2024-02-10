@@ -8,7 +8,7 @@
 use yii\bootstrap5\ActiveForm;
 use yii\bootstrap5\Html;
 
-$this->title = 'Login';
+$this->title = '这里是弃用的登录,请不要在这里登录,开发后期将会移除这个页面';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="site-login">

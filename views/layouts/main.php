@@ -41,12 +41,12 @@ $this->registerLinkTag(['rel' => 'icon', 'type' => 'image/x-icon', 'href' => Yii
         'options' => ['class' => 'navbar-nav'],
         'items' => [
             ['label' => '首页', 'url' => ['/site/index']],
-            ['label' => '文件', 'url' => ['/site/about']],
-            ['label' => '分享', 'url' => ['/site/about']],
+            ['label' => '我的文件', 'url' => ['/home/index']],
+            ['label' => '分享管理', 'url' => ['/site/about']],
             ['label' => '个人设置', 'url' => ['/site/about']],
             ['label' => '系统设置', 'url' => ['/site/contact']],
-            ['label' => '客户端下载', 'url' => ['/site/contact']],
-            ['label' => 'API', 'url' => ['/site/about']],
+            ['label' => '应用下载', 'url' => ['/site/contact']],
+            ['label' => 'API文档', 'url' => ['/site/about']],
             Yii::$app->user->isGuest
                 ? ['label' => '登录', 'url' => ['/user/login']]
                 : '<li class="nav-item">'
