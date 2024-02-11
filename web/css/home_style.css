@@ -1,0 +1,17 @@
+table a {
+    text-decoration-line: none;
+}
+
+.file_icon {
+    font-size: xx-large;
+    vertical-align: middle;
+    width: 34px;
+    text-align: center;
+}
+
+.file_name {
+    font-size: large;
+    margin-left: 0.3em;
+    vertical-align: middle;
+    line-height: 2;
+}

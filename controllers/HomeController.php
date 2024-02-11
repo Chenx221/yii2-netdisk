@@ -2,13 +2,36 @@
 
 namespace app\controllers;
 
+use app\models\RenameForm;
 use app\utils\FileTypeDetector;
+use InvalidArgumentException;
 use Yii;
+use yii\filters\VerbFilter;
+use yii\helpers\ArrayHelper;
+use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
 
-class HomeController extends \yii\web\Controller
+class HomeController extends Controller
 {
+    public function behaviors()
+    {
+        return array_merge(
+            parent::behaviors(),
+            [
+                'verbs' => [
+                    'class' => VerbFilter::class,
+                    'actions' => [
+                        'index' => ['GET'],
+                        'download' => ['GET'],
+                        'rename' => ['POST'],
+                        'delete' => ['POST'],
+                    ],
+                ],
+            ]
+        );
+    }
+
     /**
      * diplay the page of the file manager (accepts a directory parameter like cd command)
      * visit it via https://devs.chenx221.cyou:8081/index.php?r=home
@@ -65,7 +88,6 @@ class HomeController extends \yii\web\Controller
 
     /**
      * 下载指定路径下的文件
-     * must be provided with a relative path of the file
      * download link:https://devs.chenx221.cyou:8081/index.php?r=home%2Fdownload&relativePath={the relative path of the file}
      *
      * @param string $relativePath 文件的相对路径
@@ -98,5 +120,112 @@ class HomeController extends \yii\web\Controller
 
         // 将文件发送给用户进行下载
         Yii::$app->response->sendFile($realPath)->send();
+    }
+
+    /**
+     * 重命名文件或文件夹
+     * @param string $relativePath 文件或文件夹的相对路径
+     * @param string $newName 新名称
+     * @throws NotFoundHttpException 如果文件或文件夹不存在
+     */
+    public function actionRename()
+    {
+        $relativePath = Yii::$app->request->post('relativePath');
+
+        // 对相对路径进行解码
+        $relativePath = rawurldecode($relativePath);
+
+        // 检查相对路径是否只包含允许的字符
+        if (!preg_match('/^[\w\-.\/]+$/u', $relativePath)) {
+            throw new NotFoundHttpException('Invalid file path.');
+        }
+
+        // 确定文件的绝对路径
+        $absolutePath = Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . Yii::$app->user->id . '/' . $relativePath;
+
+        // 检查文件或文件夹是否存在
+        if (!file_exists($absolutePath)) {
+            throw new NotFoundHttpException('File or directory not found.');
+        }
+
+        $model = new RenameForm();
+
+        $model->newName = ArrayHelper::getValue(Yii::$app->request->post('RenameForm'), 'newName');
+
+        if (!$model->validate()) {
+            Yii::$app->response->statusCode = 400;
+            return $model->getFirstError('newName');
+        }
+
+        // 检查新名称是否和现有的文件或文件夹重名
+        if (file_exists(dirname($absolutePath) . '/' . $model->newName)) {
+            Yii::$app->session->setFlash('error', 'Failed to rename file or directory.');
+            return $this->redirect(['index', 'directory' => dirname($relativePath)]);
+        }
+
+        // 重命名文件或文件夹
+        if (!rename($absolutePath, dirname($absolutePath) . '/' . $model->newName)) {
+            Yii::$app->session->setFlash('error', 'Failed to rename file or directory.');
+        } else {
+            Yii::$app->session->setFlash('success', 'File or directory renamed successfully.');
+        }
+        return $this->redirect(['index', 'directory' => dirname($relativePath)]);
+    }
+
+    /**
+     * 删除文件或文件夹
+     * @param string $relativePath 文件或文件夹的相对路径
+     * @throws NotFoundHttpException 如果文件或文件夹不存在
+     */
+    public function actionDelete($relativePath)
+    {
+        // 对相对路径进行解码
+        $relativePath = rawurldecode($relativePath);
+
+        // 检查相对路径是否只包含允许的字符
+        if (!preg_match('/^[\w\-.\/]+$/u', $relativePath)) {
+            throw new NotFoundHttpException('Invalid file path.');
+        }
+
+        // 确定文件的绝对路径
+        $absolutePath = Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . Yii::$app->user->id . '/' . $relativePath;
+
+        // 检查文件或文件夹是否存在
+        if (!file_exists($absolutePath)) {
+            throw new NotFoundHttpException('File or directory not found.');
+        }
+
+        // 删除文件或文件夹
+        if (is_dir($absolutePath)) {
+            // 如果是文件夹，递归删除文件夹及其内容
+            $this->deleteDirectory($absolutePath);
+        } else {
+            // 如果是文件，直接删除文件
+            $fileinfo = $absolutePath; //要删了，准备一下
+            $fileinfo2 = $fileinfo;
+            //unlink($absolutePath);
+        }
+    }
+
+    /**
+     * 递归删除目录及其内容
+     * @param string $dir 目录路径
+     */
+    protected function deleteDirectory($dir)
+    {
+        if (!is_dir($dir)) {
+            return;
+        }
+
+        $files = array_diff(scandir($dir), ['.', '..']);
+        foreach ($files as $file) {
+            $dir1 = $dir;
+            $file1 = $file;
+            $file2 = $file1;
+            is_dir("$dir/$file") ? $this->deleteDirectory("$dir/$file") : ''; //unlink("$dir/$file");
+        }
+        $dir1 = $dir;
+        $dir2 = $dir1;
+        rmdir($dir);
     }
 }
