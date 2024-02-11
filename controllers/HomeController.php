@@ -2,6 +2,7 @@
 
 namespace app\controllers;
 
+use app\utils\FileTypeDetector;
 use Yii;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
@@ -9,11 +10,15 @@ use yii\web\Response;
 class HomeController extends \yii\web\Controller
 {
     /**
+     * diplay the page of the file manager (accepts a directory parameter like cd command)
+     * visit it via https://devs.chenx221.cyou:8081/index.php?r=home
+     *
      * @return string|Response
      * @throws NotFoundHttpException
      */
     public function actionIndex($directory = null)
     {
+        //Warning: Security Vulnerability: access via $directory parameter = ../ will display the internal files of the server
         if (Yii::$app->user->isGuest) {
             return $this->redirect(Yii::$app->user->loginUrl);
         }
@@ -26,6 +31,12 @@ class HomeController extends \yii\web\Controller
             $parentDirectory = dirname($directory);
         }
         $directoryContents = $this->getDirectoryContents(join(DIRECTORY_SEPARATOR, [$rootDataDirectory, $userId, $directory ?: '.']));
+        foreach ($directoryContents as $key => $item) {
+            $relativePath = $directory ? $directory . '/' . $item : $item;
+            $absolutePath = Yii::getAlias('@app') . '/data/' . Yii::$app->user->id . '/' . $relativePath;
+            $type = FileTypeDetector::detect($absolutePath);
+            $directoryContents[$key] = ['name' => $item, 'type' => $type];
+        }
         return $this->render('index', [
             'directoryContents' => $directoryContents,
             'parentDirectory' => $parentDirectory,
@@ -54,6 +65,9 @@ class HomeController extends \yii\web\Controller
 
     /**
      * 下载指定路径下的文件
+     * must be provided with a relative path of the file
+     * download link:https://devs.chenx221.cyou:8081/index.php?r=home%2Fdownload&relativePath={the relative path of the file}
+     *
      * @param string $relativePath 文件的相对路径
      * @throws NotFoundHttpException 如果文件不存在
      */
