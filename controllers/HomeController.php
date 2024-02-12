@@ -4,7 +4,6 @@ namespace app\controllers;
 
 use app\models\RenameForm;
 use app\utils\FileTypeDetector;
-use InvalidArgumentException;
 use Yii;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
@@ -48,8 +47,11 @@ class HomeController extends Controller
         $rootDataDirectory = Yii::getAlias(Yii::$app->params['dataDirectory']);
         $userId = Yii::$app->user->id;
 
-        if ($directory == null | $directory == '.') {
+        if ($directory === '.' ||$directory == null) {
+            $directory = null;
             $parentDirectory = null;
+        } elseif ($directory === '..' || str_contains($directory, '../')) {
+            throw new NotFoundHttpException('Invalid directory.');
         } else {
             $parentDirectory = dirname($directory);
         }
@@ -83,7 +85,20 @@ class HomeController extends Controller
         // 获取路径下的所有文件和文件夹
         $directoryContents = scandir($path);
 
-        return array_diff($directoryContents, ['.', '..']);
+        // 移除 '.' 和 '..'
+        $directoryContents = array_diff($directoryContents, ['.', '..']);
+
+        // 使用 usort 对目录内容进行排序，使文件夹始终在文件之前
+        usort($directoryContents, function ($a, $b) use ($path) {
+            $aIsDir = is_dir($path . '/' . $a);
+            $bIsDir = is_dir($path . '/' . $b);
+            if ($aIsDir === $bIsDir) {
+                return strnatcasecmp($a, $b); // 如果两者都是文件夹或都是文件，按名称排序
+            }
+            return $aIsDir ? -1 : 1; // 文件夹始终在文件之前
+        });
+
+        return $directoryContents;
     }
 
     /**
@@ -99,7 +114,7 @@ class HomeController extends Controller
         $relativePath = rawurldecode($relativePath);
 
         // 检查相对路径是否只包含允许的字符
-        if (!preg_match('/^[\w\-.\/]+$/u', $relativePath)) {
+        if (!preg_match('/^[\w\-.\/\s]+$/u', $relativePath)) {
             throw new NotFoundHttpException('Invalid file path.');
         }
 
@@ -136,7 +151,7 @@ class HomeController extends Controller
         $relativePath = rawurldecode($relativePath);
 
         // 检查相对路径是否只包含允许的字符
-        if (!preg_match('/^[\w\-.\/]+$/u', $relativePath)) {
+        if (!preg_match('/^[\w\-.\/\s]+$/u', $relativePath)) {
             throw new NotFoundHttpException('Invalid file path.');
         }
 
@@ -178,56 +193,63 @@ class HomeController extends Controller
      */
     public function actionDelete()
     {
-        // 从 POST 请求中获取 relativePath 参数
         $relativePath = Yii::$app->request->post('relativePath');
-
-        // 对相对路径进行解码
         $relativePath = rawurldecode($relativePath);
-
-        // 检查相对路径是否只包含允许的字符
-        if (!preg_match('/^[\w\-.\/]+$/u', $relativePath)) {
+        if (!preg_match('/^[\w\-.\/\s]+$/u', $relativePath)) {
             throw new NotFoundHttpException('Invalid file path.');
         }
-
-        // 确定文件的绝对路径
         $absolutePath = Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . Yii::$app->user->id . '/' . $relativePath;
-
-        // 检查文件或文件夹是否存在
         if (!file_exists($absolutePath)) {
             throw new NotFoundHttpException('File or directory not found.');
+        } else {
+            $realPath = realpath($absolutePath);
+            $expectedPathPrefix = realpath(Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . Yii::$app->user->id);
+            if (!str_starts_with($realPath, $expectedPathPrefix)) {
+                throw new NotFoundHttpException('File or directory not found.');
+            }
         }
 
-        // 删除文件或文件夹
         if (is_dir($absolutePath)) {
-            // 如果是文件夹，递归删除文件夹及其内容
-            $this->deleteDirectory($absolutePath);
+            if (!$this->deleteDirectory($absolutePath)) {
+                Yii::$app->session->setFlash('error', 'Failed to delete directory.');
+            } else {
+                Yii::$app->session->setFlash('success', 'Directory deleted successfully.');
+            }
         } else {
-            // 如果是文件，直接删除文件
-            $fileinfo = $absolutePath; //要删了，准备一下
-            $fileinfo2 = $fileinfo;
-            //unlink($absolutePath);
+            if (!unlink($absolutePath)) {
+                Yii::$app->session->setFlash('error', 'Failed to delete file.');
+            } else {
+                Yii::$app->session->setFlash('success', 'File deleted successfully.');
+            }
         }
+        return $this->redirect(['index', 'directory' => dirname($relativePath)]);
     }
 
     /**
      * 递归删除目录及其内容
      * @param string $dir 目录路径
      */
-    protected function deleteDirectory($dir)
+    protected function deleteDirectory($dir): bool
     {
         if (!is_dir($dir)) {
-            return;
+            return false;
         }
 
         $files = array_diff(scandir($dir), ['.', '..']);
         foreach ($files as $file) {
-            $dir1 = $dir;
-            $file1 = $file;
-            $file2 = $file1;
-            is_dir("$dir/$file") ? $this->deleteDirectory("$dir/$file") : ''; //unlink("$dir/$file");
+            if (is_dir("$dir/$file")) {
+                if (!$this->deleteDirectory("$dir/$file")) {
+                    return false;
+                }
+            } else {
+                if (!unlink("$dir/$file")) {
+                    return false;
+                }
+            }
         }
-        $dir1 = $dir;
-        $dir2 = $dir1;
-        rmdir($dir);
+        if (!rmdir($dir)) {
+            return false;
+        }
+        return true;
     }
 }
