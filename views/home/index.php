@@ -23,18 +23,33 @@ JqueryAsset::register($this);
 $this->registerCssFile('@web/css/home_style.css');
 ?>
 <div class="home-directory">
-    <h1><?= Html::encode($this->title) ?></h1>
+    <div class="d-flex justify-content-between align-items-center" style="margin-bottom: 1rem;">
+        <h1><?= Html::encode($this->title) ?></h1>
+        <div class="dropdown">
+            <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fa-solid fa-arrow-up-from-bracket"></i> 上传文件
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                <li><?= Html::button('上传文件', ['class' => 'dropdown-item file-upload-btn']) ?></li>
+                <li><?= Html::button('上传文件夹', ['class' => 'dropdown-item folder-upload-btn']) ?></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><?= Html::button('离线下载', ['class' => 'dropdown-item offline-download-btn']) ?></li>
+            </ul>
+        </div>
+    </div>
 
-    <nav aria-label="breadcrumb">
+    <nav style="--bs-breadcrumb-divider: url(&#34;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8'%3E%3Cpath d='M2.5 0L1 1.5 3.5 4 1 6.5 2.5 8l4-4-4-4z' fill='%236c757d'/%3E%3C/svg%3E&#34;);" aria-label="breadcrumb">
         <ol class="breadcrumb">
-            <?= Html::a('HOME', ['home/index'], ['class' => 'breadcrumb-item']) ?>
+            <?= Html::a('<i class="fa-solid fa-house"></i> HOME', ['home/index'], ['class' => 'breadcrumb-item']) ?>
             <?php if ($directory !== null): ?>
                 <?php
                 $parts = explode('/', $directory);
                 $path = '';
-                foreach ($parts as $part):
+                $lastIndex = count($parts) - 1;
+                foreach ($parts as $index => $part):
                     $path .= $part;
-                    echo Html::a($part, ['home/index', 'directory' => $path], ['class' => 'breadcrumb-item']);
+                    $class = $index === $lastIndex ? 'breadcrumb-item active' : 'breadcrumb-item';
+                    echo Html::a($part, ['home/index', 'directory' => $path], ['class' => $class]);
                     $path .= '/';
                 endforeach;
                 ?>
@@ -42,7 +57,7 @@ $this->registerCssFile('@web/css/home_style.css');
         </ol>
     </nav>
 
-    <table class="table table-hover">
+    <table class="table table-hover" id="drop-area">
         <thead class="table-light">
         <tr>
             <th scope="col" class="name-col">名称</th>
