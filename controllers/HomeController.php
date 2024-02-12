@@ -13,6 +13,7 @@ use yii\web\Response;
 
 class HomeController extends Controller
 {
+    protected string $pattern = '/^[^\p{C}\/:*?"<>|\\\\]+$/u';
     public function behaviors()
     {
         return array_merge(
@@ -47,7 +48,7 @@ class HomeController extends Controller
         $rootDataDirectory = Yii::getAlias(Yii::$app->params['dataDirectory']);
         $userId = Yii::$app->user->id;
 
-        if ($directory === '.' ||$directory == null) {
+        if ($directory === '.' || $directory == null) {
             $directory = null;
             $parentDirectory = null;
         } elseif ($directory === '..' || str_contains($directory, '../')) {
@@ -60,7 +61,9 @@ class HomeController extends Controller
             $relativePath = $directory ? $directory . '/' . $item : $item;
             $absolutePath = Yii::getAlias('@app') . '/data/' . Yii::$app->user->id . '/' . $relativePath;
             $type = FileTypeDetector::detect($absolutePath);
-            $directoryContents[$key] = ['name' => $item, 'type' => $type];
+            $lastModified = filemtime($absolutePath);
+            $size = is_file($absolutePath) ? filesize($absolutePath) : null;
+            $directoryContents[$key] = ['name' => $item, 'type' => $type, 'lastModified' => $lastModified, 'size' => $size];
         }
         return $this->render('index', [
             'directoryContents' => $directoryContents,
@@ -114,7 +117,7 @@ class HomeController extends Controller
         $relativePath = rawurldecode($relativePath);
 
         // 检查相对路径是否只包含允许的字符
-        if (!preg_match('/^[\w\-.\/\s]+$/u', $relativePath) || $relativePath === '.' || $relativePath === '..' || str_contains($relativePath, '../')) {
+        if (!preg_match($this->pattern, $relativePath) || $relativePath === '.' || $relativePath === '..' || str_contains($relativePath, '../')) {
             throw new NotFoundHttpException('Invalid file path.');
         }
 
@@ -151,7 +154,7 @@ class HomeController extends Controller
         $relativePath = rawurldecode($relativePath);
 
         // 检查相对路径是否只包含允许的字符
-        if (!preg_match('/^[\w\-.\/\s]+$/u', $relativePath) || $relativePath === '.' || $relativePath === '..' || str_contains($relativePath, '../')) {
+        if (!preg_match($this->pattern, $relativePath) || $relativePath === '.' || $relativePath === '..' || str_contains($relativePath, '../')) {
             throw new NotFoundHttpException('Invalid file path.');
         }
 
@@ -195,7 +198,7 @@ class HomeController extends Controller
     {
         $relativePath = Yii::$app->request->post('relativePath');
         $relativePath = rawurldecode($relativePath);
-        if (!preg_match('/^[\w\-.\/\s]+$/u', $relativePath) || $relativePath === '.' || $relativePath === '..' || str_contains($relativePath, '../')) {
+        if (!preg_match($this->pattern, $relativePath) || $relativePath === '.' || $relativePath === '..' || str_contains($relativePath, '../')) {
             throw new NotFoundHttpException('Invalid file path.');
         }
         $absolutePath = Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . Yii::$app->user->id . '/' . $relativePath;

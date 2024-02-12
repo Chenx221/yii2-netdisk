@@ -45,8 +45,10 @@ $this->registerCssFile('@web/css/home_style.css');
     <table class="table table-hover">
         <thead class="table-light">
         <tr>
-            <th scope="col">名称</th>
-            <th scope="col">操作</th>
+            <th scope="col" class="name-col">名称</th>
+            <th scope="col" class="modified-col">最近修改时间</th>
+            <th scope="col" class="size-col">大小</th>
+            <th scope="col" class="action-col">操作</th>
         </tr>
         </thead>
         <tbody>
@@ -54,10 +56,16 @@ $this->registerCssFile('@web/css/home_style.css');
             <?php $relativePath = $directory ? $directory . '/' . $item['name'] : $item['name']; ?>
             <?php $absolutePath = Yii::getAlias('@app') . '/data/' . Yii::$app->user->id . '/' . $relativePath; ?>
             <tr>
-                <?php if (is_dir($absolutePath)): ?>
+                <?php if (is_dir($absolutePath)): ?> <!-- 如果是文件夹 -->
                     <td>
                         <?= Html::tag('i', '', ['class' => $item['type'] . ' file_icon']) ?>
                         <?= Html::a($item['name'], ['home/index', 'directory' => $relativePath], ['class' => 'file_name']) ?>
+                    </td>
+                    <td class="file_info">
+                        <?= date('Y-m-d H:i:s', $item['lastModified']) ?>
+                    </td>
+                    <td class="file_info">
+                        ---
                     </td>
                     <td>
                         <?= Html::button(Html::tag('i', '', ['class' => 'fa-solid fa-download']), [
@@ -68,12 +76,18 @@ $this->registerCssFile('@web/css/home_style.css');
                             'data-bs-title' => '打包下载'
                         ]) ?>
                         <?= Html::button(Html::tag('i', '', ['class' => 'fa-regular fa-pen-to-square']), ['value' => $relativePath, 'class' => 'btn btn-outline-secondary rename-btn', 'data-bs-toggle' => 'tooltip', 'data-bs-placement' => 'top', 'data-bs-title' => '重命名']) ?>
-                        <?= Html::button(Html::tag('i','',['class' => 'fa-regular fa-trash-can']),['value' => $relativePath,'class' =>'btn btn-outline-danger delete-btn', 'data-bs-toggle' => 'tooltip', 'data-bs-placement' => 'top', 'data-bs-title' => '删除'])?>
+                        <?= Html::button(Html::tag('i', '', ['class' => 'fa-regular fa-trash-can']), ['value' => $relativePath, 'class' => 'btn btn-outline-danger delete-btn', 'data-bs-toggle' => 'tooltip', 'data-bs-placement' => 'top', 'data-bs-title' => '删除']) ?>
                     </td>
-                <?php else: ?>
+                <?php else: ?> <!-- 如果是文件 -->
                     <td>
                         <?= Html::tag('i', '', ['class' => $item['type'] . ' file_icon']) ?>
                         <?= Html::a($item['name'], ['home/download', 'relativePath' => $relativePath], ['class' => 'file_name']) ?>
+                    </td>
+                    <td class="file_info">
+                        <?= date('Y-m-d H:i:s', $item['lastModified']) ?>
+                    </td>
+                    <td class="file_info">
+                        <?= $item['size'] !== null ? Yii::$app->formatter->asShortSize($item['size'], 2) : '' ?>
                     </td>
                     <td>
                         <?= Html::button(Html::tag('i', '', ['class' => 'fa-regular fa-circle-down']), [
@@ -84,7 +98,7 @@ $this->registerCssFile('@web/css/home_style.css');
                             'data-bs-title' => '下载'
                         ]) ?>
                         <?= Html::button(Html::tag('i', '', ['class' => 'fa-regular fa-pen-to-square']), ['value' => $relativePath, 'class' => 'btn btn-outline-secondary rename-btn', 'data-bs-toggle' => 'tooltip', 'data-bs-placement' => 'top', 'data-bs-title' => '重命名']) ?>
-                        <?= Html::button(Html::tag('i','',['class' => 'fa-regular fa-trash-can']),['value' => $relativePath,'class' =>'btn btn-outline-danger delete-btn', 'data-bs-toggle' => 'tooltip', 'data-bs-placement' => 'top', 'data-bs-title' => '删除'])?>
+                        <?= Html::button(Html::tag('i', '', ['class' => 'fa-regular fa-trash-can']), ['value' => $relativePath, 'class' => 'btn btn-outline-danger delete-btn', 'data-bs-toggle' => 'tooltip', 'data-bs-placement' => 'top', 'data-bs-title' => '删除']) ?>
                     </td>
                 <?php endif; ?>
             </tr>
@@ -123,6 +137,6 @@ echo Html::submitButton('确认', ['class' => 'btn btn-danger']);
 echo Html::endForm();
 
 Modal::end();
-$this->registerJsFile('@web/js/home_script.js', ['depends' => [JqueryAsset::class],'position' => View::POS_END]);
+$this->registerJsFile('@web/js/home_script.js', ['depends' => [JqueryAsset::class], 'position' => View::POS_END]);
 ?>
 
