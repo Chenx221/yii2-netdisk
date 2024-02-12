@@ -60,7 +60,15 @@ $this->registerCssFile('@web/css/home_style.css');
                         <?= Html::a($item['name'], ['home/index', 'directory' => $relativePath], ['class' => 'file_name']) ?>
                     </td>
                     <td>
+                        <?= Html::button(Html::tag('i', '', ['class' => 'fa-solid fa-download']), [
+                            'value' => Url::to(['home/download', 'relativePath' => $relativePath]),
+                            'class' => 'btn btn-outline-primary folder-download-btn',
+                            'data-bs-toggle' => 'tooltip',
+                            'data-bs-placement' => 'top',
+                            'data-bs-title' => '打包下载'
+                        ]) ?>
                         <?= Html::button(Html::tag('i', '', ['class' => 'fa-regular fa-pen-to-square']), ['value' => $relativePath, 'class' => 'btn btn-outline-secondary rename-btn', 'data-bs-toggle' => 'tooltip', 'data-bs-placement' => 'top', 'data-bs-title' => '重命名']) ?>
+                        <?= Html::button(Html::tag('i','',['class' => 'fa-regular fa-trash-can']),['value' => $relativePath,'class' =>'btn btn-outline-danger delete-btn', 'data-bs-toggle' => 'tooltip', 'data-bs-placement' => 'top', 'data-bs-title' => '删除'])?>
                     </td>
                 <?php else: ?>
                     <td>
