@@ -14,7 +14,7 @@ class RenameForm extends Model
         return [
             ['newName', 'required'],
             ['newName', 'string', 'max' => 255],
-            ['newName', 'match', 'pattern' => '/^[^\/:*?"<>|\\\\]+$/', 'message' => 'Invalid file name.'],
+            ['newName', 'match', 'pattern' => '/^[^\p{C}\/:*?"<>|\\\\]+$/u', 'message' => 'Invalid file name.'],
         ];
     }
 }
