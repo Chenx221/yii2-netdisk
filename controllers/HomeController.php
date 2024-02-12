@@ -174,11 +174,13 @@ class HomeController extends Controller
 
     /**
      * 删除文件或文件夹
-     * @param string $relativePath 文件或文件夹的相对路径
      * @throws NotFoundHttpException 如果文件或文件夹不存在
      */
-    public function actionDelete($relativePath)
+    public function actionDelete()
     {
+        // 从 POST 请求中获取 relativePath 参数
+        $relativePath = Yii::$app->request->post('relativePath');
+
         // 对相对路径进行解码
         $relativePath = rawurldecode($relativePath);
 
