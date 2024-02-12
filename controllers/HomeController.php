@@ -142,8 +142,7 @@ class HomeController extends Controller
 
     /**
      * 重命名文件或文件夹
-     * @param string $relativePath 文件或文件夹的相对路径
-     * @param string $newName 新名称
+     * @return string|Response|null
      * @throws NotFoundHttpException 如果文件或文件夹不存在
      */
     public function actionRename()
