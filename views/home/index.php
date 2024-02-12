@@ -52,20 +52,17 @@ $this->registerCssFile('@web/css/home_style.css');
         <tbody>
         <?php foreach ($directoryContents as $item): ?>
             <?php $relativePath = $directory ? $directory . '/' . $item['name'] : $item['name']; ?>
-            <!-- 修复错误的绝对路径问题-->
             <?php $absolutePath = Yii::getAlias('@app') . '/data/' . Yii::$app->user->id . '/' . $relativePath; ?>
             <tr>
                 <?php if (is_dir($absolutePath)): ?>
-                    <!-- 文件夹 -->
                     <td>
                         <?= Html::tag('i', '', ['class' => $item['type'] . ' file_icon']) ?>
                         <?= Html::a($item['name'], ['home/index', 'directory' => $relativePath], ['class' => 'file_name']) ?>
                     </td>
                     <td>
-                        <?= Html::button(Html::tag('i', '', ['class' => 'fa-regular fa-pen-to-square']), ['value' => $relativePath, 'class' => 'btn btn-outline-secondary rename-btn']) ?>
+                        <?= Html::button(Html::tag('i', '', ['class' => 'fa-regular fa-pen-to-square']), ['value' => $relativePath, 'class' => 'btn btn-outline-secondary rename-btn', 'data-bs-toggle' => 'tooltip', 'data-bs-placement' => 'top', 'data-bs-title' => '重命名']) ?>
                     </td>
                 <?php else: ?>
-                    <!-- 文件 -->
                     <td>
                         <?= Html::tag('i', '', ['class' => $item['type'] . ' file_icon']) ?>
                         <?= Html::a($item['name'], ['home/download', 'relativePath' => $relativePath], ['class' => 'file_name']) ?>
@@ -73,9 +70,13 @@ $this->registerCssFile('@web/css/home_style.css');
                     <td>
                         <?= Html::button(Html::tag('i', '', ['class' => 'fa-regular fa-circle-down']), [
                             'value' => Url::to(['home/download', 'relativePath' => $relativePath]),
-                            'class' => 'btn btn-outline-primary download-btn'
+                            'class' => 'btn btn-outline-primary download-btn',
+                            'data-bs-toggle' => 'tooltip',
+                            'data-bs-placement' => 'top',
+                            'data-bs-title' => '下载'
                         ]) ?>
-                        <?= Html::button(Html::tag('i', '', ['class' => 'fa-regular fa-pen-to-square']), ['value' => $relativePath, 'class' => 'btn btn-outline-secondary rename-btn']) ?>
+                        <?= Html::button(Html::tag('i', '', ['class' => 'fa-regular fa-pen-to-square']), ['value' => $relativePath, 'class' => 'btn btn-outline-secondary rename-btn', 'data-bs-toggle' => 'tooltip', 'data-bs-placement' => 'top', 'data-bs-title' => '重命名']) ?>
+                        <?= Html::button(Html::tag('i','',['class' => 'fa-regular fa-trash-can']),['value' => $relativePath,'class' =>'btn btn-outline-danger delete-btn', 'data-bs-toggle' => 'tooltip', 'data-bs-placement' => 'top', 'data-bs-title' => '删除'])?>
                     </td>
                 <?php endif; ?>
             </tr>
@@ -100,19 +101,20 @@ echo Html::submitButton('提交', ['class' => 'btn btn-primary']);
 ActiveForm::end();
 Modal::end();
 
-$this->registerJs(
-    "$(document).on('click', '.rename-btn', function() {
-        var relativePath = $(this).attr('value');
-        var fileName = $(this).closest('tr').find('td:first').text().trim();
-        $('#renameRelativePath').val(relativePath);
-        $('#renameform-newname').val(fileName);
-        $('#renameModal').modal('show');
-    })
-    .on('click', '.download-btn', function() {
-        window.location.href = $(this).attr('value');
-    });",
-    View::POS_READY,
-    'button-handlers'
-);
+Modal::begin([
+    'title' => '<h4>确认删除</h4>',
+    'id' => 'deleteModal',
+    'size' => 'modal-sm',
+]);
+
+echo Html::tag('div', '你确定要删除这个文件吗？', ['class' => 'modal-body']);
+
+echo Html::beginForm(['home/delete'], 'post', ['id' => 'delete-form']);
+echo Html::hiddenInput('relativePath', '', ['id' => 'deleteRelativePath']);
+echo Html::submitButton('确认', ['class' => 'btn btn-danger']);
+echo Html::endForm();
+
+Modal::end();
+$this->registerJsFile('@web/js/home_script.js', ['depends' => [JqueryAsset::class],'position' => View::POS_END]);
 ?>
 
