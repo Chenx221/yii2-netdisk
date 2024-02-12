@@ -16,7 +16,7 @@ table a {
     line-height: 2;
 }
 
-.file_info{
+.file_info {
     font-size: large;
     line-height: 2;
 }
@@ -35,4 +35,36 @@ table a {
 
 .action-col {
     width: 18%;
+}
+
+.breadcrumb {
+    border-radius: 0.375rem;
+}
+
+.breadcrumb .breadcrumb-item {
+    text-decoration: none;
+}
+
+.dropdown-menu {
+    --bs-dropdown-min-width: auto !important;
+}
+
+#drop-area.dragging {
+    border: 2px dashed #999;
+    background: #f8f8f8;
+    z-index: 1000;
+    opacity: 0.7;
+    /*position: relative;*/
+}
+
+#drop-area.dragging::after {
+    content: "⇧\A拖拽文件到这里";
+    white-space: pre;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 40px;
+    color: #000000;
+    text-align: center;
 }

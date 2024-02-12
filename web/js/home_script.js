@@ -17,3 +17,55 @@ $(document).on('click', '.delete-btn', function () {
     $('#deleteRelativePath').val(relativePath);
     $('#deleteModal').modal('show');
 });
+$(document).on('click', '.file-upload-btn', function () {
+    console.log('你点击了上传文件，但功能尚未实现');
+});
+$(document).on('click', '.folder-upload-btn', function () {
+    console.log('你点击了上传文件夹，但功能尚未实现');
+});
+$(document).on('click', '.offline-download-btn', function () {
+    console.log('你点击了离线下载，但功能尚未实现');
+});
+
+var dropArea = document.getElementById('drop-area');
+dropArea.addEventListener('dragover', function (event) {
+    // 阻止浏览器的默认行为
+    event.preventDefault();
+});
+dropArea.addEventListener('drop', function (event) {
+    // 阻止浏览器的默认行为
+    event.preventDefault();
+
+    // 获取用户拖拽的文件或文件夹
+    var items = event.dataTransfer.items;
+
+    // 遍历项目
+    for (var i = 0; i < items.length; i++) {
+        var item = items[i];
+        uploadFile(item.getAsFile());
+        dropArea.classList.remove('dragging');
+    }
+});
+dropArea.addEventListener('dragenter', function (event) {
+    // 阻止浏览器的默认行为
+    event.preventDefault();
+
+    // 添加 dragging 类
+    dropArea.classList.add('dragging');
+});
+
+dropArea.addEventListener('dragleave', function (event) {
+    // 阻止浏览器的默认行为
+    event.preventDefault();
+
+    // 如果相关目标是拖拽区域或其子元素，那么就不移除 dragging 类
+    if (!dropArea.contains(event.relatedTarget)) {
+        // 移除 dragging 类
+        dropArea.classList.remove('dragging');
+    }
+});
+
+function uploadFile(file) {
+    console.log('准备上传，但功能尚未实现');
+}
+
