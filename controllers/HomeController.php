@@ -3,6 +3,7 @@
 namespace app\controllers;
 
 use app\models\RenameForm;
+use app\models\UploadForm;
 use app\utils\FileTypeDetector;
 use Yii;
 use yii\filters\VerbFilter;
@@ -10,10 +11,12 @@ use yii\helpers\ArrayHelper;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
+use yii\web\UploadedFile;
 
 class HomeController extends Controller
 {
     protected string $pattern = '/^[^\p{C}\/:*?"<>|\\\\]+$/u';
+
     public function behaviors()
     {
         return array_merge(
@@ -26,6 +29,7 @@ class HomeController extends Controller
                         'download' => ['GET'],
                         'rename' => ['POST'],
                         'delete' => ['POST'],
+                        'upload' => ['POST'],
                     ],
                 ],
             ]
@@ -253,5 +257,40 @@ class HomeController extends Controller
             return false;
         }
         return true;
+    }
+
+    /**
+     * 文件上传
+     * https://devs.chenx221.cyou:8081/index.php?r=home%2Fupload
+     *
+     * @return string|Response
+     */
+    public function actionUpload()
+    {
+        $model = new UploadForm();
+        $model->targetDir = Yii::$app->request->post('targetDir', '.');
+        $uploadedFiles = UploadedFile::getInstancesByName('files');
+        $successCount = 0;
+        $totalCount = count($uploadedFiles);
+
+        foreach ($uploadedFiles as $uploadedFile) {
+            $model->uploadFile = $uploadedFile;
+            if (!preg_match($this->pattern, $model->uploadFile->baseName)) {
+                continue;
+            }
+            if ($model->upload()) {
+                $successCount++;
+            }
+        }
+
+        if ($successCount === $totalCount) {
+            Yii::$app->session->setFlash('success', 'All files uploaded successfully.');
+        } elseif ($successCount > 0) {
+            Yii::$app->session->setFlash('warning', 'Some files uploaded successfully.');
+        } else {
+            Yii::$app->session->setFlash('error', 'Failed to upload files.');
+        }
+        //返回状态码200
+        return Yii::$app->response->statusCode = 200; // 如果出错请删掉return
     }
 }

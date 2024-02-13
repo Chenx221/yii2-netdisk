@@ -7,10 +7,12 @@
 /* @var $directory string 当前路径 */
 
 use app\models\RenameForm;
+use app\models\UploadForm;
 use yii\bootstrap5\ActiveForm;
 use yii\bootstrap5\Html;
 use app\assets\FontAwesomeAsset;
 use yii\bootstrap5\Modal;
+use yii\bootstrap5\Progress;
 use yii\helpers\Url;
 use yii\web\JqueryAsset;
 use yii\web\View;
@@ -23,7 +25,7 @@ JqueryAsset::register($this);
 $this->registerCssFile('@web/css/home_style.css');
 ?>
 <div class="home-directory">
-    <div class="d-flex justify-content-between align-items-center" style="margin-bottom: 1rem;">
+    <div class="d-flex justify-content-between align-items-center">
         <h1><?= Html::encode($this->title) ?></h1>
         <div class="dropdown">
             <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenuButton"
@@ -31,6 +33,10 @@ $this->registerCssFile('@web/css/home_style.css');
                 <i class="fa-solid fa-arrow-up-from-bracket"></i> 上传文件
             </button>
             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                <li hidden>
+                    <input type="file" id="file-input" name="uploadFile" multiple>
+                    <input type="hidden" name="targetDir" value="<?= $directory ?>" id="target-dir">
+                </li>
                 <li><?= Html::button('上传文件', ['class' => 'dropdown-item file-upload-btn']) ?></li>
                 <li><?= Html::button('上传文件夹', ['class' => 'dropdown-item folder-upload-btn']) ?></li>
                 <li>
@@ -40,6 +46,16 @@ $this->registerCssFile('@web/css/home_style.css');
             </ul>
         </div>
     </div>
+
+    <!--上传进度条-->
+    <?php
+    echo Progress::widget([
+        'percent' => 0,
+        'barOptions' => ['class' => ['bg-success', 'progress-bar-animated', 'progress-bar-striped']],
+        'label' => '123', //NMD 不是说可选吗
+        'options' => ['style' => 'display: none;margin-top: 10px;', 'id' => 'progress-bar']
+    ]);
+    ?>
 
     <nav style="--bs-breadcrumb-divider: url(&#34;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8'%3E%3Cpath d='M2.5 0L1 1.5 3.5 4 1 6.5 2.5 8l4-4-4-4z' fill='%236c757d'/%3E%3C/svg%3E&#34;);"
          aria-label="breadcrumb">

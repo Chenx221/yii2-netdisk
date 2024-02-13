@@ -38,7 +38,8 @@ table a {
 }
 
 .breadcrumb {
-    border-radius: 0.375rem;
+    /*border-radius: 0.375rem;*/
+    margin-top: 16px;
 }
 
 .breadcrumb .breadcrumb-item {
