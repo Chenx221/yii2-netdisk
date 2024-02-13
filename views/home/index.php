@@ -26,19 +26,23 @@ $this->registerCssFile('@web/css/home_style.css');
     <div class="d-flex justify-content-between align-items-center" style="margin-bottom: 1rem;">
         <h1><?= Html::encode($this->title) ?></h1>
         <div class="dropdown">
-            <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+            <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenuButton"
+                    data-bs-toggle="dropdown" aria-expanded="false">
                 <i class="fa-solid fa-arrow-up-from-bracket"></i> 上传文件
             </button>
             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                 <li><?= Html::button('上传文件', ['class' => 'dropdown-item file-upload-btn']) ?></li>
                 <li><?= Html::button('上传文件夹', ['class' => 'dropdown-item folder-upload-btn']) ?></li>
-                <li><hr class="dropdown-divider"></li>
+                <li>
+                    <hr class="dropdown-divider">
+                </li>
                 <li><?= Html::button('离线下载', ['class' => 'dropdown-item offline-download-btn']) ?></li>
             </ul>
         </div>
     </div>
 
-    <nav style="--bs-breadcrumb-divider: url(&#34;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8'%3E%3Cpath d='M2.5 0L1 1.5 3.5 4 1 6.5 2.5 8l4-4-4-4z' fill='%236c757d'/%3E%3C/svg%3E&#34;);" aria-label="breadcrumb">
+    <nav style="--bs-breadcrumb-divider: url(&#34;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8'%3E%3Cpath d='M2.5 0L1 1.5 3.5 4 1 6.5 2.5 8l4-4-4-4z' fill='%236c757d'/%3E%3C/svg%3E&#34;);"
+         aria-label="breadcrumb">
         <ol class="breadcrumb">
             <?= Html::a('<i class="fa-solid fa-house"></i> HOME', ['home/index'], ['class' => 'breadcrumb-item']) ?>
             <?php if ($directory !== null): ?>
@@ -91,6 +95,8 @@ $this->registerCssFile('@web/css/home_style.css');
                             'data-bs-title' => '打包下载'
                         ]) ?>
                         <?= Html::button(Html::tag('i', '', ['class' => 'fa-regular fa-pen-to-square']), ['value' => $relativePath, 'class' => 'btn btn-outline-secondary rename-btn', 'data-bs-toggle' => 'tooltip', 'data-bs-placement' => 'top', 'data-bs-title' => '重命名']) ?>
+                        <!--看不到按钮是因为你的广告拦截插件(已知Adguard会影响)错误拦截了share-btn,请对本站点停用广告拦截插件-->
+                        <?= Html::button(Html::tag('i', '', ['class' => 'fa-solid fa-share-nodes']), ['value' => $relativePath, 'class' => 'btn btn-outline-info share-btn', 'data-bs-toggle' => 'tooltip', 'data-bs-placement' => 'top', 'data-bs-title' => '分享']) ?>
                         <?= Html::button(Html::tag('i', '', ['class' => 'fa-regular fa-trash-can']), ['value' => $relativePath, 'class' => 'btn btn-outline-danger delete-btn', 'data-bs-toggle' => 'tooltip', 'data-bs-placement' => 'top', 'data-bs-title' => '删除']) ?>
                     </td>
                 <?php else: ?> <!-- 如果是文件 -->
@@ -113,6 +119,8 @@ $this->registerCssFile('@web/css/home_style.css');
                             'data-bs-title' => '下载'
                         ]) ?>
                         <?= Html::button(Html::tag('i', '', ['class' => 'fa-regular fa-pen-to-square']), ['value' => $relativePath, 'class' => 'btn btn-outline-secondary rename-btn', 'data-bs-toggle' => 'tooltip', 'data-bs-placement' => 'top', 'data-bs-title' => '重命名']) ?>
+                        <!--看不到按钮是因为你的广告拦截插件(已知Adguard会影响)错误拦截了share-btn,请对本站点停用广告拦截插件-->
+                        <?= Html::button(Html::tag('i', '', ['class' => 'fa-solid fa-share-nodes']), ['value' => $relativePath, 'class' => 'btn btn-outline-info share-btn', 'data-bs-toggle' => 'tooltip', 'data-bs-placement' => 'top', 'data-bs-title' => '分享']) ?>
                         <?= Html::button(Html::tag('i', '', ['class' => 'fa-regular fa-trash-can']), ['value' => $relativePath, 'class' => 'btn btn-outline-danger delete-btn', 'data-bs-toggle' => 'tooltip', 'data-bs-placement' => 'top', 'data-bs-title' => '删除']) ?>
                     </td>
                 <?php endif; ?>
