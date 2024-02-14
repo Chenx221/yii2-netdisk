@@ -2,10 +2,12 @@
 
 namespace app\controllers;
 
+use app\models\NewFolderForm;
 use app\models\RenameForm;
 use app\models\UploadForm;
 use app\utils\FileTypeDetector;
 use Yii;
+use yii\bootstrap5\ActiveForm;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use yii\web\Controller;
@@ -30,6 +32,8 @@ class HomeController extends Controller
                         'rename' => ['POST'],
                         'delete' => ['POST'],
                         'upload' => ['POST'],
+                        'newfolder' => ['POST'],
+                        'checkfolderexists' => ['POST'],
                     ],
                 ],
             ]
@@ -260,7 +264,7 @@ class HomeController extends Controller
     }
 
     /**
-     * 文件上传
+     * 文件、文件夹上传
      * 注意,已存在的同名文件会被覆盖
      * https://devs.chenx221.cyou:8081/index.php?r=home%2Fupload
      *
@@ -276,7 +280,7 @@ class HomeController extends Controller
 
         foreach ($uploadedFiles as $uploadedFile) {
             $model->uploadFile = $uploadedFile;
-            if (!preg_match($this->pattern, $model->uploadFile->fullPath)) {
+            if (!preg_match($this->pattern, $model->uploadFile->fullPath) || $model->uploadFile->fullPath === '.' || $model->uploadFile->fullPath === '..' || str_contains($model->uploadFile->fullPath, '../')) {
                 continue;
             }
             if ($model->upload()) {
@@ -294,4 +298,39 @@ class HomeController extends Controller
         //返回状态码200
         return Yii::$app->response->statusCode = 200; // 如果出错请删掉return
     }
+
+    /**
+     * @return array|string|Response
+     */
+    public function actionNewfolder()
+    {
+
+        $relativePath = Yii::$app->request->post('relativePath');
+        $relativePath = rawurldecode($relativePath);
+        $model = new NewFolderForm();
+
+        if ($model->load(Yii::$app->request->post())){
+            $model->relativePath = $relativePath;
+            if(Yii::$app->request->isAjax){
+                Yii::$app->response->format = Response::FORMAT_JSON;
+                return ActiveForm::validate($model);
+            }
+            if($model->validate()){
+                if ($model->createFolder()) {
+                    Yii::$app->session->setFlash('success', 'Folder created successfully.');
+                } else {
+                    Yii::$app->session->setFlash('error', 'Failed to create folder.');
+                }
+            } else {
+                $errors = $model->errors;
+                foreach ($errors as $error) {
+                    Yii::$app->session->setFlash('error', $error[0]);
+                }
+            }
+        }
+        return $this->redirect(['index', 'directory' => $relativePath]);
+
+    }
+
+
 }

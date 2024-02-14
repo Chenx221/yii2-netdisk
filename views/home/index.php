@@ -6,6 +6,7 @@
 
 /* @var $directory string 当前路径 */
 
+use app\models\NewFolderForm;
 use app\models\RenameForm;
 use yii\bootstrap5\ActiveForm;
 use yii\bootstrap5\Html;
@@ -26,26 +27,30 @@ $this->registerCssFile('@web/css/home_style.css');
 <div class="home-directory">
     <div class="d-flex justify-content-between align-items-center">
         <h1><?= Html::encode($this->title) ?></h1>
-        <div class="dropdown">
-            <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenuButton"
-                    data-bs-toggle="dropdown" aria-expanded="false">
-                <i class="fa-solid fa-arrow-up-from-bracket"></i> 上传文件
-            </button>
-            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                <li hidden>
-                    <input type="file" id="file-input" name="uploadFile" multiple>
-                    <input type="file" id="folder-input" name="uploadFile" multiple webkitdirectory>
-                    <input type="hidden" name="targetDir" value="<?= $directory ?>" id="target-dir">
-                </li>
-                <li><?= Html::button('上传文件', ['class' => 'dropdown-item file-upload-btn']) ?></li>
-<!--                上传文件功能将会覆盖已存在的同名文件，这点请注意-->
-                <li><?= Html::button('上传文件夹', ['class' => 'dropdown-item folder-upload-btn']) ?></li>
-<!--                上传文件夹功能不支持IOS设备以及Firefox for Android，上传时会跳过空文件夹-->
-                <li>
-                    <hr class="dropdown-divider">
-                </li>
-                <li><?= Html::button('离线下载', ['class' => 'dropdown-item offline-download-btn']) ?></li>
-            </ul>
+        <div>
+            <?= Html::button('刷新', ['class' => 'btn btn-outline-primary refresh-btn']) ?>
+            <?= Html::button('新建文件夹', ['class' => 'btn btn-outline-primary new-folder-btn', 'value' => $directory]) ?>
+            <div class="dropdown d-inline-block">
+                <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenuButton"
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fa-solid fa-arrow-up-from-bracket"></i> 上传文件
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                    <li hidden>
+                        <input type="file" id="file-input" name="uploadFile" multiple>
+                        <input type="file" id="folder-input" name="uploadFile" multiple webkitdirectory>
+                        <input type="hidden" name="targetDir" value="<?= $directory ?>" id="target-dir">
+                    </li>
+                    <li><?= Html::button('上传文件', ['class' => 'dropdown-item file-upload-btn']) ?></li>
+                    <!--                上传文件功能将会覆盖已存在的同名文件，这点请注意-->
+                    <li><?= Html::button('上传文件夹', ['class' => 'dropdown-item folder-upload-btn']) ?></li>
+                    <!--                上传文件夹功能不支持IOS设备以及Firefox for Android，上传时会跳过空文件夹-->
+                    <li>
+                        <hr class="dropdown-divider">
+                    </li>
+                    <li><?= Html::button('离线下载', ['class' => 'dropdown-item offline-download-btn']) ?></li>
+                </ul>
+            </div>
         </div>
     </div>
 
@@ -176,6 +181,23 @@ echo Html::submitButton('确认', ['class' => 'btn btn-danger']);
 echo Html::endForm();
 
 Modal::end();
+
+Modal::begin([
+    'title' => '<h4>新建文件夹</h4>',
+    'id' => 'newFolderModal',
+    'size' => 'modal-lg',
+]);
+
+$model1 = new NewFolderForm();
+$form = ActiveForm::begin(['id' => 'new-folder-form', 'action' => ['home/newfolder'], 'method' => 'post', 'enableAjaxValidation' => true]);
+
+echo $form->field($model1, 'folderName')->textInput(['maxlength' => true])->label('文件夹名称 (受技术所限，暂时没什么办法通过js验证文件夹是否已存在以在client side显示)');
+echo Html::hiddenInput('relativePath', '', ['id' => 'newDirRelativePath']);
+echo Html::submitButton('提交', ['class' => 'btn btn-primary']);
+
+ActiveForm::end();
+Modal::end();
+
 $this->registerJsFile('@web/js/home_script.js', ['depends' => [JqueryAsset::class], 'position' => View::POS_END]);
 ?>
 

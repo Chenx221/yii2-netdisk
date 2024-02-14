@@ -120,5 +120,12 @@ dropArea.addEventListener('dragleave', function (event) {
     }
 });
 
+$(document).on('click', '.refresh-btn', function () {
+    window.location.reload();
+});
 
-
+$(document).on('click', '.new-folder-btn', function () {
+    var relativePath = $(this).attr('value');
+    $('#newDirRelativePath').val(relativePath);
+    $('#newFolderModal').modal('show');
+})
