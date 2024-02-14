@@ -49,7 +49,34 @@ $('#file-input').on('change', function () {
 
 
 $(document).on('click', '.folder-upload-btn', function () {
-    console.log('你点击了上传文件夹，但功能尚未实现');
+    // 触发文件输入元素的点击事件
+    $('#folder-input').click();
+});
+
+$('#folder-input').on('change', function () {
+    $('#progress-bar').show();
+    var files = this.files;
+    var formData = new FormData();
+    for (var i = 0; i < files.length; i++) {
+        formData.append('files[]', files[i]);
+    }
+    formData.append('targetDir', $('#target-dir').val());
+    formData.append('_csrf', $('meta[name="csrf-token"]').attr('content'));
+    var xhr = new XMLHttpRequest();
+    xhr.upload.onprogress = function (event) {
+        if (event.lengthComputable) {
+            var percentComplete = event.loaded / event.total * 100;
+            $('#progress-bar .progress-bar').css('width', percentComplete + '%').text(Math.round(percentComplete) + '%');
+        }
+    };
+    xhr.onload = function () {
+        if (xhr.status !== 200) {
+            alert('An error occurred during the upload.');
+        }
+        window.location.reload();
+    };
+    xhr.open('POST', 'index.php?r=home%2Fupload');
+    xhr.send(formData);
 });
 $(document).on('click', '.offline-download-btn', function () {
     console.log('你点击了离线下载，但功能尚未实现');

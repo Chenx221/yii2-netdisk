@@ -35,9 +35,10 @@ class UploadForm extends Model
             if (!is_dir($absolutePath)) {
                 return false;
             }
-            $fileName = $this->uploadFile->baseName;
-            if ($this->uploadFile->extension !== '') {
-                $fileName .= '.' . $this->uploadFile->extension;
+            $fileName = $this->uploadFile->fullPath;
+            $directory = dirname($absolutePath . '/' . $fileName);
+            if (!is_dir($directory)) {
+                mkdir($directory, 0777, true);
             }
             $this->uploadFile->saveAs($absolutePath . '/' . $fileName);
             return true;

@@ -15,7 +15,7 @@ use yii\web\UploadedFile;
 
 class HomeController extends Controller
 {
-    protected string $pattern = '/^[^\p{C}\/:*?"<>|\\\\]+$/u';
+    protected string $pattern = '/^[^\p{C}:*?"<>|\\\\]+$/u';
 
     public function behaviors()
     {
@@ -261,6 +261,7 @@ class HomeController extends Controller
 
     /**
      * 文件上传
+     * 注意,已存在的同名文件会被覆盖
      * https://devs.chenx221.cyou:8081/index.php?r=home%2Fupload
      *
      * @return string|Response
@@ -275,7 +276,7 @@ class HomeController extends Controller
 
         foreach ($uploadedFiles as $uploadedFile) {
             $model->uploadFile = $uploadedFile;
-            if (!preg_match($this->pattern, $model->uploadFile->baseName)) {
+            if (!preg_match($this->pattern, $model->uploadFile->fullPath)) {
                 continue;
             }
             if ($model->upload()) {

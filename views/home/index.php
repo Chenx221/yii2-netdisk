@@ -7,7 +7,6 @@
 /* @var $directory string 当前路径 */
 
 use app\models\RenameForm;
-use app\models\UploadForm;
 use yii\bootstrap5\ActiveForm;
 use yii\bootstrap5\Html;
 use app\assets\FontAwesomeAsset;
@@ -35,6 +34,7 @@ $this->registerCssFile('@web/css/home_style.css');
             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                 <li hidden>
                     <input type="file" id="file-input" name="uploadFile" multiple>
+                    <input type="file" id="folder-input" name="uploadFile" multiple webkitdirectory>
                     <input type="hidden" name="targetDir" value="<?= $directory ?>" id="target-dir">
                 </li>
                 <li><?= Html::button('上传文件', ['class' => 'dropdown-item file-upload-btn']) ?></li>
