@@ -5,14 +5,11 @@
     <h1 align="center">基于Yii 2框架的网盘系统</h1>
 </p>
 
-Yii 2 Basic Project Template is a skeleton [Yii 2](https://www.yiiframework.com/) application best for
-rapidly creating small projects.
+这是一个基于[Yii 2](https://www.yiiframework.com/) PHP框架设计的小型网盘系统，作为我的毕业设计作业，它具备基本的网盘功能。
 
-The template contains the basic features including user login/logout and a contact page.
-It includes all commonly used configurations that would allow you to focus on adding new
-features to your application.
+这个项目基于Yii 2 基础项目模板，使用了模板中较少一部分的内容作为项目的一部分。
 
-DIRECTORY STRUCTURE
+项目结构
 -------------------
 
       assets/             contains assets definition
@@ -67,39 +64,23 @@ DIRECTORY STRUCTURE
 
 EXTRA: 客户端开发
 
-REQUIREMENTS
+运行所需环境
 ------------
 
 PHP >= 8.0
+MySQL/MariaDB
 
 
-INSTALLATION
+安装步骤
 ------------
 
-### Install via Composer
+### 通过压缩档案进行安装
 
-If you do not have [Composer](https://getcomposer.org/), you may install it by following the instructions
-at [getcomposer.org](https://getcomposer.org/doc/00-intro.md#installation-nix).
+在[本项目](https://git.chenx221.cyou/chenx221/test_project)的release下载最新版本的归档文件，解压到web根目录下.
 
-You can then install this project template using the following command:
+执行composer install，安装必要的依赖项。
 
-~~~
-composer create-project --prefer-dist yiisoft/yii2-app-basic basic
-~~~
-
-Now you should be able to access the application through the following URL, assuming `basic` is the directory
-directly under the Web root.
-
-~~~
-http://localhost/basic/web/
-~~~
-
-### Install from an Archive File
-
-Extract the archive file downloaded from [yiiframework.com](https://www.yiiframework.com/download/) to
-a directory named `basic` that is directly under the Web root.
-
-Set cookie validation key in `config/web.php` file to some random secret string:
+在`config/web.php`文件中设置一些随机的密钥：
 
 ```php
 'request' => [
@@ -108,18 +89,18 @@ Set cookie validation key in `config/web.php` file to some random secret string:
 ],
 ```
 
-You can then access the application through the following URL:
+现在你可以通过以下链接访问你的站点：
 
 ~~~
 http://localhost/basic/web/
 ~~~
 
-CONFIGURATION
+配置
 -------------
 
-### Database
+### 数据库
 
-Edit the file `config/db.php` with real data, for example:
+像这样修改config/db.php文件：
 
 ```php
 return [
@@ -131,10 +112,9 @@ return [
 ];
 ```
 
-**NOTES:**
-- Yii won't create the database for you, this has to be done manually before you can access it.
-- Check and edit the other files in the `config/` directory to customize your application as required.
-- Refer to the README in the `tests` directory for information specific to basic application tests.
+**提示:**
+- 我们不会帮你创建好数据库，请在使用项目前自行创建。
+- 检查`config/`目录下的其他配置文件以客制化你的安装。
 
 
 TESTING
