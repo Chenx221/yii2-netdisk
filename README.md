@@ -27,7 +27,45 @@ DIRECTORY STRUCTURE
       views/              contains view files for the Web application
       web/                contains the entry script and Web resources
 
+目前已实现的功能
+-------------------
 
+用户登录、注册
+
+文件显示
+
+文件操作（下载,删除,重命名）
+
+文件夹操作（删除,重命名）
+
+文件/文件夹上传
+
+计划实现的功能
+-------------------
+
+文件夹打包下载
+
+批量操作
+
+文件校验信息查看
+
+文件预览
+
+文件/文件夹分享
+
+分享管理
+
+交互性提升（右键菜单）
+
+个人资料管理
+
+访问控制
+
+系统设置
+
+设计主页，删除无用页面
+
+EXTRA: 客户端开发
 
 REQUIREMENTS
 ------------
