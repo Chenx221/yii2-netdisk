@@ -38,7 +38,9 @@ $this->registerCssFile('@web/css/home_style.css');
                     <input type="hidden" name="targetDir" value="<?= $directory ?>" id="target-dir">
                 </li>
                 <li><?= Html::button('上传文件', ['class' => 'dropdown-item file-upload-btn']) ?></li>
+<!--                上传文件功能将会覆盖已存在的同名文件，这点请注意-->
                 <li><?= Html::button('上传文件夹', ['class' => 'dropdown-item folder-upload-btn']) ?></li>
+<!--                上传文件夹功能不支持IOS设备以及Firefox for Android，上传时会跳过空文件夹-->
                 <li>
                     <hr class="dropdown-divider">
                 </li>
