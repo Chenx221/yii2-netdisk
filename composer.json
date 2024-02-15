@@ -21,7 +21,8 @@
         "sam-it/yii2-mariadb": "^3.1",
         "bestyii/yii2-gii-rest": "*",
         "bestyii/yii2-openapi-reader": "dev-master",
-        "fortawesome/font-awesome": "^6.5"
+        "fortawesome/font-awesome": "^6.5",
+        "ext-zip": "*"
     },
     "require-dev": {
         "yiisoft/yii2-debug": "~2.1.0",
