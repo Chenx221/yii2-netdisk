@@ -111,7 +111,7 @@ $this->registerCssFile('@web/css/home_style.css');
                     </td>
                     <td>
                         <?= Html::button(Html::tag('i', '', ['class' => 'fa-solid fa-download']), [
-                            'value' => Url::to(['home/download', 'relativePath' => $relativePath]),
+                            'value' => $relativePath,
                             'class' => 'btn btn-outline-primary folder-download-btn',
                             'data-bs-toggle' => 'tooltip',
                             'data-bs-placement' => 'top',
@@ -189,7 +189,7 @@ Modal::begin([
 ]);
 
 $model1 = new NewFolderForm();
-$form = ActiveForm::begin(['id' => 'new-folder-form', 'action' => ['home/newfolder'], 'method' => 'post', 'enableAjaxValidation' => true]);
+$form = ActiveForm::begin(['id' => 'new-folder-form', 'action' => ['home/new-folder'], 'method' => 'post', 'enableAjaxValidation' => true]);
 
 echo $form->field($model1, 'folderName')->textInput(['maxlength' => true])->label('文件夹名称');
 echo Html::hiddenInput('relativePath', '', ['id' => 'newDirRelativePath']);

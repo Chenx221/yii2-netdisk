@@ -12,6 +12,10 @@ var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
 $(document).on('click', '.download-btn', function () {
     window.location.href = $(this).attr('value');
 });
+$(document).on('click', '.folder-download-btn', function () {
+    var relativePath = $(this).attr('value');
+    window.open('index.php?r=home%2Fdownload-folder&relativePath=' + encodeURIComponent(relativePath), '_blank');
+});
 $(document).on('click', '.delete-btn', function () {
     var relativePath = $(this).attr('value');
     $('#deleteRelativePath').val(relativePath);

@@ -14,6 +14,7 @@ use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
 use yii\web\UploadedFile;
+use ZipArchive;
 
 class HomeController extends Controller
 {
@@ -32,8 +33,8 @@ class HomeController extends Controller
                         'rename' => ['POST'],
                         'delete' => ['POST'],
                         'upload' => ['POST'],
-                        'newfolder' => ['POST'],
-                        'checkfolderexists' => ['POST'],
+                        'new-folder' => ['POST'],
+                        'download-folder' => ['GET'],
                     ],
                 ],
             ]
@@ -304,20 +305,20 @@ class HomeController extends Controller
      *
      * @return array|string|Response
      */
-    public function actionNewfolder()
+    public function actionNewFolder()
     {
 
         $relativePath = Yii::$app->request->post('relativePath');
         $relativePath = rawurldecode($relativePath);
         $model = new NewFolderForm();
 
-        if ($model->load(Yii::$app->request->post())){
+        if ($model->load(Yii::$app->request->post())) {
             $model->relativePath = $relativePath;
-            if(Yii::$app->request->isAjax){
+            if (Yii::$app->request->isAjax) {
                 Yii::$app->response->format = Response::FORMAT_JSON;
                 return ActiveForm::validate($model);
             }
-            if($model->validate()){
+            if ($model->validate()) {
                 if ($model->createFolder()) {
                     Yii::$app->session->setFlash('success', 'Folder created successfully.');
                 } else {
@@ -334,5 +335,66 @@ class HomeController extends Controller
 
     }
 
+    /**
+     * 计算指定目录的大小
+     *
+     * @param string $directory 目录路径
+     * @return int 目录的大小（字节）
+     */
+    protected function getDirectorySize($directory)
+    {
+        $size = 0;
+        $files = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($directory));
+        foreach ($files as $file) {
+            if ($file->isFile()) {
+                $size += $file->getSize();
+            }
+        }
+        return $size;
+    }
 
+    /**
+     * @throws NotFoundHttpException
+     */
+    public function actionDownloadFolder($relativePath)
+    {
+        $relativePath = rawurldecode($relativePath);
+        if (!preg_match($this->pattern, $relativePath) || $relativePath === '.' || $relativePath === '..' || str_contains($relativePath, '../')) {
+            throw new NotFoundHttpException('Invalid path.');
+        }
+        $absolutePath = Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . Yii::$app->user->id . '/' . $relativePath;
+
+        if (!is_dir($absolutePath)) {
+            throw new NotFoundHttpException('Directory not found.');
+        }
+        $size = $this->getDirectorySize($absolutePath);
+
+        // 检查需要下载的文件夹大小是否超过200MB
+        if ($size > 200 * 1024 * 1024) {
+            throw new NotFoundHttpException('Directory size exceeds the limit of 200MB.');
+        }else{
+            $zip = new ZipArchive();
+            $tempDir = sys_get_temp_dir() . '/';
+            $zipPath = $tempDir . basename($absolutePath) . '.zip';
+
+            if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE)) {
+                $files = new \RecursiveIteratorIterator(
+                    new \RecursiveDirectoryIterator($absolutePath),
+                    \RecursiveIteratorIterator::LEAVES_ONLY
+                );
+
+                foreach ($files as $name => $file) {
+                    if (!$file->isDir()) {
+                        $filePath = $file->getRealPath();
+                        $relativePath = substr($filePath, strlen($absolutePath) + 1);
+
+                        $zip->addFile($filePath, $relativePath);
+                    }
+                }
+
+                $zip->close();
+            }
+            return Yii::$app->response->sendFile($zipPath);
+        }
+    }
 }
