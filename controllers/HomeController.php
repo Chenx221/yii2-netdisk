@@ -300,6 +300,8 @@ class HomeController extends Controller
     }
 
     /**
+     * 新建文件夹
+     *
      * @return array|string|Response
      */
     public function actionNewfolder()
