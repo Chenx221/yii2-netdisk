@@ -5,7 +5,11 @@ namespace app\controllers;
 use app\models\NewFolderForm;
 use app\models\RenameForm;
 use app\models\UploadForm;
+use app\models\ZipForm;
 use app\utils\FileTypeDetector;
+use wapmorgan\UnifiedArchive\Exceptions\FileAlreadyExistsException;
+use wapmorgan\UnifiedArchive\Exceptions\UnsupportedOperationException;
+use wapmorgan\UnifiedArchive\UnifiedArchive;
 use Yii;
 use yii\bootstrap5\ActiveForm;
 use yii\filters\VerbFilter;
@@ -36,6 +40,7 @@ class HomeController extends Controller
                         'new-folder' => ['POST'],
                         'download-folder' => ['GET'],
                         'multi-ff-zip-dl' => ['POST'],
+                        'zip' => ['POST'],
                     ],
                 ],
             ]
@@ -61,7 +66,7 @@ class HomeController extends Controller
         if ($directory === '.' || $directory == null) {
             $directory = null;
             $parentDirectory = null;
-        } elseif ($directory === '..' || str_contains($directory, '../')) {
+        } elseif (str_contains($directory, '..')) {
             throw new NotFoundHttpException('Invalid directory.');
         } else {
             $parentDirectory = dirname($directory);
@@ -127,7 +132,7 @@ class HomeController extends Controller
         $relativePath = rawurldecode($relativePath);
 
         // 检查相对路径是否只包含允许的字符
-        if (!preg_match($this->pattern, $relativePath) || $relativePath === '.' || $relativePath === '..' || str_contains($relativePath, '../')) {
+        if (!preg_match($this->pattern, $relativePath) || str_contains($relativePath, '..')) {
             throw new NotFoundHttpException('Invalid file path.');
         }
 
@@ -163,7 +168,7 @@ class HomeController extends Controller
         $relativePath = rawurldecode($relativePath);
 
         // 检查相对路径是否只包含允许的字符
-        if (!preg_match($this->pattern, $relativePath) || $relativePath === '.' || $relativePath === '..' || str_contains($relativePath, '../')) {
+        if (!preg_match($this->pattern, $relativePath) || str_contains($relativePath, '..')) {
             throw new NotFoundHttpException('Invalid file path.');
         }
 
@@ -207,7 +212,7 @@ class HomeController extends Controller
     {
         $relativePath = Yii::$app->request->post('relativePath');
         $relativePath = rawurldecode($relativePath);
-        if (!preg_match($this->pattern, $relativePath) || $relativePath === '.' || $relativePath === '..' || str_contains($relativePath, '../')) {
+        if (!preg_match($this->pattern, $relativePath) || str_contains($relativePath, '..')) {
             throw new NotFoundHttpException('Invalid file path.');
         }
         $absolutePath = Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . Yii::$app->user->id . '/' . $relativePath;
@@ -282,7 +287,7 @@ class HomeController extends Controller
 
         foreach ($uploadedFiles as $uploadedFile) {
             $model->uploadFile = $uploadedFile;
-            if (!preg_match($this->pattern, $model->uploadFile->fullPath) || $model->uploadFile->fullPath === '.' || $model->uploadFile->fullPath === '..' || str_contains($model->uploadFile->fullPath, '../')) {
+            if (!preg_match($this->pattern, $model->uploadFile->fullPath) || str_contains($model->uploadFile->fullPath, '..')) {
                 continue;
             }
             if ($model->upload()) {
@@ -360,7 +365,7 @@ class HomeController extends Controller
     public function actionDownloadFolder($relativePath)
     {
         $relativePath = rawurldecode($relativePath);
-        if (!preg_match($this->pattern, $relativePath) || $relativePath === '.' || $relativePath === '..' || str_contains($relativePath, '../')) {
+        if (!preg_match($this->pattern, $relativePath) || str_contains($relativePath, '..')) {
             throw new NotFoundHttpException('Invalid path.');
         }
         $absolutePath = Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . Yii::$app->user->id . '/' . $relativePath;
@@ -416,7 +421,7 @@ class HomeController extends Controller
 
         foreach ($relativePaths as $relativePath) {
             // 检查相对路径是否只包含允许的字符
-            if (!preg_match($this->pattern, $relativePath) || $relativePath === '.' || $relativePath === '..' || str_contains($relativePath, '../')) {
+            if (!preg_match($this->pattern, $relativePath) || str_contains($relativePath, '..')) {
                 throw new NotFoundHttpException('Invalid file path.');
             }
 
@@ -451,15 +456,12 @@ class HomeController extends Controller
                 $absolutePath = Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . Yii::$app->user->id . '/' . $relativePath;
 
                 if (is_file($absolutePath)) {
-                    // 如果是文件，直接添加到 zip 文件
                     $zip->addFile($absolutePath, $relativePath);
                 } else if (is_dir($absolutePath)) {
-                    // 如果是目录，获取目录中的所有文件并添加到 zip 文件
                     $files = new \RecursiveIteratorIterator(
                         new \RecursiveDirectoryIterator($absolutePath),
                         \RecursiveIteratorIterator::LEAVES_ONLY
                     );
-
                     foreach ($files as $name => $file) {
                         if (!$file->isDir()) {
                             $filePath = $file->getRealPath();
@@ -470,11 +472,43 @@ class HomeController extends Controller
                     }
                 }
             }
-
             $zip->close();
         }
-
-        // 发送下载
         return Yii::$app->response->sendFile($zipPath);
+    }
+
+    public function actionZip()
+    {
+        $model = new ZipForm();
+        $relativePaths = json_decode(Yii::$app->request->post('relativePath'), true);
+        $targetDirectory = Yii::$app->request->post('targetDirectory')??'.';
+        if ($model->load(Yii::$app->request->post()) && $model->validate()) {
+            if (str_contains($targetDirectory, '..')) {
+                throw new NotFoundHttpException('Invalid target directory.');
+            } elseif (!is_dir(Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . Yii::$app->user->id . '/' . $targetDirectory)) {
+                throw new NotFoundHttpException('Directory not found.');
+            }
+            $absolutePaths = [];
+            foreach ($relativePaths as $relativePath) {
+                if (!preg_match($this->pattern, $relativePath) || str_contains($relativePath, '..')) {
+                    continue;
+                }
+                $absolutePath = Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . Yii::$app->user->id . '/' . $relativePath;
+                if (!file_exists($absolutePath)) {
+                    throw new NotFoundHttpException('The requested file does not exist.');
+                }
+                $absolutePaths[] = $absolutePath;
+            }
+            $zipPath = Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . Yii::$app->user->id . '/' . $targetDirectory . '/' . $model->zipFilename . '.' . $model->zipFormat;
+            try {
+                UnifiedArchive::create($absolutePaths, $zipPath);
+                Yii::$app->session->setFlash('success', '打包成功');
+            } catch (FileAlreadyExistsException $e) {
+                Yii::$app->session->setFlash('error', '目标文件夹已存在同名压缩档案');
+            } catch (UnsupportedOperationException $e) {
+                Yii::$app->session->setFlash('error', '不支持的操作');
+            }
+        }
+        return $this->redirect(['index', 'directory' => $targetDirectory]);
     }
 }

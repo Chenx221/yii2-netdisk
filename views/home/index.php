@@ -8,6 +8,7 @@
 
 use app\models\NewFolderForm;
 use app\models\RenameForm;
+use app\models\ZipForm;
 use yii\bootstrap5\ActiveForm;
 use yii\bootstrap5\Html;
 use app\assets\FontAwesomeAsset;
@@ -211,6 +212,22 @@ echo Html::submitButton('提交', ['class' => 'btn btn-primary']);
 ActiveForm::end();
 Modal::end();
 
+Modal::begin([
+    'title' => '<h4>创建压缩文件</h4>',
+    'id' => 'zipModal',
+    'size' => 'modal-lg',
+]);
+$model2 = new ZipForm();
+$form = ActiveForm::begin(['id' => 'zip-form', 'action' => ['home/zip'], 'method' => 'post']);
+
+echo $form->field($model2, 'zipFilename')->textInput(['maxlength' => true])->label('压缩文件名');
+echo $form->field($model2, 'zipFormat')->dropDownList(['zip' => 'ZIP', '7z' => '7Z'])->label('压缩格式');
+echo Html::hiddenInput('relativePath', '', ['id' => 'zipRelativePath']);
+echo Html::hiddenInput('targetDirectory', $directory, ['id' => 'zipTargetDirectory']);  // 添加这一行
+echo Html::submitButton('创建', ['class' => 'btn btn-primary']);
+
+ActiveForm::end();
+Modal::end();
 $this->registerJsFile('@web/js/home_script.js', ['depends' => [JqueryAsset::class], 'position' => View::POS_END]);
 ?>
 

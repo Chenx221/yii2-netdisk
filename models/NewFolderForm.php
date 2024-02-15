@@ -24,7 +24,7 @@ class NewFolderForm extends Model
 
     public function validateRelativePath($attribute, $params, $validator)
     {
-        if (str_contains($this->$attribute, '../') || str_contains($this->$attribute, '..')) {
+        if (str_contains($this->$attribute, '..')) {
             $this->addError($attribute, 'Invalid file path.');
         }
     }

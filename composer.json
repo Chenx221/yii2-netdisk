@@ -22,7 +22,11 @@
         "bestyii/yii2-gii-rest": "*",
         "bestyii/yii2-openapi-reader": "dev-master",
         "fortawesome/font-awesome": "^6.5",
-        "ext-zip": "*"
+        "ext-zip": "*",
+        "ext-rar": "*",
+        "wapmorgan/unified-archive": "^1.2",
+        "symfony/console": "^6.1",
+        "gemorroj/archive7z": "^5.7"
     },
     "require-dev": {
         "yiisoft/yii2-debug": "~2.1.0",

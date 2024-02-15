@@ -68,7 +68,7 @@ $(document).on('click', '.batch-zip-download-btn', function () {
     });
 
     // 将相对路径添加到表单中
-    $.each(relativePaths, function(index, value) {
+    $.each(relativePaths, function (index, value) {
         form.append($('<input>', {
             type: 'hidden',
             name: 'relativePaths[]',
@@ -88,9 +88,16 @@ $(document).on('click', '.batch-zip-download-btn', function () {
 });
 
 $(document).on('click', '.batch-zip-btn', function () {
-    console.log('打包按钮被点击');
-    // 在这里添加你的代码
+    var relativePaths = $('.select-item:checked').map(function () {
+        return $(this).data('relativePath');
+    }).get();
+    $('#zipRelativePath').val(JSON.stringify(relativePaths));
+    $('#zipModal').modal('show');
 });
+
+
+
+
 
 $(document).on('click', '.unzip-btn', function () {
     console.log('解压按钮被点击');
