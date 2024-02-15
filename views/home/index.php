@@ -110,7 +110,7 @@ $this->registerCssFile('@web/css/home_style.css');
             <?php $relativePath = $directory ? $directory . '/' . $item['name'] : $item['name']; ?>
             <?php $absolutePath = Yii::getAlias('@app') . '/data/' . Yii::$app->user->id . '/' . $relativePath; ?>
             <tr>
-                <td><input type="checkbox" class="select-item"></td>
+                <td><input type="checkbox" class="select-item" data-relative-path="<?= Html::encode($relativePath) ?>" data-is-directory="<?= Html::encode(is_dir($absolutePath)) ?>"></td>
                 <?php if (is_dir($absolutePath)): ?> <!-- 如果是文件夹 -->
                     <td>
                         <?= Html::tag('i', '', ['class' => $item['type'] . ' file_icon']) ?>

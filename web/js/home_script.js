@@ -40,6 +40,7 @@ $('#folder-input').on('change', function () {
 
 $(document).on('click', '.offline-download-btn', function () {
     console.log('你点击了离线下载，但功能尚未实现');
+    //TO DO
 });
 
 $(document).on('click', '.refresh-btn', function () {
@@ -51,6 +52,63 @@ $(document).on('click', '.new-folder-btn', function () {
     $('#newDirRelativePath').val(relativePath);
     $('#newFolderModal').modal('show');
 })
+
+$(document).on('click', '.single-download-btn', function () {
+    console.log('单文件下载按钮被点击');
+    // 在这里添加你的代码
+});
+
+$(document).on('click', '.batch-zip-download-btn', function () {
+    console.log('批量打包并下载按钮被点击');
+    // 在这里添加你的代码
+});
+
+$(document).on('click', '.batch-zip-btn', function () {
+    console.log('打包按钮被点击');
+    // 在这里添加你的代码
+});
+
+$(document).on('click', '.unzip-btn', function () {
+    console.log('解压按钮被点击');
+    // 在这里添加你的代码
+});
+
+$(document).on('click', '.single-rename-btn', function () {
+    console.log('重命名按钮被点击');
+    // 在这里添加你的代码
+});
+
+$(document).on('click', '.batch-copy-btn', function () {
+    console.log('复制按钮被点击');
+    // 在这里添加你的代码
+});
+
+$(document).on('click', '.batch-cut-btn', function () {
+    console.log('剪切按钮被点击');
+    // 在这里添加你的代码
+});
+
+$(document).on('click', '.batch-paste-btn', function () {
+    console.log('粘贴按钮被点击');
+    // 在这里添加你的代码
+});
+
+$(document).on('click', '.calc-sum-btn', function () {
+    console.log('计算文件校验值按钮被点击');
+    // 在这里添加你的代码
+});
+
+$(document).on('click', '.single-share-btn', function () {
+    console.log('分享按钮被点击');
+    // 在这里添加你的代码
+});
+
+$(document).on('click', '.batch-delete-btn', function () {
+    console.log('删除按钮被点击');
+    // 在这里添加你的代码
+});
+
+//下面的代码实现了各种按钮/样式功能，建议别看了(
 
 //上传
 function uploadFiles(files) {
@@ -113,7 +171,7 @@ dropArea.addEventListener('dragleave', function (event) {
 });
 
 // 为全选/取消全选的复选框添加事件监听器
-document.getElementById('select-all').addEventListener('change', function() {
+document.getElementById('select-all').addEventListener('change', function () {
     // 获取所有的复选框
     var checkboxes = document.querySelectorAll('.select-item');
     // 设置所有复选框的状态与全选/取消全选的复选框的状态相同
@@ -126,7 +184,7 @@ document.getElementById('select-all').addEventListener('change', function() {
 // 为每一行的复选框添加事件监听器
 var itemCheckboxes = document.querySelectorAll('.select-item');
 for (var i = 0; i < itemCheckboxes.length; i++) {
-    itemCheckboxes[i].addEventListener('change', function() {
+    itemCheckboxes[i].addEventListener('change', function () {
         // 如果有一个复选框未被选中，则全选/取消全选的复选框也应该未被选中
         if (!this.checked) {
             document.getElementById('select-all').checked = false;
@@ -147,7 +205,7 @@ for (var i = 0; i < itemCheckboxes.length; i++) {
 }
 
 // 为document添加键盘事件监听器
-document.addEventListener('keydown', function(event) {
+document.addEventListener('keydown', function (event) {
     // 如果用户按下了Ctrl+A
     if (event.ctrlKey && event.key === 'a') {
         // 阻止默认的全选操作
@@ -158,11 +216,12 @@ document.addEventListener('keydown', function(event) {
         selectAll.checked = !selectAll.checked;
         for (var i = 0; i < checkboxes.length; i++) {
             checkboxes[i].checked = selectAll.checked;
-            checkboxes[i].closest('tr').classList.toggle('selected',selectAll.checked);
+            checkboxes[i].closest('tr').classList.toggle('selected', selectAll.checked);
         }
     }
 });
 
+//行点击事件
 $(document).on('click', 'tr', function (event) {
     // 如果点击的是checkbox，就不执行下面的代码
     if ($(event.target).is('input[type="checkbox"]')) {
@@ -172,4 +231,32 @@ $(document).on('click', 'tr', function (event) {
     $(this).toggleClass('selected');
     var checkbox = $(this).children(':first-child').find('input[type="checkbox"]');
     checkbox.prop('checked', !checkbox.prop('checked'));
+    updateButtons();
 });
+
+// 更新按钮的状态
+function updateButtons() {
+    var checkboxes = $('.select-item:checked');
+    var count = checkboxes.length;
+    var isSingleFile = count === 1 && !checkboxes.first().data('isDirectory');
+    var isSingleZip = isSingleFile && checkboxes.first().closest('tr').find('.file_icon').hasClass('fa-file-zipper');
+    var hasCopiedOrCut = false/* 判断是否有复制或剪切的项，你需要自己实现这部分逻辑 */;
+
+    $('.single-download-btn').toggle(isSingleFile);
+    $('.batch-zip-download-btn').toggle(count > 0 && !isSingleFile);
+    $('.batch-zip-btn').toggle(count >= 1);
+    $('.unzip-btn').toggle(isSingleZip);
+    $('.single-rename-btn').toggle(count === 1);
+    $('.batch-copy-btn').toggle(count >= 1);
+    $('.batch-cut-btn').toggle(count >= 1);
+    $('.batch-paste-btn').toggle(hasCopiedOrCut);
+    $('.calc-sum-btn').toggle(isSingleFile);
+    $('.single-share-btn').toggle(count === 1);
+    $('.batch-delete-btn').toggle(count >= 1);
+}
+
+// 在页面加载时调用updateButtons函数
+$(document).ready(updateButtons);
+
+// 当checkbox的状态改变时，调用updateButtons函数
+$(document).on('change', '.select-item', updateButtons);
