@@ -29,7 +29,7 @@ $this->registerCssFile('@web/css/home_style.css');
         <h1><?= Html::encode($this->title) ?></h1>
         <div>
             <?= Html::button('下载', ['class' => 'btn btn-outline-primary single-download-btn']) ?>
-            <?= Html::button('下载', ['class' => 'btn btn-outline-primary batch-zip-download-btn']) ?>
+            <?= Html::button('打包下载', ['class' => 'btn btn-outline-primary batch-zip-download-btn']) ?>
             <?= Html::button('压缩', ['class' => 'btn btn-outline-primary batch-zip-btn']) ?>
             <?= Html::button('解压', ['class' => 'btn btn-outline-primary unzip-btn']) ?>
             <?= Html::button('重命名', ['class' => 'btn btn-outline-primary single-rename-btn']) ?>

@@ -39,7 +39,7 @@ $('#folder-input').on('change', function () {
 });
 
 $(document).on('click', '.offline-download-btn', function () {
-    console.log('你点击了离线下载，但功能尚未实现');
+    console.log('离线下载功能尚未实现');
     //TO DO
 });
 
@@ -218,6 +218,7 @@ document.addEventListener('keydown', function (event) {
             checkboxes[i].checked = selectAll.checked;
             checkboxes[i].closest('tr').classList.toggle('selected', selectAll.checked);
         }
+        updateButtons();
     }
 });
 
