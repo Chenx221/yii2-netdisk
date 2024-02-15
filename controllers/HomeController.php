@@ -35,6 +35,7 @@ class HomeController extends Controller
                         'upload' => ['POST'],
                         'new-folder' => ['POST'],
                         'download-folder' => ['GET'],
+                        'multi-ff-zip-dl' => ['POST'],
                     ],
                 ],
             ]
@@ -372,7 +373,7 @@ class HomeController extends Controller
         // 检查需要下载的文件夹大小是否超过200MB
         if ($size > 200 * 1024 * 1024) {
             throw new NotFoundHttpException('Directory size exceeds the limit of 200MB.');
-        }else{
+        } else {
             $zip = new ZipArchive();
             $tempDir = sys_get_temp_dir() . '/';
             $zipPath = $tempDir . basename($absolutePath) . '.zip';
@@ -396,5 +397,84 @@ class HomeController extends Controller
             }
             return Yii::$app->response->sendFile($zipPath);
         }
+    }
+
+    /**
+     * @return \yii\console\Response|Response
+     * @throws NotFoundHttpException
+     */
+    public function actionMultiFfZipDl()
+    {
+        // 获取请求中的文件和文件夹的相对路径
+        $relativePaths = Yii::$app->request->post('relativePaths');
+
+        // 对相对路径进行解码
+        $relativePaths = array_map('rawurldecode', $relativePaths);
+
+        // 初始化总大小
+        $totalSize = 0;
+
+        foreach ($relativePaths as $relativePath) {
+            // 检查相对路径是否只包含允许的字符
+            if (!preg_match($this->pattern, $relativePath) || $relativePath === '.' || $relativePath === '..' || str_contains($relativePath, '../')) {
+                throw new NotFoundHttpException('Invalid file path.');
+            }
+
+            // 确定文件或文件夹的绝对路径
+            $absolutePath = Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . Yii::$app->user->id . '/' . $relativePath;
+
+            // 检查文件或文件夹是否存在
+            if (!file_exists($absolutePath)) {
+                throw new NotFoundHttpException('File or directory not found.');
+            }
+
+            // 计算文件或文件夹的大小，并添加到总大小
+            if (is_dir($absolutePath)) {
+                $totalSize += $this->getDirectorySize($absolutePath);
+            } else {
+                $totalSize += filesize($absolutePath);
+            }
+        }
+
+        // 检查总大小是否超过200MB
+        if ($totalSize > 200 * 1024 * 1024) {
+            throw new NotFoundHttpException('Total size exceeds the limit of 200MB.');
+        }
+
+        // 创建一个新的ZipArchive实例
+        $zip = new ZipArchive();
+        $tempDir = sys_get_temp_dir() . '/';
+        $zipPath = $tempDir . time() . '.zip';
+
+        if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE)) {
+            foreach ($relativePaths as $relativePath) {
+                $absolutePath = Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . Yii::$app->user->id . '/' . $relativePath;
+
+                if (is_file($absolutePath)) {
+                    // 如果是文件，直接添加到 zip 文件
+                    $zip->addFile($absolutePath, $relativePath);
+                } else if (is_dir($absolutePath)) {
+                    // 如果是目录，获取目录中的所有文件并添加到 zip 文件
+                    $files = new \RecursiveIteratorIterator(
+                        new \RecursiveDirectoryIterator($absolutePath),
+                        \RecursiveIteratorIterator::LEAVES_ONLY
+                    );
+
+                    foreach ($files as $name => $file) {
+                        if (!$file->isDir()) {
+                            $filePath = $file->getRealPath();
+                            $relativePathInZip = $relativePath . '/' . substr($filePath, strlen($absolutePath) + 1);
+
+                            $zip->addFile($filePath, $relativePathInZip);
+                        }
+                    }
+                }
+            }
+
+            $zip->close();
+        }
+
+        // 发送下载
+        return Yii::$app->response->sendFile($zipPath);
     }
 }

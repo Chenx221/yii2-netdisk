@@ -22,7 +22,6 @@ $(document).on('click', '.delete-btn', function () {
     $('#deleteModal').modal('show');
 });
 $(document).on('click', '.file-upload-btn', function () {
-    // 触发文件输入元素的点击事件
     $('#file-input').click();
 });
 $('#file-input').on('change', function () {
@@ -30,7 +29,6 @@ $('#file-input').on('change', function () {
 });
 
 $(document).on('click', '.folder-upload-btn', function () {
-    // 触发文件输入元素的点击事件
     $('#folder-input').click();
 });
 
@@ -59,8 +57,34 @@ $(document).on('click', '.single-download-btn', function () {
 });
 
 $(document).on('click', '.batch-zip-download-btn', function () {
-    console.log('批量打包并下载按钮被点击');
-    // 在这里添加你的代码
+    var relativePaths = $('.select-item:checked').map(function () {
+        return $(this).data('relativePath');
+    }).get();
+
+    // 创建一个新的表单
+    var form = $('<form>', {
+        action: 'index.php?r=home%2Fmulti-ff-zip-dl',
+        method: 'post'
+    });
+
+    // 将相对路径添加到表单中
+    $.each(relativePaths, function(index, value) {
+        form.append($('<input>', {
+            type: 'hidden',
+            name: 'relativePaths[]',
+            value: value
+        }));
+    });
+
+    // 添加 CSRF 令牌
+    form.append($('<input>', {
+        type: 'hidden',
+        name: '_csrf',
+        value: $('meta[name="csrf-token"]').attr('content')
+    }));
+
+    // 将表单添加到页面中并提交
+    form.appendTo('body').submit();
 });
 
 $(document).on('click', '.batch-zip-btn', function () {
