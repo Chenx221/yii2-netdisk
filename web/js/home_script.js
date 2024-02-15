@@ -54,8 +54,8 @@ $(document).on('click', '.new-folder-btn', function () {
 })
 
 $(document).on('click', '.single-download-btn', function () {
-    console.log('单文件下载按钮被点击');
-    // 在这里添加你的代码
+    var relativePath = $('.select-item:checked').first().data('relativePath');
+    window.location.href = 'index.php?r=home%2Fdownload&relativePath=' + encodeURIComponent(relativePath);
 });
 
 $(document).on('click', '.batch-zip-download-btn', function () {
