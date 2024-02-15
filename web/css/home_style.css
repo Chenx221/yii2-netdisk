@@ -1,5 +1,6 @@
 table a {
     text-decoration-line: none;
+    color: black;
 }
 
 .file_icon {
@@ -20,7 +21,9 @@ table a {
     font-size: large;
     line-height: 2;
 }
-
+.selector-col{
+    width: 0%;
+}
 .name-col {
     width: 50%;
 }
@@ -68,4 +71,17 @@ table a {
     font-size: 40px;
     color: #000000;
     text-align: center;
+}
+
+table tbody .selected {
+    --bs-table-bg: #C1D4FF;
+    --bs-table-color: black;
+    --bs-table-hover-color: black;
+}
+
+table .selected a {
+    color: black !important;
+}
+table tr td:first-child, table tr th:first-child {
+    display: none;
 }

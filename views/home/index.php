@@ -28,6 +28,17 @@ $this->registerCssFile('@web/css/home_style.css');
     <div class="d-flex justify-content-between align-items-center">
         <h1><?= Html::encode($this->title) ?></h1>
         <div>
+            <?= Html::button('下载', ['class' => 'btn btn-outline-primary single-download-btn']) ?>
+            <?= Html::button('下载', ['class' => 'btn btn-outline-primary batch-zip-download-btn']) ?>
+            <?= Html::button('压缩', ['class' => 'btn btn-outline-primary batch-zip-btn']) ?>
+            <?= Html::button('解压', ['class' => 'btn btn-outline-primary unzip-btn']) ?>
+            <?= Html::button('重命名', ['class' => 'btn btn-outline-primary single-rename-btn']) ?>
+            <?= Html::button('复制', ['class' => 'btn btn-outline-primary batch-copy-btn']) ?>
+            <?= Html::button('剪切', ['class' => 'btn btn-outline-primary batch-cut-btn']) ?>
+            <?= Html::button('粘贴', ['class' => 'btn btn-outline-primary batch-paste-btn']) ?>
+            <?= Html::button('计算校验', ['class' => 'btn btn-outline-primary calc-sum-btn']) ?>
+            <?= Html::button('分享', ['class' => 'btn btn-outline-primary single-share-btn']) ?>
+            <?= Html::button('删除', ['class' => 'btn btn-outline-danger batch-delete-btn']) ?>
             <?= Html::button('刷新', ['class' => 'btn btn-outline-primary refresh-btn']) ?>
             <?= Html::button('新建文件夹', ['class' => 'btn btn-outline-primary new-folder-btn', 'value' => $directory]) ?>
             <div class="dropdown d-inline-block">
@@ -87,6 +98,7 @@ $this->registerCssFile('@web/css/home_style.css');
     <table class="table table-hover" id="drop-area">
         <thead class="table-light">
         <tr>
+            <th scope="col" class="selector-col"><input type="checkbox" id="select-all"></th>
             <th scope="col" class="name-col">名称</th>
             <th scope="col" class="modified-col">最近修改时间</th>
             <th scope="col" class="size-col">大小</th>
@@ -98,6 +110,7 @@ $this->registerCssFile('@web/css/home_style.css');
             <?php $relativePath = $directory ? $directory . '/' . $item['name'] : $item['name']; ?>
             <?php $absolutePath = Yii::getAlias('@app') . '/data/' . Yii::$app->user->id . '/' . $relativePath; ?>
             <tr>
+                <td><input type="checkbox" class="select-item"></td>
                 <?php if (is_dir($absolutePath)): ?> <!-- 如果是文件夹 -->
                     <td>
                         <?= Html::tag('i', '', ['class' => $item['type'] . ' file_icon']) ?>
@@ -118,7 +131,7 @@ $this->registerCssFile('@web/css/home_style.css');
                             'data-bs-title' => '打包下载'
                         ]) ?>
                         <?= Html::button(Html::tag('i', '', ['class' => 'fa-regular fa-pen-to-square']), ['value' => $relativePath, 'class' => 'btn btn-outline-secondary rename-btn', 'data-bs-toggle' => 'tooltip', 'data-bs-placement' => 'top', 'data-bs-title' => '重命名']) ?>
-                        <?= Html::button(Html::tag('i', '', ['class' => 'fa-solid fa-share-nodes']), ['value' => $relativePath, 'class' => 'btn btn-outline-info shares-btn', 'data-bs-toggle' => 'tooltip', 'data-bs-placement' => 'top', 'data-bs-title' => '分享']) ?>
+                        <?= Html::button(Html::tag('i', '', ['class' => 'fa-solid fa-share-nodes']), ['value' => $relativePath, 'class' => 'btn btn-outline-success shares-btn', 'data-bs-toggle' => 'tooltip', 'data-bs-placement' => 'top', 'data-bs-title' => '分享']) ?>
                         <?= Html::button(Html::tag('i', '', ['class' => 'fa-regular fa-trash-can']), ['value' => $relativePath, 'class' => 'btn btn-outline-danger delete-btn', 'data-bs-toggle' => 'tooltip', 'data-bs-placement' => 'top', 'data-bs-title' => '删除']) ?>
                     </td>
                 <?php else: ?> <!-- 如果是文件 -->
@@ -141,7 +154,7 @@ $this->registerCssFile('@web/css/home_style.css');
                             'data-bs-title' => '下载'
                         ]) ?>
                         <?= Html::button(Html::tag('i', '', ['class' => 'fa-regular fa-pen-to-square']), ['value' => $relativePath, 'class' => 'btn btn-outline-secondary rename-btn', 'data-bs-toggle' => 'tooltip', 'data-bs-placement' => 'top', 'data-bs-title' => '重命名']) ?>
-                        <?= Html::button(Html::tag('i', '', ['class' => 'fa-solid fa-share-nodes']), ['value' => $relativePath, 'class' => 'btn btn-outline-info shares-btn', 'data-bs-toggle' => 'tooltip', 'data-bs-placement' => 'top', 'data-bs-title' => '分享']) ?>
+                        <?= Html::button(Html::tag('i', '', ['class' => 'fa-solid fa-share-nodes']), ['value' => $relativePath, 'class' => 'btn btn-outline-success shares-btn', 'data-bs-toggle' => 'tooltip', 'data-bs-placement' => 'top', 'data-bs-title' => '分享']) ?>
                         <?= Html::button(Html::tag('i', '', ['class' => 'fa-regular fa-trash-can']), ['value' => $relativePath, 'class' => 'btn btn-outline-danger delete-btn', 'data-bs-toggle' => 'tooltip', 'data-bs-placement' => 'top', 'data-bs-title' => '删除']) ?>
                     </td>
                 <?php endif; ?>

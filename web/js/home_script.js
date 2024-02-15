@@ -111,3 +111,65 @@ dropArea.addEventListener('dragleave', function (event) {
         dropArea.classList.remove('dragging');
     }
 });
+
+// 为全选/取消全选的复选框添加事件监听器
+document.getElementById('select-all').addEventListener('change', function() {
+    // 获取所有的复选框
+    var checkboxes = document.querySelectorAll('.select-item');
+    // 设置所有复选框的状态与全选/取消全选的复选框的状态相同
+    for (var i = 0; i < checkboxes.length; i++) {
+        checkboxes[i].checked = this.checked;
+        checkboxes[i].closest('tr').classList.toggle('selected', this.checked);
+    }
+});
+
+// 为每一行的复选框添加事件监听器
+var itemCheckboxes = document.querySelectorAll('.select-item');
+for (var i = 0; i < itemCheckboxes.length; i++) {
+    itemCheckboxes[i].addEventListener('change', function() {
+        // 如果有一个复选框未被选中，则全选/取消全选的复选框也应该未被选中
+        if (!this.checked) {
+            document.getElementById('select-all').checked = false;
+        }
+        // 如果所有的复选框都被选中，则全选/取消全选的复选框也应该被选中
+        else {
+            var allChecked = true;
+            for (var j = 0; j < itemCheckboxes.length; j++) {
+                if (!itemCheckboxes[j].checked) {
+                    allChecked = false;
+                    break;
+                }
+            }
+            document.getElementById('select-all').checked = allChecked;
+        }
+        this.closest('tr').classList.toggle('selected', this.checked);
+    });
+}
+
+// 为document添加键盘事件监听器
+document.addEventListener('keydown', function(event) {
+    // 如果用户按下了Ctrl+A
+    if (event.ctrlKey && event.key === 'a') {
+        // 阻止默认的全选操作
+        event.preventDefault();
+        // 获取所有的复选框
+        var checkboxes = document.querySelectorAll('.select-item');
+        var selectAll = document.getElementById('select-all');
+        selectAll.checked = !selectAll.checked;
+        for (var i = 0; i < checkboxes.length; i++) {
+            checkboxes[i].checked = selectAll.checked;
+            checkboxes[i].closest('tr').classList.toggle('selected',selectAll.checked);
+        }
+    }
+});
+
+$(document).on('click', 'tr', function (event) {
+    // 如果点击的是checkbox，就不执行下面的代码
+    if ($(event.target).is('input[type="checkbox"]')) {
+        return;
+    }
+
+    $(this).toggleClass('selected');
+    var checkbox = $(this).children(':first-child').find('input[type="checkbox"]');
+    checkbox.prop('checked', !checkbox.prop('checked'));
+});
