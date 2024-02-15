@@ -191,7 +191,7 @@ Modal::begin([
 $model1 = new NewFolderForm();
 $form = ActiveForm::begin(['id' => 'new-folder-form', 'action' => ['home/newfolder'], 'method' => 'post', 'enableAjaxValidation' => true]);
 
-echo $form->field($model1, 'folderName')->textInput(['maxlength' => true])->label('文件夹名称 (受技术所限，暂时没什么办法通过js验证文件夹是否已存在以在client side显示)');
+echo $form->field($model1, 'folderName')->textInput(['maxlength' => true])->label('文件夹名称');
 echo Html::hiddenInput('relativePath', '', ['id' => 'newDirRelativePath']);
 echo Html::submitButton('提交', ['class' => 'btn btn-primary']);
 

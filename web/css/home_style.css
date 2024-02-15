@@ -59,7 +59,7 @@ table a {
 }
 
 #drop-area.dragging::after {
-    content: "⇧\A拖拽文件到这里";
+    content: "⇧\A拖拽文件到这里\A(不支持拖拽文件夹上传)";
     white-space: pre;
     position: absolute;
     top: 50%;
