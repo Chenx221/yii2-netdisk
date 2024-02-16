@@ -1,6 +1,6 @@
 $(document).on('click', '.rename-btn', function () {
     var relativePath = $(this).attr('value');
-    var fileName = $(this).closest('tr').find('td:first').text().trim();
+    var fileName = $(this).closest('tr').find('td:eq(1)').text().trim();
     $('#renameRelativePath').val(relativePath);
     $('#renameform-newname').val(fileName);
     $('#renameModal').modal('show');
