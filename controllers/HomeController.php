@@ -7,6 +7,7 @@ use app\models\RenameForm;
 use app\models\UploadForm;
 use app\models\ZipForm;
 use app\utils\FileTypeDetector;
+use wapmorgan\UnifiedArchive\Exceptions\ArchiveExtractionException;
 use wapmorgan\UnifiedArchive\Exceptions\FileAlreadyExistsException;
 use wapmorgan\UnifiedArchive\Exceptions\UnsupportedOperationException;
 use wapmorgan\UnifiedArchive\UnifiedArchive;
@@ -41,6 +42,7 @@ class HomeController extends Controller
                         'download-folder' => ['GET'],
                         'multi-ff-zip-dl' => ['POST'],
                         'zip' => ['POST'],
+                        'unzip' => ['POST'],
                     ],
                 ],
             ]
@@ -508,5 +510,49 @@ class HomeController extends Controller
             }
         }
         return $this->redirect(['index', 'directory' => $targetDirectory]);
+    }
+
+    /**
+     * @throws NotFoundHttpException
+     */
+    public function actionUnzip()
+    {
+        $relativePath = Yii::$app->request->post('relativePath');
+        if (!preg_match($this->pattern, $relativePath) || str_contains($relativePath, '..')) {
+            throw new NotFoundHttpException('Invalid file path.');
+        }
+        $absolutePath = Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . Yii::$app->user->id . '/' . $relativePath;
+
+        if (!file_exists($absolutePath)) {
+            throw new NotFoundHttpException('File not found.');
+        }
+        $archive = UnifiedArchive::open($absolutePath);
+        if ($archive === null) {
+            throw new NotFoundHttpException('Failed to open the archive.');
+        }
+
+        $targetDirectory = Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . Yii::$app->user->id . '/' . pathinfo($relativePath, PATHINFO_FILENAME) . '_' . time();
+        if (!is_dir($targetDirectory)) {
+            mkdir($targetDirectory, 0777, true);
+        }
+
+        try {
+            $archive->extract($targetDirectory);
+            Yii::$app->session->setFlash('success', 'Folder created successfully.');
+            Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+            return [
+                'status' => 200,
+                'directory' => pathinfo($relativePath, PATHINFO_FILENAME) . '_' . time(),
+            ];
+        } catch (ArchiveExtractionException $e) {
+            $this->deleteDirectory($targetDirectory);
+            Yii::$app->session->setFlash('error', 'Failed to extract the archive.');
+            Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+            return [
+                'status' => 500,
+                'directory' => pathinfo($relativePath, PATHINFO_FILENAME) . '_' . time(),
+                'parentDirectory' => dirname($relativePath),
+            ];
+        }
     }
 }

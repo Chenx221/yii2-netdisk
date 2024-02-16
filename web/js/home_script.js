@@ -96,8 +96,27 @@ $(document).on('click', '.batch-zip-btn', function () {
 });
 
 $(document).on('click', '.unzip-btn', function () {
-    console.log('解压按钮被点击');
-    // 在这里添加你的代码
+    var relativePath = $('.select-item:checked').first().data('relativePath');
+    $.ajax({
+        type: "POST",
+        url: "index.php?r=home%2Funzip",
+        data: { relativePath: relativePath },
+        dataType: "json",  // 期望从服务器接收json格式的响应
+        success: function(response) {
+            // 如果服务器返回的状态码是200，说明解压成功
+            if (response.status === 200) {
+                // 刷新页面，加载到解压后的目录
+                window.location.href = 'index.php?r=home%2Findex&directory=' + encodeURIComponent(response.directory);
+            } else {
+                console.error('Unzip failed: ' + response.message);
+                window.location.href = 'index.php?r=home%2Findex&directory=' + encodeURIComponent(response.parentDirectory);
+            }
+        },
+        error: function() {
+            // 处理错误
+            console.error('AJAX request failed.');
+        }
+    });
 });
 
 $(document).on('click', '.single-rename-btn', function () {
