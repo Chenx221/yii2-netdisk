@@ -42,7 +42,7 @@ $this->registerLinkTag(['rel' => 'icon', 'type' => 'image/x-icon', 'href' => Yii
         'items' => [
             ['label' => '首页', 'url' => ['/site/index']],
             ['label' => '我的文件', 'url' => ['/home/index']],
-            ['label' => '分享管理', 'url' => ['/site/about']],
+            ['label' => '分享管理', 'url' => ['/share/index']],
             ['label' => '个人设置', 'url' => ['/site/about']],
             ['label' => '系统设置', 'url' => ['/site/contact']],
             ['label' => '应用下载', 'url' => ['/site/contact']],
