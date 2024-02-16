@@ -98,7 +98,7 @@ $this->registerCssFile('@web/css/home_style.css');
     <table class="table table-hover" id="drop-area">
         <thead class="table-light">
         <tr>
-            <th scope="col" class="selector-col"><input type="checkbox" id="select-all"></th>
+            <th scope="col" class="selector-col"><label for="select-all" hidden></label><input type="checkbox" id="select-all"></th>
             <th scope="col" class="name-col">名称</th>
             <th scope="col" class="modified-col">最近修改时间</th>
             <th scope="col" class="size-col">大小</th>
@@ -110,7 +110,7 @@ $this->registerCssFile('@web/css/home_style.css');
             <?php $relativePath = $directory ? $directory . '/' . $item['name'] : $item['name']; ?>
             <?php $absolutePath = Yii::getAlias('@app') . '/data/' . Yii::$app->user->id . '/' . $relativePath; ?>
             <tr>
-                <td><input type="checkbox" class="select-item" data-relative-path="<?= Html::encode($relativePath) ?>" data-is-directory="<?= Html::encode(is_dir($absolutePath)) ?>"></td>
+                <td><label for="selector1" hidden></label><input id="selector1" type="checkbox" class="select-item" data-relative-path="<?= Html::encode($relativePath) ?>" data-is-directory="<?= Html::encode(is_dir($absolutePath)) ?>"></td>
                 <?php if (is_dir($absolutePath)): ?> <!-- 如果是文件夹 -->
                     <td>
                         <?= Html::tag('i', '', ['class' => $item['type'] . ' file_icon']) ?>

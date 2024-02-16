@@ -152,7 +152,7 @@ $(document).on('click', '.batch-paste-btn', function () {
         type: "POST",
         url: "index.php?r=home%2Fpaste",
         data: { operation: operation, relativePaths: relativePaths, targetDirectory: targetDirectory },
-        success: function(response) {
+        success: function() {
             // 处理响应
             location.reload();
         },
@@ -200,7 +200,7 @@ $(document).on('click', '.batch-delete-btn', function () {
         type: "POST",
         url: "index.php?r=home%2Fdelete",
         data: { relativePath: relativePaths },
-        success: function(response) {
+        success: function() {
             // 处理响应
             location.reload();
         },
