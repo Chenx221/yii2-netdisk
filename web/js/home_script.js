@@ -168,8 +168,23 @@ $(document).on('click', '.batch-paste-btn', function () {
 });
 
 $(document).on('click', '.calc-sum-btn', function () {
-    console.log('计算文件校验值按钮被点击');
-    // 在这里添加你的代码
+    var relativePath = $('.select-item:checked').first().data('relativePath');
+    $.ajax({
+        type: "POST",
+        url: "index.php?r=home%2Fchecksum",
+        data: { relativePath: relativePath },
+        dataType: "json",
+        success: function(response) {
+            // 更新模态框中的内容
+            $('#crc32b').text('CRC32B: ' + response.crc32b);
+            $('#sha256').text('SHA256: ' + response.sha256);
+            // 显示模态框
+            $('#checksumModal').modal('show');
+        },
+        error: function() {
+            console.error('AJAX request failed.');
+        }
+    });
 });
 
 $(document).on('click', '.single-share-btn', function () {

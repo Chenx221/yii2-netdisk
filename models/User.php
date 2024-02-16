@@ -3,6 +3,7 @@
 namespace app\models;
 
 use Yii;
+use yii\db\ActiveRecord;
 use yii\web\IdentityInterface;
 
 /**
@@ -15,7 +16,7 @@ use yii\web\IdentityInterface;
  * @property string|null $email 邮箱
  * @property int|null $status 用户状态
  */
-class User extends \yii\db\ActiveRecord implements IdentityInterface
+class User extends ActiveRecord implements IdentityInterface
 {
     public $password2; // 重复密码
     public $rememberMe; // 记住我

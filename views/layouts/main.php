@@ -78,7 +78,7 @@ $this->registerLinkTag(['rel' => 'icon', 'type' => 'image/x-icon', 'href' => Yii
         <div class="row text-muted">
             <div class="col-md-6 text-center text-md-start"><?php echo '&copy; Created & Design by ' . '<a href="https://blog.chenx221.cyou" rel="external">Chenx221</a> | 2024 - ' . date('Y') ?></div>
             <div class="col-md-6 text-center text-md-end"><?= Yii::t('yii', 'Powered by {yii}', [
-                    'yii' => '<a href="https://www.yiiframework.com/" rel="external">' . \Yii::t('yii',
+                    'yii' => '<a href="https://www.yiiframework.com/" rel="external">' . Yii::t('yii',
                             'Yii Framework') . '</a>',
                 ]) ?></div>
         </div>

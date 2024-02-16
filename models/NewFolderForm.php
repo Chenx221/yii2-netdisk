@@ -43,6 +43,6 @@ class NewFolderForm extends Model
         $userHomeDir = Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . Yii::$app->user->id;
         $absolutePath = $userHomeDir . '/' . $this->relativePath . '/' . $this->folderName;
 
-        return mkdir($absolutePath, 0777);
+        return mkdir($absolutePath);
     }
 }

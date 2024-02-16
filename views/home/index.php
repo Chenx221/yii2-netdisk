@@ -76,8 +76,7 @@ $this->registerCssFile('@web/css/home_style.css');
     ]);
     ?>
 
-    <nav style="--bs-breadcrumb-divider: url(&#34;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8'%3E%3Cpath d='M2.5 0L1 1.5 3.5 4 1 6.5 2.5 8l4-4-4-4z' fill='%236c757d'/%3E%3C/svg%3E&#34;);"
-         aria-label="breadcrumb">
+    <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
             <?= Html::a('<i class="fa-solid fa-house"></i> HOME', ['home/index'], ['class' => 'breadcrumb-item']) ?>
             <?php if ($directory !== null): ?>
@@ -227,6 +226,15 @@ echo Html::hiddenInput('targetDirectory', $directory, ['id' => 'zipTargetDirecto
 echo Html::submitButton('创建', ['class' => 'btn btn-primary']);
 
 ActiveForm::end();
+Modal::end();
+
+Modal::begin([
+    'id' => 'checksumModal',
+    'title' => '文件校验信息',
+    'size' => 'modal-lg',
+]);
+echo Html::tag('p', '', ['id' => 'crc32b']);
+echo Html::tag('p', '', ['id' => 'sha256']);
 Modal::end();
 $this->registerJsFile('@web/js/home_script.js', ['depends' => [JqueryAsset::class], 'position' => View::POS_END]);
 ?>

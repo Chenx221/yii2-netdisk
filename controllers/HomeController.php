@@ -7,6 +7,9 @@ use app\models\RenameForm;
 use app\models\UploadForm;
 use app\models\ZipForm;
 use app\utils\FileTypeDetector;
+use Exception;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
 use wapmorgan\UnifiedArchive\Exceptions\ArchiveExtractionException;
 use wapmorgan\UnifiedArchive\Exceptions\FileAlreadyExistsException;
 use wapmorgan\UnifiedArchive\Exceptions\UnsupportedOperationException;
@@ -25,7 +28,7 @@ class HomeController extends Controller
 {
     protected string $pattern = '/^[^\p{C}:*?"<>|\\\\]+$/u';
 
-    public function behaviors()
+    public function behaviors(): array
     {
         return array_merge(
             parent::behaviors(),
@@ -51,13 +54,14 @@ class HomeController extends Controller
     }
 
     /**
-     * diplay the page of the file manager (accepts a directory parameter like cd command)
+     * display the page of the file manager (accepts a directory parameter like cd command)
      * visit it via https://devs.chenx221.cyou:8081/index.php?r=home
      *
+     * @param null $directory
      * @return string|Response
      * @throws NotFoundHttpException
      */
-    public function actionIndex($directory = null)
+    public function actionIndex($directory = null): Response|string
     {
         if (Yii::$app->user->isGuest) {
             return $this->redirect(Yii::$app->user->loginUrl);
@@ -94,7 +98,7 @@ class HomeController extends Controller
      * @return array 文件和文件夹内容数组
      * @throws NotFoundHttpException 如果路径不存在
      */
-    protected function getDirectoryContents($path)
+    protected function getDirectoryContents(string $path): array
     {
         // 确定路径是否存在
         if (!is_dir($path)) {
@@ -127,7 +131,7 @@ class HomeController extends Controller
      * @param string $relativePath 文件的相对路径
      * @throws NotFoundHttpException 如果文件不存在
      */
-    public function actionDownload($relativePath)
+    public function actionDownload(string $relativePath): void
     {
         // 对相对路径进行解码
         $relativePath = rawurldecode($relativePath);
@@ -161,7 +165,7 @@ class HomeController extends Controller
      * @return string|Response|null
      * @throws NotFoundHttpException 如果文件或文件夹不存在
      */
-    public function actionRename()
+    public function actionRename(): Response|string|null
     {
         $relativePath = Yii::$app->request->post('relativePath');
 
@@ -183,7 +187,11 @@ class HomeController extends Controller
 
         $model = new RenameForm();
 
-        $model->newName = ArrayHelper::getValue(Yii::$app->request->post('RenameForm'), 'newName');
+        try {
+            $model->newName = ArrayHelper::getValue(Yii::$app->request->post('RenameForm'), 'newName');
+        } catch (Exception) {
+            throw new NotFoundHttpException('Invalid request.');
+        }
 
         if (!$model->validate()) {
             Yii::$app->response->statusCode = 400;
@@ -209,7 +217,7 @@ class HomeController extends Controller
      * 删除文件或文件夹
      * @throws NotFoundHttpException 如果文件或文件夹不存在
      */
-    public function actionDelete()
+    public function actionDelete(): Response
     {
         $relativePaths = Yii::$app->request->post('relativePath');
         if (!is_array($relativePaths)) {
@@ -253,7 +261,7 @@ class HomeController extends Controller
      * 递归删除目录及其内容
      * @param string $dir 目录路径
      */
-    protected function deleteDirectory($dir): bool
+    protected function deleteDirectory(string $dir): bool
     {
         if (!is_dir($dir)) {
             return false;
@@ -282,9 +290,9 @@ class HomeController extends Controller
      * 注意,已存在的同名文件会被覆盖
      * https://devs.chenx221.cyou:8081/index.php?r=home%2Fupload
      *
-     * @return string|Response
+     * @return int
      */
-    public function actionUpload()
+    public function actionUpload(): int
     {
         $model = new UploadForm();
         $model->targetDir = Yii::$app->request->post('targetDir', '.');
@@ -316,9 +324,9 @@ class HomeController extends Controller
     /**
      * 新建文件夹
      *
-     * @return array|string|Response
+     * @return array|Response
      */
-    public function actionNewFolder()
+    public function actionNewFolder(): Response|array
     {
 
         $relativePath = Yii::$app->request->post('relativePath');
@@ -354,10 +362,10 @@ class HomeController extends Controller
      * @param string $directory 目录路径
      * @return int 目录的大小（字节）
      */
-    protected function getDirectorySize($directory)
+    protected function getDirectorySize(string $directory): int
     {
         $size = 0;
-        $files = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($directory));
+        $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directory));
         foreach ($files as $file) {
             if ($file->isFile()) {
                 $size += $file->getSize();
@@ -369,7 +377,7 @@ class HomeController extends Controller
     /**
      * @throws NotFoundHttpException
      */
-    public function actionDownloadFolder($relativePath)
+    public function actionDownloadFolder($relativePath): Response|\yii\console\Response
     {
         $relativePath = rawurldecode($relativePath);
         if (!preg_match($this->pattern, $relativePath) || str_contains($relativePath, '..')) {
@@ -391,12 +399,12 @@ class HomeController extends Controller
             $zipPath = $tempDir . basename($absolutePath) . '.zip';
 
             if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE)) {
-                $files = new \RecursiveIteratorIterator(
-                    new \RecursiveDirectoryIterator($absolutePath),
-                    \RecursiveIteratorIterator::LEAVES_ONLY
+                $files = new RecursiveIteratorIterator(
+                    new RecursiveDirectoryIterator($absolutePath),
+                    RecursiveIteratorIterator::LEAVES_ONLY
                 );
 
-                foreach ($files as $name => $file) {
+                foreach ($files as $file) {
                     if (!$file->isDir()) {
                         $filePath = $file->getRealPath();
                         $relativePath = substr($filePath, strlen($absolutePath) + 1);
@@ -415,7 +423,7 @@ class HomeController extends Controller
      * @return \yii\console\Response|Response
      * @throws NotFoundHttpException
      */
-    public function actionMultiFfZipDl()
+    public function actionMultiFfZipDl(): Response|\yii\console\Response
     {
         // 获取请求中的文件和文件夹的相对路径
         $relativePaths = Yii::$app->request->post('relativePaths');
@@ -465,11 +473,11 @@ class HomeController extends Controller
                 if (is_file($absolutePath)) {
                     $zip->addFile($absolutePath, $relativePath);
                 } else if (is_dir($absolutePath)) {
-                    $files = new \RecursiveIteratorIterator(
-                        new \RecursiveDirectoryIterator($absolutePath),
-                        \RecursiveIteratorIterator::LEAVES_ONLY
+                    $files = new RecursiveIteratorIterator(
+                        new RecursiveDirectoryIterator($absolutePath),
+                        RecursiveIteratorIterator::LEAVES_ONLY
                     );
-                    foreach ($files as $name => $file) {
+                    foreach ($files as $file) {
                         if (!$file->isDir()) {
                             $filePath = $file->getRealPath();
                             $relativePathInZip = $relativePath . '/' . substr($filePath, strlen($absolutePath) + 1);
@@ -488,7 +496,7 @@ class HomeController extends Controller
      * @return Response
      * @throws NotFoundHttpException
      */
-    public function actionZip()
+    public function actionZip(): Response
     {
         $model = new ZipForm();
         $relativePaths = json_decode(Yii::$app->request->post('relativePath'), true);
@@ -514,9 +522,9 @@ class HomeController extends Controller
             try {
                 UnifiedArchive::create($absolutePaths, $zipPath);
                 Yii::$app->session->setFlash('success', '打包成功');
-            } catch (FileAlreadyExistsException $e) {
+            } catch (FileAlreadyExistsException) {
                 Yii::$app->session->setFlash('error', '目标文件夹已存在同名压缩档案');
-            } catch (UnsupportedOperationException $e) {
+            } catch (UnsupportedOperationException) {
                 Yii::$app->session->setFlash('error', '不支持的操作');
             }
         }
@@ -526,7 +534,7 @@ class HomeController extends Controller
     /**
      * @throws NotFoundHttpException
      */
-    public function actionUnzip()
+    public function actionUnzip(): array
     {
         $relativePath = Yii::$app->request->post('relativePath');
         if (!preg_match($this->pattern, $relativePath) || str_contains($relativePath, '..')) {
@@ -550,15 +558,15 @@ class HomeController extends Controller
         try {
             $archive->extract($targetDirectory);
             Yii::$app->session->setFlash('success', 'Folder created successfully.');
-            Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+            Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'status' => 200,
                 'directory' => pathinfo($relativePath, PATHINFO_FILENAME) . '_' . time(),
             ];
-        } catch (ArchiveExtractionException $e) {
+        } catch (ArchiveExtractionException) {
             $this->deleteDirectory($targetDirectory);
             Yii::$app->session->setFlash('error', 'Failed to extract the archive.');
-            Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+            Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'status' => 500,
                 'directory' => pathinfo($relativePath, PATHINFO_FILENAME) . '_' . time(),
@@ -572,7 +580,7 @@ class HomeController extends Controller
      *
      * @return Response
      */
-    public function actionPaste()
+    public function actionPaste(): Response
     {
         // 获取请求中的操作类型、相对路径和目标目录
         $operation = Yii::$app->request->post('operation');
@@ -650,7 +658,7 @@ class HomeController extends Controller
      * @param string $destination 目标目录路径
      * @return bool 操作是否成功
      */
-    protected function copyDirectory($source, $destination)
+    protected function copyDirectory(string $source, string $destination): bool
     {
         // 创建目标目录
         if (!mkdir($destination)) {
@@ -695,7 +703,7 @@ class HomeController extends Controller
      * @param string $destination 目标目录路径
      * @return bool 操作是否成功
      */
-    protected function moveDirectory($source, $destination)
+    protected function moveDirectory(string $source, string $destination): bool
     {
         // 创建目标目录
         if (!mkdir($destination)) {
@@ -738,5 +746,31 @@ class HomeController extends Controller
         }
 
         return true;
+    }
+
+    /**
+     * @return array
+     * @throws NotFoundHttpException
+     */
+    public function actionChecksum(): array
+    {
+        $relativePath = Yii::$app->request->post('relativePath');
+        if (!preg_match($this->pattern, $relativePath) || str_contains($relativePath, '..')) {
+            throw new NotFoundHttpException('Invalid file path.');
+        }
+        $absolutePath = Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . Yii::$app->user->id . '/' . $relativePath;
+        if (!is_file($absolutePath)) {
+            throw new NotFoundHttpException('The specified path does not point to a file.');
+        }
+        // 计算文件的校验值
+        $crc32b = hash_file('crc32b', $absolutePath);
+        $sha256 = hash_file('sha256', $absolutePath);
+
+        // 将校验值返回给客户端
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        return [
+            'crc32b' => strtoupper($crc32b),
+            'sha256' => strtoupper($sha256),
+        ];
     }
 }
