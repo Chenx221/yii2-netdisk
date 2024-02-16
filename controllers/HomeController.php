@@ -43,6 +43,7 @@ class HomeController extends Controller
                         'multi-ff-zip-dl' => ['POST'],
                         'zip' => ['POST'],
                         'unzip' => ['POST'],
+                        'paste' => ['POST'],
                     ],
                 ],
             ]
@@ -483,6 +484,10 @@ class HomeController extends Controller
         return Yii::$app->response->sendFile($zipPath);
     }
 
+    /**
+     * @return Response
+     * @throws NotFoundHttpException
+     */
     public function actionZip()
     {
         $model = new ZipForm();
@@ -560,5 +565,178 @@ class HomeController extends Controller
                 'parentDirectory' => dirname($relativePath),
             ];
         }
+    }
+
+    /**
+     *
+     *
+     * @return Response
+     */
+    public function actionPaste()
+    {
+        // 获取请求中的操作类型、相对路径和目标目录
+        $operation = Yii::$app->request->post('operation');
+        $relativePaths = Yii::$app->request->post('relativePaths');
+        $targetDirectory = Yii::$app->request->post('targetDirectory');
+
+        // 对相对路径进行解码
+        $relativePaths = array_map('rawurldecode', $relativePaths);
+
+        // 对每个相对路径进行处理
+        foreach ($relativePaths as $relativePath) {
+            // 确定源文件/目录和目标文件/目录的绝对路径
+            $sourcePath = Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . Yii::$app->user->id . '/' . $relativePath;
+            $targetPath = Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . Yii::$app->user->id . '/' . $targetDirectory . '/' . basename($relativePath);
+
+            // 检查目标路径是否是源路径的子路径 // 你是白痴吗
+            if ($operation === 'cut' && is_dir($sourcePath) && str_starts_with($targetPath, $sourcePath)) {
+                Yii::$app->session->setFlash('error', 'Cannot move a directory into itself.');
+                return $this->redirect(['index', 'directory' => $targetDirectory]);
+            }
+
+            // 检查目标路径是否已经存在同名文件或目录
+            if ($operation === 'copy' && file_exists($targetPath)) {
+                $pathInfo = pathinfo($targetPath);
+                $i = 1;
+                do {
+                    $newFilename = $pathInfo['filename'] . '_副本' . ($i > 1 ? $i : '');
+                    $newTargetPath = $pathInfo['dirname'] . '/' . $newFilename . '.' . $pathInfo['extension'];
+                    $i++;
+                } while (file_exists($newTargetPath));
+                $targetPath = $newTargetPath;
+            }
+
+            // 根据操作类型执行相应的操作
+            if ($operation === 'copy') {
+                // 如果是复制操作
+                if (is_dir($sourcePath)) {
+                    // 如果源路径是目录，递归复制目录
+                    if (!$this->copyDirectory($sourcePath, $targetPath)) {
+                        Yii::$app->session->setFlash('error', 'Failed to copy directory.');
+                        return $this->redirect(['index', 'directory' => $targetDirectory]);
+                    }
+                } else {
+                    // 如果源路径是文件，使用PHP的copy函数复制文件
+                    if (!copy($sourcePath, $targetPath)) {
+                        Yii::$app->session->setFlash('error', 'Failed to copy file.');
+                        return $this->redirect(['index', 'directory' => $targetDirectory]);
+                    }
+                }
+            } elseif ($operation === 'cut') {
+                // 如果是剪切操作
+                if (is_dir($sourcePath)) {
+                    // 如果源路径是目录，递归移动目录
+                    if (!$this->moveDirectory($sourcePath, $targetPath)) {
+                        Yii::$app->session->setFlash('error', 'Failed to move directory.');
+                        return $this->redirect(['index', 'directory' => $targetDirectory]);
+                    }
+                } else {
+                    // 如果源路径是文件，使用PHP的rename函数移动文件
+                    if (!rename($sourcePath, $targetPath)) {
+                        Yii::$app->session->setFlash('error', 'Failed to move file.');
+                        return $this->redirect(['index', 'directory' => $targetDirectory]);
+                    }
+                }
+            }
+        }
+
+        Yii::$app->session->setFlash('success', 'Operation completed successfully.');
+        return $this->redirect(['index', 'directory' => $targetDirectory]);
+    }
+
+    /**
+     * 递归复制目录及其内容
+     * @param string $source 源目录路径
+     * @param string $destination 目标目录路径
+     * @return bool 操作是否成功
+     */
+    protected function copyDirectory($source, $destination)
+    {
+        // 创建目标目录
+        if (!mkdir($destination)) {
+            return false;
+        }
+
+        // 打开源目录
+        $dir = opendir($source);
+        if ($dir === false) {
+            return false;
+        }
+
+        // 递归复制目录的内容
+        while (($entry = readdir($dir)) !== false) {
+            if ($entry === '.' || $entry === '..') {
+                continue;
+            }
+
+            $sourcePath = $source . '/' . $entry;
+            $destinationPath = $destination . '/' . $entry;
+
+            if (is_dir($sourcePath)) {
+                // 如果源路径是目录，递归复制目录
+                if (!$this->copyDirectory($sourcePath, $destinationPath)) {
+                    return false;
+                }
+            } else {
+                // 如果源路径是文件，复制文件
+                if (!copy($sourcePath, $destinationPath)) {
+                    return false;
+                }
+            }
+        }
+
+        closedir($dir);
+        return true;
+    }
+
+    /**
+     * 递归移动目录及其内容
+     * @param string $source 源目录路径
+     * @param string $destination 目标目录路径
+     * @return bool 操作是否成功
+     */
+    protected function moveDirectory($source, $destination)
+    {
+        // 创建目标目录
+        if (!mkdir($destination)) {
+            return false;
+        }
+
+        // 打开源目录
+        $dir = opendir($source);
+        if ($dir === false) {
+            return false;
+        }
+
+        // 递归移动目录的内容
+        while (($entry = readdir($dir)) !== false) {
+            if ($entry === '.' || $entry === '..') {
+                continue;
+            }
+
+            $sourcePath = $source . '/' . $entry;
+            $destinationPath = $destination . '/' . $entry;
+
+            if (is_dir($sourcePath)) {
+                // 如果源路径是目录，递归移动目录
+                if (!$this->moveDirectory($sourcePath, $destinationPath)) {
+                    return false;
+                }
+            } else {
+                // 如果源路径是文件，移动文件
+                if (!rename($sourcePath, $destinationPath)) {
+                    return false;
+                }
+            }
+        }
+
+        closedir($dir);
+
+        // 删除源目录
+        if (!rmdir($source)) {
+            return false;
+        }
+
+        return true;
     }
 }

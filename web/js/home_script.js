@@ -123,20 +123,48 @@ $(document).on('click', '.single-rename-btn', function () {
     var relativePath = $('.select-item:checked').first().data('relativePath');
     $('.rename-btn[value="' + relativePath + '"]').trigger('click');
 });
-
+// 当用户点击复制按钮时
 $(document).on('click', '.batch-copy-btn', function () {
-    console.log('复制按钮被点击');
-    // 在这里添加你的代码
+    var relativePaths = $('.select-item:checked').map(function () {
+        return $(this).data('relativePath');
+    }).get();
+    sessionStorage.setItem('operation', 'copy');
+    sessionStorage.setItem('relativePaths', JSON.stringify(relativePaths));
+    updateButtons();  // 更新按钮的状态
 });
 
+// 当用户点击剪切按钮时
 $(document).on('click', '.batch-cut-btn', function () {
-    console.log('剪切按钮被点击');
-    // 在这里添加你的代码
+    var relativePaths = $('.select-item:checked').map(function () {
+        return $(this).data('relativePath');
+    }).get();
+    sessionStorage.setItem('operation', 'cut');
+    sessionStorage.setItem('relativePaths', JSON.stringify(relativePaths));
+    updateButtons();  // 更新按钮的状态
 });
 
+// 当用户点击粘贴按钮时
 $(document).on('click', '.batch-paste-btn', function () {
-    console.log('粘贴按钮被点击');
-    // 在这里添加你的代码
+    var operation = sessionStorage.getItem('operation');
+    var relativePaths = JSON.parse(sessionStorage.getItem('relativePaths'));
+    var targetDirectory = $('#target-dir').val();
+    $.ajax({
+        type: "POST",
+        url: "index.php?r=home%2Fpaste",
+        data: { operation: operation, relativePaths: relativePaths, targetDirectory: targetDirectory },
+        success: function(response) {
+            // 处理响应
+            location.reload();
+        },
+        error: function() {
+            // 处理错误
+            console.error('AJAX request failed.');
+        }
+    });
+    sessionStorage.removeItem('operation');  // 清除 sessionStorage 中的 operation
+    sessionStorage.removeItem('relativePaths');  // 清除 sessionStorage 中的 relativePaths
+    hasCopiedOrCut = false;  // 设置 hasCopiedOrCut 为 false
+    updateButtons();  // 更新按钮的状态
 });
 
 $(document).on('click', '.calc-sum-btn', function () {
@@ -302,7 +330,7 @@ function updateButtons() {
     var count = checkboxes.length;
     var isSingleFile = count === 1 && !checkboxes.first().data('isDirectory');
     var isSingleZip = isSingleFile && checkboxes.first().closest('tr').find('.file_icon').hasClass('fa-file-zipper');
-    var hasCopiedOrCut = false/* 判断是否有复制或剪切的项，你需要自己实现这部分逻辑 */;
+    var hasOperation = sessionStorage.getItem('operation') !== null;  // 检查 sessionStorage 中是否存在 operation
 
     $('.single-download-btn').toggle(isSingleFile);
     $('.batch-zip-download-btn').toggle(count > 0 && !isSingleFile);
@@ -311,7 +339,7 @@ function updateButtons() {
     $('.single-rename-btn').toggle(count === 1);
     $('.batch-copy-btn').toggle(count >= 1);
     $('.batch-cut-btn').toggle(count >= 1);
-    $('.batch-paste-btn').toggle(hasCopiedOrCut);
+    $('.batch-paste-btn').toggle(hasOperation);  // 根据 hasOperation 的值来决定是否显示粘贴按钮
     $('.calc-sum-btn').toggle(isSingleFile);
     $('.single-share-btn').toggle(count === 1);
     $('.batch-delete-btn').toggle(count >= 1);
