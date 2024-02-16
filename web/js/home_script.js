@@ -95,10 +95,6 @@ $(document).on('click', '.batch-zip-btn', function () {
     $('#zipModal').modal('show');
 });
 
-
-
-
-
 $(document).on('click', '.unzip-btn', function () {
     console.log('解压按钮被点击');
     // 在这里添加你的代码

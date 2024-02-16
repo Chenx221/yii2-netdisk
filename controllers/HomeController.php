@@ -56,12 +56,10 @@ class HomeController extends Controller
      */
     public function actionIndex($directory = null)
     {
-        //Warning: Security Vulnerability: access via $directory parameter = ../ will display the internal files of the server
         if (Yii::$app->user->isGuest) {
             return $this->redirect(Yii::$app->user->loginUrl);
         }
-        $rootDataDirectory = Yii::getAlias(Yii::$app->params['dataDirectory']);
-        $userId = Yii::$app->user->id;
+        $rootDataDirectory = Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . Yii::$app->user->id;
 
         if ($directory === '.' || $directory == null) {
             $directory = null;
@@ -71,7 +69,7 @@ class HomeController extends Controller
         } else {
             $parentDirectory = dirname($directory);
         }
-        $directoryContents = $this->getDirectoryContents(join(DIRECTORY_SEPARATOR, [$rootDataDirectory, $userId, $directory ?: '.']));
+        $directoryContents = $this->getDirectoryContents(join(DIRECTORY_SEPARATOR, [$rootDataDirectory, $directory ?: '.']));
         foreach ($directoryContents as $key => $item) {
             $relativePath = $directory ? $directory . '/' . $item : $item;
             $absolutePath = Yii::getAlias('@app') . '/data/' . Yii::$app->user->id . '/' . $relativePath;
