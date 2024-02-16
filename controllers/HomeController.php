@@ -210,36 +210,42 @@ class HomeController extends Controller
      */
     public function actionDelete()
     {
-        $relativePath = Yii::$app->request->post('relativePath');
-        $relativePath = rawurldecode($relativePath);
-        if (!preg_match($this->pattern, $relativePath) || str_contains($relativePath, '..')) {
-            throw new NotFoundHttpException('Invalid file path.');
-        }
-        $absolutePath = Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . Yii::$app->user->id . '/' . $relativePath;
-        if (!file_exists($absolutePath)) {
-            throw new NotFoundHttpException('File or directory not found.');
-        } else {
-            $realPath = realpath($absolutePath);
-            $expectedPathPrefix = realpath(Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . Yii::$app->user->id);
-            if (!str_starts_with($realPath, $expectedPathPrefix)) {
-                throw new NotFoundHttpException('File or directory not found.');
-            }
+        $relativePaths = Yii::$app->request->post('relativePath');
+        if (!is_array($relativePaths)) {
+            $relativePaths = [$relativePaths];
         }
 
-        if (is_dir($absolutePath)) {
-            if (!$this->deleteDirectory($absolutePath)) {
-                Yii::$app->session->setFlash('error', 'Failed to delete directory.');
-            } else {
-                Yii::$app->session->setFlash('success', 'Directory deleted successfully.');
+        foreach ($relativePaths as $relativePath) {
+            $relativePath = rawurldecode($relativePath);
+            if (!preg_match($this->pattern, $relativePath) || str_contains($relativePath, '..')) {
+                throw new NotFoundHttpException('Invalid file path.');
             }
-        } else {
-            if (!unlink($absolutePath)) {
-                Yii::$app->session->setFlash('error', 'Failed to delete file.');
+            $absolutePath = Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . Yii::$app->user->id . '/' . $relativePath;
+            if (!file_exists($absolutePath)) {
+                throw new NotFoundHttpException('File or directory not found.');
             } else {
-                Yii::$app->session->setFlash('success', 'File deleted successfully.');
+                $realPath = realpath($absolutePath);
+                $expectedPathPrefix = realpath(Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . Yii::$app->user->id);
+                if (!str_starts_with($realPath, $expectedPathPrefix)) {
+                    throw new NotFoundHttpException('File or directory not found.');
+                }
+            }
+
+            if (is_dir($absolutePath)) {
+                if (!$this->deleteDirectory($absolutePath)) {
+                    Yii::$app->session->setFlash('error', 'Failed to delete directory.');
+                } else {
+                    Yii::$app->session->setFlash('success', 'Directory deleted successfully.');
+                }
+            } else {
+                if (!unlink($absolutePath)) {
+                    Yii::$app->session->setFlash('error', 'Failed to delete file.');
+                } else {
+                    Yii::$app->session->setFlash('success', 'File deleted successfully.');
+                }
             }
         }
-        return $this->redirect(['index', 'directory' => dirname($relativePath)]);
+        return $this->redirect(['index', 'directory' => dirname($relativePaths[0])]);
     }
 
     /**

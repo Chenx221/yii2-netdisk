@@ -150,8 +150,23 @@ $(document).on('click', '.single-share-btn', function () {
 });
 
 $(document).on('click', '.batch-delete-btn', function () {
-    console.log('删除按钮被点击');
-    // 在这里添加你的代码
+    var relativePaths = $('.select-item:checked').map(function () {
+        return $(this).data('relativePath');
+    }).get();
+    $.ajax({
+        type: "POST",
+        url: "index.php?r=home%2Fdelete",
+        data: { relativePath: relativePaths },
+        success: function(response) {
+            // 处理响应
+            location.reload();
+        },
+        error: function() {
+            // 处理错误
+            console.error('AJAX request failed.');
+            location.reload();
+        }
+    });
 });
 
 //下面的代码实现了各种按钮/样式功能，建议别看了(
