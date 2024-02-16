@@ -120,8 +120,8 @@ $(document).on('click', '.unzip-btn', function () {
 });
 
 $(document).on('click', '.single-rename-btn', function () {
-    console.log('重命名按钮被点击');
-    // 在这里添加你的代码
+    var relativePath = $('.select-item:checked').first().data('relativePath');
+    $('.rename-btn[value="' + relativePath + '"]').trigger('click');
 });
 
 $(document).on('click', '.batch-copy-btn', function () {
