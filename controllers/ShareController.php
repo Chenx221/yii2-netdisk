@@ -6,6 +6,7 @@ use app\models\Share;
 use app\models\ShareSearch;
 use Yii;
 use yii\web\Controller;
+use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use yii\web\Response;
@@ -67,12 +68,26 @@ class ShareController extends Controller
      * If creation is successful, the browser will be redirected to the 'view' page.
      * @return string|Response
      */
-    public function actionCreate()
+    public function actionCreate(): Response|string
     {
         $model = new Share();
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
+                //对access_code进行检测
+                if (empty($model->access_code) || !preg_match('/^[a-zA-Z0-9]{4}$/', $model->access_code)) {
+                    Yii::$app->session->setFlash('error', '访问密码必须是4位字母和数字的组合');
+                    return $this->render('create', ['model' => $model]);
+                }
+
+                //对file_relative_path进行检测
+                $absolutePath = Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . Yii::$app->user->id . '/' . $model->file_relative_path;
+                if (!file_exists($absolutePath)) {
+                    Yii::$app->session->setFlash('error', '文件或文件夹不存在');
+                    return $this->render('create', ['model' => $model]);
+                }
+
+                $model->access_code = strtolower($model->access_code);
                 $model->sharer_id = Yii::$app->user->id;  // 自动设置 sharer_id 为当前用户的 ID
                 if ($model->save()) {
                     return $this->redirect(['view', 'share_id' => $model->share_id]);
@@ -142,5 +157,71 @@ class ShareController extends Controller
         }
 
         throw new NotFoundHttpException('The requested page does not exist.');
+    }
+
+    public function actionAccess($share_id, $access_code = null)
+    {
+        if ($this->request->isPost) {
+            $model = $this->findModel($share_id);
+            $access_code = $this->request->post('Share')['access_code'];
+            if ($access_code === $model->access_code) {
+                // 访问密码正确，显示文件信息和下载按钮
+                $access_granted = Yii::$app->session->get('access_granted', []);
+                $access_granted[$share_id] = true;
+                Yii::$app->session->set('access_granted', $access_granted);  // 将访问权限信息存储到 session 中
+                $absolutePath = Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . $model->sharer_id . '/' . $model->file_relative_path;
+                $isDirectory = is_dir($absolutePath);
+                $sharerUsername = $model->getSharerUsername();
+                return $this->render('_file_info', [
+                    'model' => $model,
+                    'isDirectory' => $isDirectory,
+                    'sharerUsername' => $sharerUsername,
+                ]);
+            } else {
+                Yii::$app->session->setFlash('error', '访问密码错误');
+            }
+        }
+        $model = new Share();
+        $model->access_code = $access_code;
+
+        return $this->render('access', [
+            'model' => $model,
+        ]);
+    }
+
+    /**
+     * @throws ForbiddenHttpException
+     * @throws NotFoundHttpException
+     */
+    public function actionDownload($share_id)
+    {
+        $access_granted = Yii::$app->session->get('access_granted', []);
+        if (!isset($access_granted[$share_id]) || !$access_granted[$share_id]) {
+            throw new \yii\web\ForbiddenHttpException('你没有权限下载这个文件');
+        }
+
+        $model = $this->findModel($share_id);
+
+        $absolutePath = Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . $model->sharer_id . '/' . $model->file_relative_path;
+        if (is_file($absolutePath)) {
+            return Yii::$app->response->sendFile($absolutePath);
+        } else if (is_dir($absolutePath)) {
+            // 如果是文件夹，压缩后发送
+            $zipPath = $absolutePath . '.zip';
+            $zip = new \ZipArchive();
+            $zip->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
+            $files = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($absolutePath));
+            foreach ($files as $file) {
+                if (!$file->isDir()) {
+                    $filePath = $file->getRealPath();
+                    $relativePath = substr($filePath, strlen($absolutePath) + 1);
+                    $zip->addFile($filePath, $relativePath);
+                }
+            }
+            $zip->close();
+            return Yii::$app->response->sendFile($zipPath);
+        }else{
+            throw new NotFoundHttpException('异常，文件不存在');
+        }
     }
 }

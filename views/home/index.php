@@ -8,6 +8,7 @@
 
 use app\models\NewFolderForm;
 use app\models\RenameForm;
+use app\models\Share;
 use app\models\ZipForm;
 use yii\bootstrap5\ActiveForm;
 use yii\bootstrap5\Html;
@@ -235,6 +236,22 @@ Modal::begin([
 ]);
 echo Html::tag('p', '', ['id' => 'crc32b']);
 echo Html::tag('p', '', ['id' => 'sha256']);
+Modal::end();
+
+Modal::begin([
+    'title' => '<h4>创建分享</h4>',
+    'id' => 'shareModal',
+//    'size' => 'modal-sm',
+]);
+$form = ActiveForm::begin(['id' => 'share-form', 'action' => ['share/create'], 'method' => 'post']);
+$model3 = new Share();
+echo $form->field($model3, 'file_relative_path')->textInput(['readonly' => true])->label('文件位置');
+echo $form->field($model3, 'access_code')->textInput(['maxlength' => 4])->label('访问密码(4位英文数字组合,不区分大小写)');
+echo Html::button('生成密码', ['id' => 'generate_access_code', 'class' => 'btn btn-primary']);
+echo str_repeat('&nbsp;', 5);  // 添加5个空格
+echo Html::submitButton('提交', ['class' => 'btn btn-primary']);
+
+ActiveForm::end();
 Modal::end();
 $this->registerJsFile('@web/js/home_script.js', ['depends' => [JqueryAsset::class], 'position' => View::POS_END]);
 ?>

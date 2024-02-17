@@ -188,8 +188,39 @@ $(document).on('click', '.calc-sum-btn', function () {
 });
 
 $(document).on('click', '.single-share-btn', function () {
-    console.log('分享按钮被点击');
-    // 在这里添加你的代码
+    var relativePath = $('.select-item:checked').first().data('relativePath');
+    $('#shareModal #share-file_relative_path').val(relativePath);
+    $('#shareModal').modal('show');
+});
+$(document).on('click', '#generate_access_code', function () {
+    var accessCode = Math.random().toString(36).substring(2, 6);
+    $('#shareModal #share-access_code').val(accessCode);
+});
+
+// $(document).on('submit', '#share-form', function (event) {
+//     event.preventDefault();
+//
+//     var relativePath = $('#shareModal #share-file_relative_path').val();
+//     var accessCode = $('#shareModal #share-access_code').val();
+//
+//     $.ajax({
+//         type: "POST",
+//         url: "index.php?r=share%2Fcreate",
+//         data: { file_relative_path: relativePath, access_code: accessCode },
+//         success: function() {
+//             // 处理响应
+//             location.reload();
+//         },
+//         error: function() {
+//             // 处理错误
+//             console.error('AJAX request failed.');
+//         }
+//     });
+// });
+$(document).on('click', '.shares-btn', function () {
+    var relativePath = $(this).closest('tr').find('.select-item').data('relativePath');
+    $('#shareModal #share-file_relative_path').val(relativePath);
+    $('#shareModal').modal('show');
 });
 
 $(document).on('click', '.batch-delete-btn', function () {

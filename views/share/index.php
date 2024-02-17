@@ -27,15 +27,29 @@ $this->params['breadcrumbs'][] = $this->title;
         'dataProvider' => $dataProvider,
         'filterModel' => $searchModel,
         'columns' => [
-            ['class' => 'yii\grid\SerialColumn'],
-
-            'share_id',
+            ['class' => 'yii\grid\SerialColumn',
+                'headerOptions' => ['style' => 'width:4%;'],
+            ],
+            [
+                'attribute' => 'share_id',
+                'headerOptions' => ['style' => 'width:6%;'],
+            ],
 //            'sharer_id',
-            'file_relative_path',
-            'access_code',
-            'creation_date',
+            [
+                'attribute' => 'file_relative_path',
+                'headerOptions' => ['style' => 'width:60%;'],
+            ],
+            [
+                'attribute' => 'access_code',
+                'headerOptions' => ['style' => 'width:7%;'],
+            ],
+            [
+                'attribute' => 'creation_date',
+                'headerOptions' => ['style' => 'width:15%;'],
+            ],
             [
                 'class' => ActionColumn::className(),
+                'headerOptions' => ['style' => 'width:8%;'],
                 'urlCreator' => function ($action, Share $model, $key, $index, $column) {
                     return Url::toRoute([$action, 'share_id' => $model->share_id]);
                  }

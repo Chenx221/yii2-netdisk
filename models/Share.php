@@ -65,4 +65,8 @@ class Share extends \yii\db\ActiveRecord
     {
         return $this->hasOne(User::class, ['id' => 'sharer_id']);
     }
+    public function getSharerUsername()
+    {
+        return $this->sharer->username;
+    }
 }
