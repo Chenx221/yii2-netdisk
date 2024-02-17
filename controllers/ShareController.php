@@ -150,7 +150,7 @@ class ShareController extends Controller
      * @return Share the loaded model
      * @throws NotFoundHttpException if the model cannot be found
      */
-    protected function findModel($share_id)
+    protected function findModel($share_id): Share
     {
         if (($model = Share::findOne(['share_id' => $share_id])) !== null) {
             return $model;
@@ -159,10 +159,15 @@ class ShareController extends Controller
         throw new NotFoundHttpException('The requested page does not exist.');
     }
 
-    public function actionAccess($share_id, $access_code = null)
+    public function actionAccess($share_id, $access_code = null): string
     {
+        $model = $this->findModel($share_id);
+        //检查文件/文件夹是否存在
+        $abp = Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . $model->sharer_id . '/' . $model->file_relative_path;
+        if (!file_exists($abp)) {
+            throw new NotFoundHttpException('分享失效，文件或文件夹不存在');
+        }
         if ($this->request->isPost) {
-            $model = $this->findModel($share_id);
             $access_code = $this->request->post('Share')['access_code'];
             if ($access_code === $model->access_code) {
                 // 访问密码正确，显示文件信息和下载按钮
@@ -181,11 +186,11 @@ class ShareController extends Controller
                 Yii::$app->session->setFlash('error', '访问密码错误');
             }
         }
-        $model = new Share();
-        $model->access_code = $access_code;
+        $model1 = new Share();
+        $model1->access_code = $access_code;
 
         return $this->render('access', [
-            'model' => $model,
+            'model' => $model1,
         ]);
     }
 
