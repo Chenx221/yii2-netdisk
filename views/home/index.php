@@ -6,6 +6,7 @@
 
 /* @var $directory string 当前路径 */
 
+use app\assets\ViewerJsAsset;
 use app\models\NewFolderForm;
 use app\models\RenameForm;
 use app\models\Share;
@@ -24,6 +25,7 @@ $this->title = '文件管理';
 $this->params['breadcrumbs'][] = $this->title;
 FontAwesomeAsset::register($this);
 JqueryAsset::register($this);
+ViewerJsAsset::register($this);
 $this->registerCssFile('@web/css/home_style.css');
 ?>
 <div class="home-directory">
