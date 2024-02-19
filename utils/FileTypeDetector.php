@@ -29,7 +29,7 @@ class FileTypeDetector
                 'ppt', 'pptx' => 'fa-regular fa-file-powerpoint',
                 'jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'psd', 'clip', 'raw', 'tiff', 'tif' => 'fa-regular fa-file-image',
                 'zip', 'rar', '7z', 'tar', 'tar.gz', 'xz', 'cab' => 'fa-regular fa-file-zipper',
-                'mp3', 'wav', 'flac', 'acc', 'ogg', 'wma', 'ac3' => 'fa-regular fa-file-audio',
+                'mp3', 'wav', 'flac', 'acc', 'ogg', 'wma', 'ac3', 'm4a' => 'fa-regular fa-file-audio',
                 'mp4', 'mkv', '3gp', 'avi', 'flv', 'm4v', 'mov', 'mpeg', 'mpg', 'mpe', 'rm', 'wmv', 'webm' => 'fa-regular fa-file-video',
                 'xhtml', 'asp', 'aspx', 'cgi', 'jsp', 'pl', 'phtml', 'php', 'html', 'htm', 'css', 'c', 'cpp', 'py', 'cs', 'ahk', 'as', 'au3', 'bat', 'fs', 'go', 'ipynb', 'kt', 'lua', 'o', 'ps1', 'ps1xml', 'psc1', 'psd1', 'psm1', 'pyc', 'pyo', 'r', 'rb', 'vbs', 'vb', 'cls', 'cc', 'cxx', 'cbp', 'csproj', 'h', 'hpp', 'hxx', 'vbg', 'vbp', 'vip', 'vbproj', 'vcproj', 'vdproj' => 'fa-regular fa-file-code',
                 'abb', 'apk' => 'fa-brands fa-android',
