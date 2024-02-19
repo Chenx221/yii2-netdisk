@@ -84,7 +84,8 @@ class HomeController extends Controller
             $type = FileTypeDetector::detect($absolutePath);
             $lastModified = filemtime($absolutePath);
             $size = is_file($absolutePath) ? filesize($absolutePath) : null;
-            $directoryContents[$key] = ['name' => $item, 'type' => $type, 'lastModified' => $lastModified, 'size' => $size];
+            $rawType = is_file($absolutePath) ? mime_content_type($absolutePath) : null;
+            $directoryContents[$key] = ['name' => $item, 'type' => $type, 'lastModified' => $lastModified, 'size' => $size, 'rawType' => $rawType];
         }
         return $this->render('index', [
             'directoryContents' => $directoryContents,

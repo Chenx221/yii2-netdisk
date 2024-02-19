@@ -422,3 +422,27 @@ function previewImage(element, event) {
     });
     viewer.show();
 }
+
+// video preview
+var player;
+var videoModal = $('#videoModal'); // 存储选择器的结果
+
+function previewVideo(element, event) {
+    event.preventDefault(); // 阻止默认的点击事件
+    var videoElement = document.getElementById('vPlayer');
+    videoElement.src = element.href; // 设置视频的URL
+    videoElement.type = element.getAttribute('type'); // 设置视频的MIME类型
+
+    // 创建一个新的 Plyr 实例
+    player = new Plyr(videoElement);
+    player.play();
+
+    // 显示模态框
+    videoModal.modal('show');
+}
+
+videoModal.on('hidden.bs.modal', function (e) {
+    if (player) {
+        player.destroy();
+    }
+});

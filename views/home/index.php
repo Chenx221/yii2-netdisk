@@ -6,6 +6,7 @@
 
 /* @var $directory string 当前路径 */
 
+use app\assets\PlyrAsset;
 use app\assets\ViewerJsAsset;
 use app\models\NewFolderForm;
 use app\models\RenameForm;
@@ -26,6 +27,7 @@ $this->params['breadcrumbs'][] = $this->title;
 FontAwesomeAsset::register($this);
 JqueryAsset::register($this);
 ViewerJsAsset::register($this);
+PlyrAsset::register($this);
 $this->registerCssFile('@web/css/home_style.css');
 ?>
 <div class="home-directory">
@@ -101,7 +103,8 @@ $this->registerCssFile('@web/css/home_style.css');
     <table class="table table-hover" id="drop-area">
         <thead class="table-light">
         <tr>
-            <th scope="col" class="selector-col"><label for="select-all" hidden></label><input type="checkbox" id="select-all"></th>
+            <th scope="col" class="selector-col"><label for="select-all" hidden></label><input type="checkbox"
+                                                                                               id="select-all"></th>
             <th scope="col" class="name-col">名称</th>
             <th scope="col" class="modified-col">最近修改时间</th>
             <th scope="col" class="size-col">大小</th>
@@ -113,7 +116,10 @@ $this->registerCssFile('@web/css/home_style.css');
             <?php $relativePath = $directory ? $directory . '/' . $item['name'] : $item['name']; ?>
             <?php $absolutePath = Yii::getAlias('@app') . '/data/' . Yii::$app->user->id . '/' . $relativePath; ?>
             <tr>
-                <td><label for="selector1" hidden></label><input id="selector1" type="checkbox" class="select-item" data-relative-path="<?= Html::encode($relativePath) ?>" data-is-directory="<?= Html::encode(is_dir($absolutePath)) ?>"></td>
+                <td><label for="selector1" hidden></label><input id="selector1" type="checkbox" class="select-item"
+                                                                 data-relative-path="<?= Html::encode($relativePath) ?>"
+                                                                 data-is-directory="<?= Html::encode(is_dir($absolutePath)) ?>">
+                </td>
                 <?php if (is_dir($absolutePath)): ?> <!-- 如果是文件夹 -->
                     <td>
                         <?= Html::tag('i', '', ['class' => $item['type'] . ' file_icon']) ?>
@@ -141,8 +147,9 @@ $this->registerCssFile('@web/css/home_style.css');
                     <td>
                         <?= Html::tag('i', '', ['class' => $item['type'] . ' file_icon']) ?>
                         <?php if ($item['type'] === 'fa-regular fa-file-image'): ?>
-                            <!-- 如果是图像文件，添加一个点击事件来预览图像 -->
                             <?= Html::a($item['name'], ['home/preview', 'relativePath' => $relativePath], ['class' => 'file_name', 'onclick' => 'previewImage(this, event)']) ?>
+                        <?php elseif ($item['type'] === 'fa-regular fa-file-video'): ?>
+                            <?= Html::a($item['name'], ['home/download', 'relativePath' => $relativePath, 'type' => $item['rawType']], ['class' => 'file_name', 'onclick' => 'previewVideo(this, event)']) ?>
                         <?php else: ?>
                             <?= Html::a($item['name'], ['home/download', 'relativePath' => $relativePath], ['class' => 'file_name']) ?>
                         <?php endif; ?>
@@ -171,6 +178,14 @@ $this->registerCssFile('@web/css/home_style.css');
         </tbody>
     </table>
 </div>
+
+<!--test area start-->
+<!--<video id="player" controls crossorigin playsinline>-->
+<!--    <source src="https://devs.chenx221.cyou:8081/index.php?r=home%2Fdownload&relativePath=%E3%80%90%E6%9C%9F%E9%96%93%E9%99%90%E5%AE%9A%E5%85%AC%E9%96%8B%E3%80%91%E9%95%B7%E7%80%AC%E6%9C%89%E8%8A%B1+LIVE+%E2%80%9CEureka%E2%80%9D+%5BDkt65nqwbhM%5D.webm"-->
+<!--            type="video/webm">-->
+<!--</video>-->
+<!--test area end-->
+
 <?php
 Modal::begin([
     'title' => '<h4>重命名文件/文件夹</h4>',
@@ -260,6 +275,19 @@ echo Html::submitButton('提交', ['class' => 'btn btn-primary']);
 
 ActiveForm::end();
 Modal::end();
+
+Modal::begin([
+    'title' => '<h4>视频在线播放</h4>',
+    'id' => 'videoModal',
+    'size' => 'modal-xl',
+]);
+
+echo '<video id="vPlayer" controls crossorigin playsinline>
+    <source src="" type="">
+</video>';
+
+Modal::end();
+
 $this->registerJsFile('@web/js/home_script.js', ['depends' => [JqueryAsset::class], 'position' => View::POS_END]);
 ?>
 
