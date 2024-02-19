@@ -150,6 +150,8 @@ $this->registerCssFile('@web/css/home_style.css');
                             <?= Html::a($item['name'], ['home/preview', 'relativePath' => $relativePath], ['class' => 'file_name', 'onclick' => 'previewImage(this, event)']) ?>
                         <?php elseif ($item['type'] === 'fa-regular fa-file-video'): ?>
                             <?= Html::a($item['name'], ['home/download', 'relativePath' => $relativePath, 'type' => $item['rawType']], ['class' => 'file_name', 'onclick' => 'previewVideo(this, event)']) ?>
+                        <?php elseif ($item['type'] === 'fa-regular fa-file-audio'): ?>
+                            <?= Html::a($item['name'], ['home/download', 'relativePath' => $relativePath, 'type' => $item['rawType']], ['class' => 'file_name', 'onclick' => 'previewAudio(this, event)']) ?>
                         <?php else: ?>
                             <?= Html::a($item['name'], ['home/download', 'relativePath' => $relativePath], ['class' => 'file_name']) ?>
                         <?php endif; ?>
@@ -180,10 +182,8 @@ $this->registerCssFile('@web/css/home_style.css');
 </div>
 
 <!--test area start-->
-<!--<video id="player" controls crossorigin playsinline>-->
-<!--    <source src="https://devs.chenx221.cyou:8081/index.php?r=home%2Fdownload&relativePath=%E3%80%90%E6%9C%9F%E9%96%93%E9%99%90%E5%AE%9A%E5%85%AC%E9%96%8B%E3%80%91%E9%95%B7%E7%80%AC%E6%9C%89%E8%8A%B1+LIVE+%E2%80%9CEureka%E2%80%9D+%5BDkt65nqwbhM%5D.webm"-->
-<!--            type="video/webm">-->
-<!--</video>-->
+<!--<audio id="audioPlayer" src=""></audio>-->
+<!--<button id="audioBtn" onclick="testf()">播放</button>-->
 <!--test area end-->
 
 <?php
@@ -277,7 +277,7 @@ ActiveForm::end();
 Modal::end();
 
 Modal::begin([
-    'title' => '<h4>视频在线播放</h4>',
+    'title' => '<h4>视频播放</h4>',
     'id' => 'videoModal',
     'size' => 'modal-xl',
 ]);
@@ -288,6 +288,17 @@ echo '<video id="vPlayer" controls crossorigin playsinline>
 
 Modal::end();
 
+Modal::begin([
+    'title' => '<h4>音频播放</h4>',
+    'id' => 'audioModal',
+//    'size' => 'modal-sm',
+]);
+
+echo '<audio id="aPlayer" controls>
+  <source src="" type="">
+</audio>';
+
+Modal::end();
 $this->registerJsFile('@web/js/home_script.js', ['depends' => [JqueryAsset::class], 'position' => View::POS_END]);
 ?>
 

@@ -1,9 +1,10 @@
-<p align="center">
+<div style="text-align: center">
     <a href="https://github.com/yiisoft" target="_blank">
-        <img src="https://avatars0.githubusercontent.com/u/993323" height="100px">
+        <img src="https://avatars0.githubusercontent.com/u/993323" height="100px" alt="">
     </a>
-    <h1 align="center">基于Yii 2框架的网盘系统</h1>
-</p>
+    <h1 style="text-align: center">基于Yii 2框架的网盘系统</h1>
+</div>
+
 
 这是一个基于[Yii 2](https://www.yiiframework.com/) PHP框架设计的小型网盘系统，作为我的毕业设计作业，它具备基本的网盘功能。
 
@@ -48,7 +49,7 @@
 计划实现的功能
 -------------------
 
-文件预览(图像,视频ok)
+文件预览(图像,视频,音频ok)
 
 文件收集
 

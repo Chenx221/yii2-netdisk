@@ -439,8 +439,29 @@ function previewVideo(element, event) {
     videoModal.modal('show');
 }
 
-videoModal.on('hidden.bs.modal', function (e) {
+videoModal.on('hidden.bs.modal', function () {
     if (player) {
         player.destroy();
+    }
+});
+
+//music preview
+var aPlayer;
+var audioModal = $('#audioModal');
+function previewAudio(element, event) {
+    event.preventDefault();
+    var audioElement = document.getElementById('aPlayer');
+    audioElement.src = element.href;
+    audioElement.type = element.getAttribute('type');
+
+    aPlayer = new Plyr(audioElement);
+    aPlayer.play();
+
+    // 显示模态框
+    audioModal.modal('show');
+}
+audioModal.on('hidden.bs.modal', function () {
+    if (aPlayer) {
+        aPlayer.destroy();
     }
 });
