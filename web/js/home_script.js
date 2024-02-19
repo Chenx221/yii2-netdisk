@@ -359,11 +359,9 @@ document.addEventListener('keydown', function (event) {
 
 //行点击事件
 $(document).on('click', 'tr', function (event) {
-    // 如果点击的是checkbox，就不执行下面的代码
-    if ($(event.target).is('input[type="checkbox"]')) {
+    if ($(event.target).is('input[type="checkbox"]') || $(event.target).is('a')) {
         return;
     }
-
     $(this).toggleClass('selected');
     var checkbox = $(this).children(':first-child').find('input[type="checkbox"]');
     checkbox.prop('checked', !checkbox.prop('checked'));
