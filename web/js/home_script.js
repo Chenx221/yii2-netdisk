@@ -391,8 +391,34 @@ function updateButtons() {
     $('.batch-delete-btn').toggle(count >= 1);
 }
 
-// 在页面加载时调用updateButtons函数
-$(document).ready(updateButtons);
-
 // 当checkbox的状态改变时，调用updateButtons函数
 $(document).on('change', '.select-item', updateButtons);
+
+$(document).ready(function() {
+    updateButtons();
+});
+
+// image preview
+function previewImage(element, event) {
+    event.preventDefault(); // 阻止默认的点击事件
+    var hiddenImage = document.getElementById('hidden-image');
+    hiddenImage.src = element.href; // 设置图像的URL
+
+    // 创建一个新的 Viewer.js 实例
+    var viewer = new Viewer(hiddenImage, {
+        toolbar: {
+            zoomIn: 1,
+            zoomOut: 1,
+            oneToOne: 1,
+            reset: 1,
+            rotateLeft: 1,
+            rotateRight: 1,
+            flipHorizontal: 1,
+            flipVertical: 1,
+        },
+        hidden: function() {
+            viewer.destroy();
+        }
+    });
+    viewer.show();
+}

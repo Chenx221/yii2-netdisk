@@ -10,4 +10,7 @@ class ViewerJsAsset extends AssetBundle
     public $js = [
         'viewer.min.js',
     ];
+    public $css = [
+        'viewer.min.css'
+    ];
 }

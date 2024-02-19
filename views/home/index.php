@@ -97,7 +97,7 @@ $this->registerCssFile('@web/css/home_style.css');
             <?php endif; ?>
         </ol>
     </nav>
-
+    <img id="hidden-image" style="display: none;" alt="" src="" loading=lazy>
     <table class="table table-hover" id="drop-area">
         <thead class="table-light">
         <tr>
@@ -140,7 +140,12 @@ $this->registerCssFile('@web/css/home_style.css');
                 <?php else: ?> <!-- 如果是文件 -->
                     <td>
                         <?= Html::tag('i', '', ['class' => $item['type'] . ' file_icon']) ?>
-                        <?= Html::a($item['name'], ['home/download', 'relativePath' => $relativePath], ['class' => 'file_name']) ?>
+                        <?php if ($item['type'] === 'fa-regular fa-file-image'): ?>
+                            <!-- 如果是图像文件，添加一个点击事件来预览图像 -->
+                            <?= Html::a($item['name'], ['home/preview', 'relativePath' => $relativePath], ['class' => 'file_name', 'onclick' => 'previewImage(this, event)']) ?>
+                        <?php else: ?>
+                            <?= Html::a($item['name'], ['home/download', 'relativePath' => $relativePath], ['class' => 'file_name']) ?>
+                        <?php endif; ?>
                     </td>
                     <td class="file_info">
                         <?= date('Y-m-d H:i:s', $item['lastModified']) ?>
