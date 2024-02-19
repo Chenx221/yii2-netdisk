@@ -38,6 +38,7 @@ class HomeController extends Controller
                     'actions' => [
                         'index' => ['GET'],
                         'download' => ['GET'],
+                        'preview' =>['GET'],
                         'rename' => ['POST'],
                         'delete' => ['POST'],
                         'upload' => ['POST'],
@@ -160,6 +161,44 @@ class HomeController extends Controller
         Yii::$app->response->sendFile($realPath)->send();
     }
 
+    /**
+     * @param string $relativePath
+     * @return void
+     * @throws NotFoundHttpException
+     */
+    public function actionPreview(string $relativePath): void
+    {
+        // 对相对路径进行解码
+        $relativePath = rawurldecode($relativePath);
+
+        // 检查相对路径是否只包含允许的字符
+        if (!preg_match($this->pattern, $relativePath) || str_contains($relativePath, '..')) {
+            throw new NotFoundHttpException('Invalid file path.');
+        }
+
+        // 确定文件的绝对路径
+        $absolutePath = Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . Yii::$app->user->id . '/' . $relativePath;
+
+        // 检查文件是否存在
+        if (!file_exists($absolutePath)) {
+            throw new NotFoundHttpException('File not found.');
+        }
+
+        // 获取图像的 MIME 类型
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mimeType = finfo_file($finfo, $absolutePath);
+        finfo_close($finfo);
+
+        // 设置响应头
+        header('Content-Type: ' . $mimeType);
+        header('Content-Disposition: inline; filename="' . basename($absolutePath) . '"');
+
+        // 读取并输出图像数据
+        readfile($absolutePath);
+
+        // 结束脚本执行
+        exit;
+    }
     /**
      * 重命名文件或文件夹
      * @return string|Response|null

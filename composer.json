@@ -32,7 +32,8 @@
     "wapmorgan/unified-archive": "^1.2",
     "symfony/console": "^6.1",
     "gemorroj/archive7z": "^5.7",
-    "npm-asset/viewerjs": "^1.11"
+    "npm-asset/viewerjs": "^1.11",
+    "ext-fileinfo": "*"
   },
   "require-dev": {
     "yiisoft/yii2-debug": "~2.1.0",
