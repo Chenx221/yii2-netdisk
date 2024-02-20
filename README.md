@@ -73,13 +73,20 @@
 
 EXTRA: 客户端开发
 
-运行所需环境
+开发环境
 ------------
 
-PHP >= 8.1
+Windows 10 Pro (19045.4046)
 
-MySQL/MariaDB
+PhpStorm 2023.3.4
 
+PHP 8.2.16
+
+MariaDB 11.2.2
+
+Apache 2.4.58.1
+
+Redis(Memurai) 4.1.1
 
 安装步骤
 ------------
