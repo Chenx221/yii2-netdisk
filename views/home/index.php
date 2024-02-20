@@ -6,6 +6,7 @@
 
 /* @var $directory string 当前路径 */
 
+use app\assets\AceAsset;
 use app\assets\PlyrAsset;
 use app\assets\ViewerJsAsset;
 use app\models\NewFolderForm;
@@ -28,6 +29,7 @@ FontAwesomeAsset::register($this);
 JqueryAsset::register($this);
 ViewerJsAsset::register($this);
 PlyrAsset::register($this);
+AceAsset::register($this);
 $this->registerCssFile('@web/css/home_style.css');
 ?>
 <div class="home-directory">
@@ -150,6 +152,8 @@ $this->registerCssFile('@web/css/home_style.css');
                             <?= Html::a($item['name'], ['home/preview', 'relativePath' => $relativePath], ['class' => 'file_name', 'onclick' => 'previewImage(this, event)']) ?>
                         <?php elseif ($item['type'] === 'fa-regular fa-file-video'): ?>
                             <?= Html::a($item['name'], ['home/download', 'relativePath' => $relativePath, 'type' => $item['rawType']], ['class' => 'file_name', 'onclick' => 'previewVideo(this, event)']) ?>
+                        <?php elseif ($item['type'] === 'fa-regular fa-file-lines' || $item['type'] === 'fa-regular fa-file-code' || $item['type'] === 'fa-solid fa-gears'): ?>
+                            <?= Html::a($item['name'], ['home/download', 'relativePath' => $relativePath, 'type' => $item['rawType']], ['class' => 'file_name', 'onclick' => 'textEdit(this, event)']) ?>
                         <?php elseif ($item['type'] === 'fa-regular fa-file-audio'): ?>
                             <?= Html::a($item['name'], ['home/download', 'relativePath' => $relativePath, 'type' => $item['rawType']], ['class' => 'file_name', 'onclick' => 'previewAudio(this, event)']) ?>
                         <?php else: ?>
@@ -297,6 +301,19 @@ Modal::begin([
 echo '<audio id="aPlayer" controls>
   <source src="" type="">
 </audio>';
+
+Modal::end();
+
+Modal::begin([
+    'title' => '<h4>文本编辑</h4>',
+    'id' => 'textEditModal',
+    'size' => 'modal-lg',
+]);
+
+echo'<div class="alert alert-success" role="alert" id="ed-alert-success">保存成功</div><div class="alert alert-danger" role="alert" id="ed-alert-fail">保存失败</div>';
+echo '<button id="saveButton" class="btn btn-outline-primary" style="margin-bottom: 16px"><i class="fa-regular fa-floppy-disk"></i> 保存文件</button>';
+echo '<input type="hidden" id="edFilename" value="">';
+echo '<div id="editor" style="width: 100%; height: 500px;"></div>';
 
 Modal::end();
 $this->registerJsFile('@web/js/home_script.js', ['depends' => [JqueryAsset::class], 'position' => View::POS_END]);

@@ -100,9 +100,9 @@ $(document).on('click', '.unzip-btn', function () {
     $.ajax({
         type: "POST",
         url: "index.php?r=home%2Funzip",
-        data: { relativePath: relativePath },
+        data: {relativePath: relativePath},
         dataType: "json",  // 期望从服务器接收json格式的响应
-        success: function(response) {
+        success: function (response) {
             // 如果服务器返回的状态码是200，说明解压成功
             if (response.status === 200) {
                 // 刷新页面，加载到解压后的目录
@@ -112,7 +112,7 @@ $(document).on('click', '.unzip-btn', function () {
                 window.location.href = 'index.php?r=home%2Findex&directory=' + encodeURIComponent(response.parentDirectory);
             }
         },
-        error: function() {
+        error: function () {
             // 处理错误
             console.error('AJAX request failed.');
         }
@@ -151,12 +151,12 @@ $(document).on('click', '.batch-paste-btn', function () {
     $.ajax({
         type: "POST",
         url: "index.php?r=home%2Fpaste",
-        data: { operation: operation, relativePaths: relativePaths, targetDirectory: targetDirectory },
-        success: function() {
+        data: {operation: operation, relativePaths: relativePaths, targetDirectory: targetDirectory},
+        success: function () {
             // 处理响应
             location.reload();
         },
-        error: function() {
+        error: function () {
             // 处理错误
             console.error('AJAX request failed.');
         }
@@ -172,16 +172,16 @@ $(document).on('click', '.calc-sum-btn', function () {
     $.ajax({
         type: "POST",
         url: "index.php?r=home%2Fchecksum",
-        data: { relativePath: relativePath },
+        data: {relativePath: relativePath},
         dataType: "json",
-        success: function(response) {
+        success: function (response) {
             // 更新模态框中的内容
             $('#crc32b').text('CRC32B: ' + response.crc32b);
             $('#sha256').text('SHA256: ' + response.sha256);
             // 显示模态框
             $('#checksumModal').modal('show');
         },
-        error: function() {
+        error: function () {
             console.error('AJAX request failed.');
         }
     });
@@ -197,26 +197,6 @@ $(document).on('click', '#generate_access_code', function () {
     $('#shareModal #share-access_code').val(accessCode);
 });
 
-// $(document).on('submit', '#share-form', function (event) {
-//     event.preventDefault();
-//
-//     var relativePath = $('#shareModal #share-file_relative_path').val();
-//     var accessCode = $('#shareModal #share-access_code').val();
-//
-//     $.ajax({
-//         type: "POST",
-//         url: "index.php?r=share%2Fcreate",
-//         data: { file_relative_path: relativePath, access_code: accessCode },
-//         success: function() {
-//             // 处理响应
-//             location.reload();
-//         },
-//         error: function() {
-//             // 处理错误
-//             console.error('AJAX request failed.');
-//         }
-//     });
-// });
 $(document).on('click', '.shares-btn', function () {
     var relativePath = $(this).closest('tr').find('.select-item').data('relativePath');
     $('#shareModal #share-file_relative_path').val(relativePath);
@@ -230,12 +210,12 @@ $(document).on('click', '.batch-delete-btn', function () {
     $.ajax({
         type: "POST",
         url: "index.php?r=home%2Fdelete",
-        data: { relativePath: relativePaths },
-        success: function() {
+        data: {relativePath: relativePaths},
+        success: function () {
             // 处理响应
             location.reload();
         },
-        error: function() {
+        error: function () {
             // 处理错误
             console.error('AJAX request failed.');
             location.reload();
@@ -392,7 +372,7 @@ function updateButtons() {
 // 当checkbox的状态改变时，调用updateButtons函数
 $(document).on('change', '.select-item', updateButtons);
 
-$(document).ready(function() {
+$(document).ready(function () {
     updateButtons();
 });
 
@@ -414,7 +394,7 @@ function previewImage(element, event) {
             flipHorizontal: 1,
             flipVertical: 1,
         },
-        hidden: function() {
+        hidden: function () {
             viewer.destroy();
         }
     });
@@ -448,6 +428,7 @@ videoModal.on('hidden.bs.modal', function () {
 //music preview
 var aPlayer;
 var audioModal = $('#audioModal');
+
 function previewAudio(element, event) {
     event.preventDefault();
     var audioElement = document.getElementById('aPlayer');
@@ -460,8 +441,68 @@ function previewAudio(element, event) {
     // 显示模态框
     audioModal.modal('show');
 }
+
 audioModal.on('hidden.bs.modal', function () {
     if (aPlayer) {
         aPlayer.destroy();
     }
+});
+
+//text edit
+var editor;
+var editorModal = $('#textEditModal');
+
+function textEdit(element, event) {
+    event.preventDefault();
+    editorModal.modal('show');
+    var fileUrl = element.href;
+    $('#edFilename').val(element.innerText);
+    $('#ed-alert-success').hide();
+    $('#ed-alert-fail').hide();
+    $.get(fileUrl, function (data) {
+        editor = ace.edit("editor");
+        editor.session.setOption("useWorker", false);
+        editor.setTheme("ace/theme/github");
+        editor.renderer.setOption("fontSize", 15);
+        editor.renderer.setOption("animatedScroll", true)
+        editor.session.setMode("ace/mode/text");
+        editor.setValue(data);
+    });
+}
+
+editorModal.on('hidden.bs.modal', function () {
+    if (editor) {
+        editor.destroy();
+        // editor.container.remove();
+    }
+});
+$('#saveButton').on('click', function () {
+    var content = editor.getValue();
+    var blob = new Blob([content], {type: "text/plain"});
+    var file = new File([blob], $('#edFilename').val(), {type: "text/plain"});
+    var formData = new FormData();
+    formData.append('files', file);
+    formData.append('sp', 'editSaving');
+    formData.append('targetDir', $('#target-dir').val());
+
+    $.ajax({
+        type: "POST",
+        url: "index.php?r=home%2Fupload", // 替换为你的上传URL
+        data: formData,
+        processData: false, // 告诉jQuery不要处理发送的数据
+        contentType: false, // 告诉jQuery不要设置Content-Type请求头
+        success: function (data) {
+            if (data.status === 200) {
+                $('#ed-alert-success').show();
+                $('#ed-alert-fail').hide();
+            } else {
+                $('#ed-alert-success').hide();
+                $('#ed-alert-fail').show();
+            }
+        },
+        error: function () {
+            $('#ed-alert-success').hide();
+            $('#ed-alert-fail').show();
+        }
+    });
 });

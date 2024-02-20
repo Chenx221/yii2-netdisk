@@ -330,15 +330,16 @@ class HomeController extends Controller
      * 注意,已存在的同名文件会被覆盖
      * https://devs.chenx221.cyou:8081/index.php?r=home%2Fupload
      *
-     * @return int
+     * @return int|Response
      */
-    public function actionUpload(): int
+    public function actionUpload()
     {
         $model = new UploadForm();
         $model->targetDir = Yii::$app->request->post('targetDir', '.');
         $uploadedFiles = UploadedFile::getInstancesByName('files');
         $successCount = 0;
         $totalCount = count($uploadedFiles);
+        $sp = Yii::$app->request->post('sp', null);
 
         foreach ($uploadedFiles as $uploadedFile) {
             $model->uploadFile = $uploadedFile;
@@ -349,16 +350,25 @@ class HomeController extends Controller
                 $successCount++;
             }
         }
-
-        if ($successCount === $totalCount) {
-            Yii::$app->session->setFlash('success', 'All files uploaded successfully.');
-        } elseif ($successCount > 0) {
-            Yii::$app->session->setFlash('warning', 'Some files uploaded successfully.');
-        } else {
-            Yii::$app->session->setFlash('error', 'Failed to upload files.');
+        if ($sp === 'editSaving') {
+            if ($successCount === $totalCount) {
+                Yii::$app->response->statusCode = 200;
+                return $this->asJson(['status' => 200, 'message' => 'All files uploaded successfully.']);
+            } else{
+                Yii::$app->response->statusCode = 500;
+                return $this->asJson(['status' => 500, 'message' => 'Failed to upload files.']);
+            }
+        }else {
+            if ($successCount === $totalCount) {
+                Yii::$app->session->setFlash('success', 'All files uploaded successfully.');
+            } elseif ($successCount > 0) {
+                Yii::$app->session->setFlash('warning', 'Some files uploaded successfully.');
+            } else {
+                Yii::$app->session->setFlash('error', 'Failed to upload files.');
+            }
+            //返回状态码200
+            return Yii::$app->response->statusCode = 200; // 如果出错请删掉return}
         }
-        //返回状态码200
-        return Yii::$app->response->statusCode = 200; // 如果出错请删掉return
     }
 
     /**
