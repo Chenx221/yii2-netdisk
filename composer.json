@@ -34,7 +34,9 @@
     "gemorroj/archive7z": "^5.7",
     "npm-asset/viewerjs": "^1.11",
     "npm-asset/plyr": "^3.7",
-    "ext-fileinfo": "*"
+    "ext-fileinfo": "*",
+    "npm-asset/ace-builds": "^1.32",
+    "yiisoft/yii2-redis": "^2.0"
   },
   "require-dev": {
     "yiisoft/yii2-debug": "~2.1.0",

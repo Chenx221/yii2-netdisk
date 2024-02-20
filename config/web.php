@@ -18,8 +18,11 @@ $config = [
             // !!! insert a secret key in the following (if it is empty) - this is required by cookie validation
             'cookieValidationKey' => '9vuTNyfQqTOWY8fhAajrAhOfX_uaZqZZ',
         ],
+//        'cache' => [
+//            'class' => 'yii\caching\FileCache',
+//        ],
         'cache' => [
-            'class' => 'yii\caching\FileCache',
+            'class' => 'yii\redis\Cache',
         ],
         'user' => [
             'identityClass' => 'app\models\User',
@@ -43,6 +46,15 @@ $config = [
                     'levels' => ['error', 'warning'],
                 ],
             ],
+        ],
+        'session' => [
+            'class' => 'yii\redis\Session',
+        ],
+        'redis' => [
+            'class' => 'yii\redis\Connection',
+            'hostname' => 'localhost',
+            'port' => 6379,
+            'database' => 0,
         ],
         'db' => $db,
         /*
