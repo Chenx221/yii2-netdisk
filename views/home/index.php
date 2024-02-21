@@ -22,7 +22,6 @@ use yii\helpers\Url;
 use yii\web\JqueryAsset;
 use yii\web\View;
 
-
 $this->title = '文件管理';
 $this->params['breadcrumbs'][] = $this->title;
 FontAwesomeAsset::register($this);
@@ -156,6 +155,8 @@ $this->registerCssFile('@web/css/home_style.css');
                             <?= Html::a($item['name'], ['home/download', 'relativePath' => $relativePath, 'type' => $item['rawType']], ['class' => 'file_name', 'onclick' => 'textEdit(this, event)']) ?>
                         <?php elseif ($item['type'] === 'fa-regular fa-file-audio'): ?>
                             <?= Html::a($item['name'], ['home/download', 'relativePath' => $relativePath, 'type' => $item['rawType']], ['class' => 'file_name', 'onclick' => 'previewAudio(this, event)']) ?>
+                        <?php elseif ($item['type'] === 'fa-regular fa-file-pdf'): ?>
+                            <?= Html::a($item['name'], ['home/preview', 'relativePath' => $relativePath, 'type' => $item['rawType']], ['class' => 'file_name', 'onclick' => 'previewPdf(this, event)']) ?>
                         <?php else: ?>
                             <?= Html::a($item['name'], ['home/download', 'relativePath' => $relativePath], ['class' => 'file_name']) ?>
                         <?php endif; ?>
@@ -310,11 +311,19 @@ Modal::begin([
     'size' => 'modal-lg',
 ]);
 
-echo'<div class="alert alert-success" role="alert" id="ed-alert-success">保存成功</div><div class="alert alert-danger" role="alert" id="ed-alert-fail">保存失败</div>';
+echo '<div class="alert alert-success" role="alert" id="ed-alert-success">保存成功</div><div class="alert alert-danger" role="alert" id="ed-alert-fail">保存失败</div>';
 echo '<button id="saveButton" class="btn btn-outline-primary" style="margin-bottom: 16px"><i class="fa-regular fa-floppy-disk"></i> 保存文件</button>';
 echo '<input type="hidden" id="edFilename" value="">';
 echo '<div id="editor" style="width: 100%; height: 500px;"></div>';
 
+Modal::end();
+
+Modal::begin([
+    'title' => '<h4>PDF预览</h4>',
+    'id' => 'pdfModal',
+    'size' => 'modal-xl',
+]);
+//echo '<object id="pdfObject" type="application/pdf" style="width:100%;height:500px;"></object>';
 Modal::end();
 $this->registerJsFile('@web/js/home_script.js', ['depends' => [JqueryAsset::class], 'position' => View::POS_END]);
 ?>

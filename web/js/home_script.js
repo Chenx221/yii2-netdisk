@@ -506,3 +506,26 @@ $('#saveButton').on('click', function () {
         }
     });
 });
+
+//pdf preview
+var pdfModal = $('#pdfModal');
+
+function previewPdf(element, event) {
+    event.preventDefault();
+    var pdfUrl = element.href;
+    var pdfObject = document.createElement('object');
+    pdfObject.id = 'pdfObject';
+    pdfObject.type = 'application/pdf';
+    pdfObject.style.width = '100%';
+    pdfObject.style.height = '500px';
+    pdfObject.data = pdfUrl;
+    pdfModal.find('.modal-body').append(pdfObject);
+    pdfModal.modal('show');
+}
+
+pdfModal.on('hidden.bs.modal', function () {
+    var pdfObject = document.getElementById('pdfObject');
+    if (pdfObject) {
+        pdfObject.remove();
+    }
+});
