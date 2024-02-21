@@ -186,11 +186,6 @@ $this->registerCssFile('@web/css/home_style.css');
     </table>
 </div>
 
-<!--test area start-->
-<!--<audio id="audioPlayer" src=""></audio>-->
-<!--<button id="audioBtn" onclick="testf()">播放</button>-->
-<!--test area end-->
-
 <?php
 Modal::begin([
     'title' => '<h4>重命名文件/文件夹</h4>',
@@ -296,7 +291,6 @@ Modal::end();
 Modal::begin([
     'title' => '<h4>音频播放</h4>',
     'id' => 'audioModal',
-//    'size' => 'modal-sm',
 ]);
 
 echo '<audio id="aPlayer" controls>
@@ -323,7 +317,6 @@ Modal::begin([
     'id' => 'pdfModal',
     'size' => 'modal-xl',
 ]);
-//echo '<object id="pdfObject" type="application/pdf" style="width:100%;height:500px;"></object>';
 Modal::end();
 $this->registerJsFile('@web/js/home_script.js', ['depends' => [JqueryAsset::class], 'position' => View::POS_END]);
 ?>
