@@ -11,7 +11,7 @@
  Target Server Version : 110202 (11.2.2-MariaDB)
  File Encoding         : 65001
 
- Date: 23/02/2024 11:42:23
+ Date: 23/02/2024 14:51:33
 */
 
 SET NAMES utf8mb4;
@@ -30,7 +30,22 @@ CREATE TABLE `collection_tasks`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `user_id`(`user_id`) USING BTREE,
   CONSTRAINT `collection_tasks_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Table structure for collection_uploaded
+-- ----------------------------
+DROP TABLE IF EXISTS `collection_uploaded`;
+CREATE TABLE `collection_uploaded`  (
+  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '文件收集的上传记录id',
+  `task_id` int(11) NOT NULL COMMENT '对应的文件收集id',
+  `uploader_ip` varchar(45) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '上传者ip',
+  `uploaded_at` timestamp NOT NULL DEFAULT current_timestamp() COMMENT '上传时间',
+  `subfolder_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '对应的子文件夹名',
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `task_id`(`task_id`) USING BTREE,
+  CONSTRAINT `collection_uploaded_ibfk_1` FOREIGN KEY (`task_id`) REFERENCES `collection_tasks` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for country
@@ -57,21 +72,6 @@ CREATE TABLE `share`  (
   INDEX `sharer_id`(`sharer_id`) USING BTREE,
   CONSTRAINT `share_ibfk_1` FOREIGN KEY (`sharer_id`) REFERENCES `user` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
 ) ENGINE = InnoDB AUTO_INCREMENT = 7 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
-
--- ----------------------------
--- Table structure for uploaded_files
--- ----------------------------
-DROP TABLE IF EXISTS `uploaded_files`;
-CREATE TABLE `uploaded_files`  (
-  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '文件上传记录id',
-  `task_id` int(11) NOT NULL COMMENT '对应的收集任务id',
-  `uploader_ip` varchar(45) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '上传者ip',
-  `uploaded_at` timestamp NOT NULL DEFAULT current_timestamp() COMMENT '上传时间',
-  `subfolder_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '子文件夹名',
-  PRIMARY KEY (`id`) USING BTREE,
-  INDEX `task_id`(`task_id`) USING BTREE,
-  CONSTRAINT `uploaded_files_ibfk_1` FOREIGN KEY (`task_id`) REFERENCES `collection_tasks` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for user
