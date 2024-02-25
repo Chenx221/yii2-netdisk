@@ -10,7 +10,7 @@ use yii\widgets\DetailView;
 /** @var app\models\Share $model */
 
 $this->title = '分享ID '.$model->share_id;
-$this->params['breadcrumbs'][] = ['label' => 'Shares', 'url' => ['index']];
+$this->params['breadcrumbs'][] = ['label' => '分享', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 YiiAsset::register($this);
 JqueryAsset::register($this);
@@ -21,12 +21,12 @@ JqueryAsset::register($this);
 
     <p>
         <?= Html::a('复制分享链接', null, ['class' => 'btn btn-primary', 'id' => 'copy-link-button']) ?>
-        <?= Html::a('访问分享链接', ['share/access', 'share_id' => $model->share_id], ['class' => 'btn btn-primary', 'target' => '_blank']) ?>
+        <?= Html::a('访问分享链接', ['share/access', 'share_id' => $model->share_id,'access_code'=>$model->access_code], ['class' => 'btn btn-primary', 'target' => '_blank']) ?>
         <?= Html::a('修改分享', ['update', 'share_id' => $model->share_id], ['class' => 'btn btn-primary']) ?>
         <?= Html::a('取消分享', ['delete', 'share_id' => $model->share_id], [
             'class' => 'btn btn-danger',
             'data' => [
-                'confirm' => 'Are you sure you want to delete this item?',
+                'confirm' => '你确定要取消这个分享？其他人将无法通过该链接访问文件',
                 'method' => 'post',
             ],
         ]) ?>
