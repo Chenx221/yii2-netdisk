@@ -367,6 +367,7 @@ function updateButtons() {
     $('.calc-sum-btn').toggle(isSingleFile);
     $('.single-share-btn').toggle(count === 1);
     $('.batch-delete-btn').toggle(count >= 1);
+    $('.create-collection-btn').toggle(count === 1 && !isSingleFile);
 }
 
 // 当checkbox的状态改变时，调用updateButtons函数
@@ -528,4 +529,10 @@ pdfModal.on('hidden.bs.modal', function () {
     if (pdfObject) {
         pdfObject.remove();
     }
+});
+
+//create collection task
+$(document).on('click', '.create-collection-btn', function () {
+    document.getElementById('collectiontasks-folder_path').value = $('.select-item:checked').first().data('relativePath');
+    $('#collectionModal').modal('show');
 });

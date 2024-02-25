@@ -9,6 +9,7 @@
 use app\assets\AceAsset;
 use app\assets\PlyrAsset;
 use app\assets\ViewerJsAsset;
+use app\models\CollectionTasks;
 use app\models\NewFolderForm;
 use app\models\RenameForm;
 use app\models\Share;
@@ -46,6 +47,7 @@ $this->registerCssFile('@web/css/home_style.css');
             <?= Html::button('计算校验', ['class' => 'btn btn-outline-primary calc-sum-btn']) ?>
             <?= Html::button('分享', ['class' => 'btn btn-outline-primary single-share-btn']) ?>
             <?= Html::button('删除', ['class' => 'btn btn-outline-danger batch-delete-btn']) ?>
+            <?= Html::button('收集文件', ['class' => 'btn btn-outline-primary create-collection-btn']) ?>
             <?= Html::button('刷新', ['class' => 'btn btn-outline-primary refresh-btn']) ?>
             <?= Html::button('新建文件夹', ['class' => 'btn btn-outline-primary new-folder-btn', 'value' => $directory]) ?>
             <div class="dropdown d-inline-block">
@@ -316,6 +318,17 @@ Modal::begin([
     'title' => '<h4>PDF预览</h4>',
     'id' => 'pdfModal',
     'size' => 'modal-xl',
+]);
+Modal::end();
+
+Modal::begin([
+    'title' => '<h4>创建文件收集</h4>',
+    'id' => 'collectionModal',
+]);
+$collectionTasks = new CollectionTasks();
+$collectionTasks->scenario = 'create';
+echo $this->render('../collection/create', [
+    'model' => $collectionTasks,
 ]);
 Modal::end();
 $this->registerJsFile('@web/js/home_script.js', ['depends' => [JqueryAsset::class], 'position' => View::POS_END]);
