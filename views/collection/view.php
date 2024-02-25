@@ -2,6 +2,8 @@
 
 use yii\grid\GridView;
 use yii\helpers\Html;
+use yii\web\JqueryAsset;
+use yii\web\View;
 use yii\web\YiiAsset;
 use yii\widgets\DetailView;
 use app\models\CollectionUploadedSearch;
@@ -9,8 +11,8 @@ use app\models\CollectionUploadedSearch;
 /** @var yii\web\View $this */
 /** @var app\models\CollectionTasks $model */
 
-$this->title = $model->id;
-$this->params['breadcrumbs'][] = ['label' => 'Collection Tasks', 'url' => ['index']];
+$this->title = '文件收集ID ' . $model->id;
+$this->params['breadcrumbs'][] = ['label' => '文件收集', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 YiiAsset::register($this);
 
@@ -23,11 +25,12 @@ $dataProvider->query->andWhere(['task_id' => $model->id]);
     <h1><?= Html::encode($this->title) ?></h1>
 
     <p>
-        <?= Html::a('Update', ['update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
-        <?= Html::a('Delete', ['delete', 'id' => $model->id], [
+        <?= Html::a('复制收集链接', null, ['class' => 'btn btn-primary', 'id' => 'copy-link-button']) ?>
+        <?= Html::a('访问收集链接', ['collection/access', 'id' => $model->id, '$secret' => $model->secret], ['class' => 'btn btn-primary', 'target' => '_blank']) ?>
+        <?= Html::a('取消收集', ['delete', 'id' => $model->id], [
             'class' => 'btn btn-danger',
             'data' => [
-                'confirm' => 'Are you sure you want to delete this item?',
+                'confirm' => '你确定要取消这个收集任务吗？已收集的文件不会被删除',
                 'method' => 'post',
             ],
         ]) ?>
@@ -37,14 +40,13 @@ $dataProvider->query->andWhere(['task_id' => $model->id]);
         'model' => $model,
         'attributes' => [
             'id',
-            'user_id',
             'folder_path',
             'created_at',
             'secret',
         ],
     ]) ?>
 
-    <h2>收集情况:</h2>
+    <h2>文件收集情况:</h2>
     <?= GridView::widget([
         'dataProvider' => $dataProvider,
         'filterModel' => $searchModel,
@@ -58,3 +60,6 @@ $dataProvider->query->andWhere(['task_id' => $model->id]);
         ],
     ]); ?>
 </div>
+<?php
+$this->registerJsFile('@web/js/collection_view.js', ['depends' => [JqueryAsset::class], 'position' => View::POS_END]);
+?>

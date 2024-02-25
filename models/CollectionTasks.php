@@ -3,6 +3,7 @@
 namespace app\models;
 
 use Yii;
+use yii\db\ActiveRecord;
 
 /**
  * This is the model class for table "collection_tasks".
@@ -16,8 +17,10 @@ use Yii;
  * @property CollectionUploaded[] $collectionUploadeds
  * @property User $user
  */
-class CollectionTasks extends \yii\db\ActiveRecord
+class CollectionTasks extends ActiveRecord
 {
+    const SCENARIO_CREATE = 'create';
+
     /**
      * {@inheritdoc}
      */
@@ -33,6 +36,7 @@ class CollectionTasks extends \yii\db\ActiveRecord
     {
         return [
             [['user_id', 'folder_path', 'secret'], 'required'],
+            [['folder_path', 'secret'], 'required', 'on' => self::SCENARIO_CREATE],
             [['user_id'], 'integer'],
             [['created_at'], 'safe'],
             [['folder_path', 'secret'], 'string', 'max' => 255],
@@ -52,6 +56,16 @@ class CollectionTasks extends \yii\db\ActiveRecord
             'created_at' => '任务创建时间',
             'secret' => '访问密钥',
         ];
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function scenarios()
+    {
+        $scenarios = parent::scenarios();
+        $scenarios[self::SCENARIO_CREATE] = ['folder_path', 'secret']; // 在这里列出你想在创建收集任务时验证的属性
+        return $scenarios;
     }
 
     /**

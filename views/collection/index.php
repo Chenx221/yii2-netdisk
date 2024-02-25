@@ -36,6 +36,7 @@ $this->params['breadcrumbs'][] = $this->title;
             'secret',
             [
                 'class' => ActionColumn::className(),
+                'template' => '{view} {delete}',
                 'urlCreator' => function ($action, CollectionTasks $model, $key, $index, $column) {
                     return Url::toRoute([$action, 'id' => $model->id]);
                  }
