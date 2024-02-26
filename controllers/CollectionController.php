@@ -4,6 +4,8 @@ namespace app\controllers;
 
 use app\models\CollectionTasks;
 use app\models\CollectionSearch;
+use app\models\CollectionUploaded;
+use Ramsey\Uuid\Uuid;
 use Yii;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
@@ -115,5 +117,41 @@ class CollectionController extends Controller
         }
 
         throw new NotFoundHttpException('The requested page does not exist.');
+    }
+
+    /**
+     * 外部访问接口，接受参数id:收集文件任务id,secret:访问密钥,CollectionTasks[secret]:访问密钥(另一种形式)
+     *
+     * @param $id
+     * @param $secret
+     * @return string
+     * @throws NotFoundHttpException
+     */
+    public function actionAccess($id = null, $secret = null)
+    {
+        $receive_secret = Yii::$app->request->get('CollectionTasks')['secret'] ?? null;
+        if (!is_null($receive_secret)) {
+            $secret = $receive_secret;
+        }
+        $model = CollectionTasks::findOne(['id' => $id]);
+        if ($model === null) {
+            throw new NotFoundHttpException('请求的文件收集任务不存在');
+        } elseif ($secret === null) {
+            return $this->render('gateway', [
+                'model' => new CollectionTasks(),
+            ]);
+        } elseif ($model->secret !== $secret) {
+            Yii::$app->session->setFlash('error', '拒绝访问，凭证不正确');
+            return $this->render('gateway', [
+                'model' => new CollectionTasks(),
+            ]);
+        } else {
+            $model2 = new CollectionUploaded();
+            $model2->subfolder_name = Uuid::uuid4()->toString();
+            return $this->render('access', [
+                'model' => $model,
+                'model2' => $model2,
+            ]);
+        }
     }
 }

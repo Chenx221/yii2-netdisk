@@ -2,6 +2,7 @@
 
 namespace app\controllers;
 
+use app\models\CollectionTasks;
 use app\models\CollectionUploaded;
 use app\models\CollectionUploadedSearch;
 use yii\web\Controller;
@@ -28,16 +29,6 @@ class CollectionUploadedController extends Controller
                 ],
             ]
         );
-    }
-
-    /**
-     * Lists all CollectionUploaded models.
-     *
-     * @return string
-     */
-    public function actionIndex()
-    {
-        return $this->render('index');
     }
 
 
