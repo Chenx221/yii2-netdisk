@@ -49,14 +49,19 @@ $dataProvider->query->andWhere(['task_id' => $model->id]);
     <h2>文件收集情况:</h2>
     <?= GridView::widget([
         'dataProvider' => $dataProvider,
-//        'filterModel' => $searchModel,
         'columns' => [
             ['class' => 'yii\grid\SerialColumn'],
             'id',
-//            'task_id',
             'uploader_ip',
             'uploaded_at',
-            'subfolder_name',
+            [
+                'attribute' => 'subfolder_name',
+                'format' => 'raw',
+                'value' => function ($model) {
+                    $url = "https://devs.chenx221.cyou:8081/index.php?r=home%2Findex&directory=" . urlencode($model->task->folder_path.'/'.$model->subfolder_name);
+                    return Html::a($model->subfolder_name, $url, ['target' => '_blank']);
+                },
+            ],
         ],
     ]); ?>
 </div>
