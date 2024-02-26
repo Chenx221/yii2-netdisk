@@ -49,7 +49,7 @@ $dataProvider->query->andWhere(['task_id' => $model->id]);
     <h2>文件收集情况:</h2>
     <?= GridView::widget([
         'dataProvider' => $dataProvider,
-        'filterModel' => $searchModel,
+//        'filterModel' => $searchModel,
         'columns' => [
             ['class' => 'yii\grid\SerialColumn'],
             'id',

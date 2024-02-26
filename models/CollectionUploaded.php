@@ -3,6 +3,7 @@
 namespace app\models;
 
 use Yii;
+use yii\db\ActiveRecord;
 
 /**
  * This is the model class for table "collection_uploaded".
@@ -15,7 +16,7 @@ use Yii;
  *
  * @property CollectionTasks $task
  */
-class CollectionUploaded extends \yii\db\ActiveRecord
+class CollectionUploaded extends ActiveRecord
 {
     /**
      * {@inheritdoc}
