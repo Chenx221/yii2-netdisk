@@ -26,7 +26,7 @@ $dataProvider->query->andWhere(['task_id' => $model->id]);
 
     <p>
         <?= Html::a('复制收集链接', null, ['class' => 'btn btn-primary', 'id' => 'copy-link-button']) ?>
-        <?= Html::a('访问收集链接', ['collection/access', 'id' => $model->id, '$secret' => $model->secret], ['class' => 'btn btn-primary', 'target' => '_blank']) ?>
+        <?= Html::a('访问收集链接', ['collection/access', 'id' => $model->id, 'secret' => $model->secret], ['class' => 'btn btn-primary', 'target' => '_blank']) ?>
         <?= Html::a('取消收集', ['delete', 'id' => $model->id], [
             'class' => 'btn btn-danger',
             'data' => [
