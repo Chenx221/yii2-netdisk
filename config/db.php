@@ -4,9 +4,9 @@ use yii\db\Connection;
 
 return [
     'class' => Connection::class,
-    'dsn' => 'mysql:host=localhost:3307;dbname=yii2basic',
-    'username' => 'root',
-    'password' => 'chenx221',
+    'dsn' => 'mysql:host='.$_ENV['DB_HOST'].';dbname='.$_ENV['DB_NAME'],
+    'username' => $_ENV['DB_USERNAME'],
+    'password' => $_ENV['DB_PASSWORD'],
     'charset' => 'utf8',
     'schemaMap' => [
         'mysql' => SamIT\Yii2\MariaDb\Schema::class
