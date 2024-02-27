@@ -4,8 +4,11 @@ namespace app\controllers;
 
 use app\models\User;
 use app\models\UserSearch;
+use ReCaptcha\ReCaptcha;
 use Yii;
 use yii\base\Exception;
+use yii\base\InvalidConfigException;
+use yii\httpclient\Client;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
@@ -141,7 +144,7 @@ class UserController extends Controller
      *
      * @return string|Response
      */
-    public function actionLogin()
+    public function actionLogin(): Response|string
     {
         if (!Yii::$app->user->isGuest) {
             return $this->goHome();
@@ -150,15 +153,102 @@ class UserController extends Controller
         $model = new User(['scenario' => 'login']);
 
         if ($model->load(Yii::$app->request->post()) && $model->validate()) {
-            if ($model->login()) {
-                return $this->goBack();
+            // 根据 verifyProvider 的值选择使用哪种验证码服务
+            $verifyProvider = Yii::$app->params['verifyProvider'];
+            $captchaResponse = null;
+            $isCaptchaValid = false;
+            if ($verifyProvider === 'reCAPTCHA') {
+                $captchaResponse = Yii::$app->request->post('g-recaptcha-response', null);
+                $isCaptchaValid = $this->validateRecaptcha($captchaResponse);
+            } elseif ($verifyProvider === 'hCaptcha') {
+                $captchaResponse = Yii::$app->request->post('h-captcha-response', null);
+                $isCaptchaValid = $this->validateHcaptcha($captchaResponse);
+            } elseif ($verifyProvider === 'Turnstile') {
+                $captchaResponse = Yii::$app->request->post('cf-turnstile-response', null);
+                $isCaptchaValid = $this->validateTurnstile($captchaResponse);
+            }
+
+            if ($captchaResponse !== null && $isCaptchaValid) {
+                if ($model->login()) {
+                    return $this->goBack();
+                } else {
+                    Yii::$app->session->setFlash('error', 'Invalid username or password.');
+                }
             } else {
-                Yii::$app->session->setFlash('error', 'Invalid username or password.');
+                Yii::$app->session->setFlash('error', 'Invalid captcha.');
             }
         }
         return $this->render('login', [
             'model' => $model,
         ]);
+    }
+
+    /**
+     * 验证 reCAPTCHA 的响应
+     * 无法保证这项服务在中国大陆的可用性
+     * @param $recaptchaResponse
+     * @return bool
+     */
+    private function validateRecaptcha($recaptchaResponse): bool
+    {
+        $recaptcha = new ReCaptcha(Yii::$app->params['reCAPTCHA']['secret']);
+        $resp = $recaptcha->verify($recaptchaResponse, $_SERVER['REMOTE_ADDR']);
+
+        return $resp->isSuccess();
+    }
+
+    /**
+     * 验证 hCaptcha 的响应
+     * @param $hcaptchaResponse
+     * @return bool
+     * @throws InvalidConfigException
+     * @throws \yii\httpclient\Exception
+     */
+    private function validateHcaptcha($hcaptchaResponse): bool
+    {
+        $hcaptchaSecret = Yii::$app->params['hCaptcha']['secret'];
+        $verifyUrl = 'https://api.hcaptcha.com/siteverify';
+
+        $client = new Client();
+        $response = $client->createRequest()
+            ->setMethod('POST')
+            ->setUrl($verifyUrl)
+            ->setData(['secret' => $hcaptchaSecret, 'response' => $hcaptchaResponse])
+            ->send();
+
+        if ($response->isOk) {
+            $responseData = $response->getData();
+            return isset($responseData['success']) && $responseData['success'] === true;
+        }
+
+        return false;
+    }
+
+    /**
+     * 验证 Turnstile 的响应
+     * @param $turnstileResponse
+     * @return bool
+     * @throws InvalidConfigException
+     * @throws \yii\httpclient\Exception
+     */
+    private function validateTurnstile($turnstileResponse): bool
+    {
+        $turnstileSecret = Yii::$app->params['Turnstile']['secret'];
+        $verifyUrl = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
+
+        $client = new Client();
+        $response = $client->createRequest()
+            ->setMethod('POST')
+            ->setUrl($verifyUrl)
+            ->setData(['secret' => $turnstileSecret, 'response' => $turnstileResponse])
+            ->send();
+
+        if ($response->isOk) {
+            $responseData = $response->getData();
+            return isset($responseData['success']) && $responseData['success'] === true;
+        }
+
+        return false;
     }
 
     /**
@@ -178,19 +268,38 @@ class UserController extends Controller
      * @return string|Response
      * @throws Exception
      */
-    public function actionRegister()
+    public function actionRegister(): Response|string
     {
         $model = new User(['scenario' => 'register']);
         if ($model->load(Yii::$app->request->post()) && $model->validate()) {
-            $raw_password = $model->password;
-            $model->password = Yii::$app->security->generatePasswordHash($raw_password);
-            $model->auth_key = Yii::$app->security->generateRandomString();
-            if ($model->save(false)) { // save without validation
-                Yii::$app->session->setFlash('success', 'Registration successful. You can now log in.');
-                return $this->redirect(['login']);
+            // 根据 verifyProvider 的值选择使用哪种验证码服务
+            $verifyProvider = Yii::$app->params['verifyProvider'];
+            $captchaResponse = null;
+            $isCaptchaValid = false;
+            if ($verifyProvider === 'reCAPTCHA') {
+                $captchaResponse = Yii::$app->request->post('g-recaptcha-response', null);
+                $isCaptchaValid = $this->validateRecaptcha($captchaResponse);
+            } elseif ($verifyProvider === 'hCaptcha') {
+                $captchaResponse = Yii::$app->request->post('h-captcha-response', null);
+                $isCaptchaValid = $this->validateHcaptcha($captchaResponse);
+            } elseif ($verifyProvider === 'Turnstile') {
+                $captchaResponse = Yii::$app->request->post('cf-turnstile-response', null);
+                $isCaptchaValid = $this->validateTurnstile($captchaResponse);
+            }
+
+            if ($captchaResponse !== null && $isCaptchaValid) {
+                $raw_password = $model->password;
+                $model->password = Yii::$app->security->generatePasswordHash($raw_password);
+                $model->auth_key = Yii::$app->security->generateRandomString();
+                if ($model->save(false)) { // save without validation
+                    Yii::$app->session->setFlash('success', 'Registration successful. You can now log in.');
+                    return $this->redirect(['login']);
+                } else {
+                    $model->password = $raw_password;
+                    Yii::$app->session->setFlash('error', 'Failed to register user.');
+                }
             } else {
-                $model->password = $raw_password;
-                Yii::$app->session->setFlash('error', 'Failed to register user.');
+                Yii::$app->session->setFlash('error', 'Invalid captcha.');
             }
         }
 
