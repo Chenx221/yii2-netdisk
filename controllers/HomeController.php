@@ -599,8 +599,8 @@ class HomeController extends Controller
         if ($archive === null) {
             throw new NotFoundHttpException('Failed to open the archive.');
         }
-
-        $targetDirectory = Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . Yii::$app->user->id . '/' . pathinfo($relativePath, PATHINFO_FILENAME) . '_' . time();
+        $now_time = time();
+        $targetDirectory = Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . Yii::$app->user->id . '/' . pathinfo($relativePath, PATHINFO_FILENAME) . '_' . $now_time;
         if (!is_dir($targetDirectory)) {
             mkdir($targetDirectory, 0777, true);
         }
@@ -611,7 +611,7 @@ class HomeController extends Controller
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'status' => 200,
-                'directory' => pathinfo($relativePath, PATHINFO_FILENAME) . '_' . time(),
+                'directory' => pathinfo($relativePath, PATHINFO_FILENAME) . '_' . $now_time,
             ];
         } catch (ArchiveExtractionException) {
             $this->deleteDirectory($targetDirectory);
@@ -619,7 +619,7 @@ class HomeController extends Controller
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'status' => 500,
-                'directory' => pathinfo($relativePath, PATHINFO_FILENAME) . '_' . time(),
+                'directory' => pathinfo($relativePath, PATHINFO_FILENAME) . '_' . $now_time,
                 'parentDirectory' => dirname($relativePath),
             ];
         }
