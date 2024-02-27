@@ -68,7 +68,10 @@ $this->registerCssFile('@web/css/home_style.css');
                     <li>
                         <hr class="dropdown-divider">
                     </li>
-                    <li><?= Html::button('离线下载', ['class' => 'dropdown-item offline-download-btn']) ?></li>
+                    <li>
+                        <!--尚未实现-->
+                        <?= Html::button('离线下载', ['class' => 'dropdown-item offline-download-btn', 'disabled' => true]) ?>
+                    </li>
                 </ul>
             </div>
         </div>
