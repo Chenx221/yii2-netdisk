@@ -44,7 +44,6 @@ table a {
 }
 
 .breadcrumb {
-    /*border-radius: 0.375rem;*/
     margin-top: 16px;
 }
 
@@ -61,7 +60,6 @@ table a {
     background: #f8f8f8;
     z-index: 1000;
     opacity: 0.7;
-    /*position: relative;*/
 }
 
 #drop-area.dragging::after {
