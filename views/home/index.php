@@ -36,6 +36,7 @@ $this->registerCssFile('@web/css/home_style.css');
     <div class="d-flex justify-content-between align-items-center">
         <h1><?= Html::encode($this->title) ?></h1>
         <div>
+            <?= Html::button('打开', ['class' => 'btn btn-outline-primary single-open-btn']) ?>
             <?= Html::button('下载', ['class' => 'btn btn-outline-primary single-download-btn']) ?>
             <?= Html::button('打包下载', ['class' => 'btn btn-outline-primary batch-zip-download-btn']) ?>
             <?= Html::button('压缩', ['class' => 'btn btn-outline-primary batch-zip-btn']) ?>
@@ -105,6 +106,19 @@ $this->registerCssFile('@web/css/home_style.css');
             <?php endif; ?>
         </ol>
     </nav>
+    <div class="dropdown" id="contextMenu" style="display: none;position: absolute">
+        <ul class="dropdown-menu shadow" aria-labelledby="dropdownMenuButton" id="contextMenu-content">
+            <li><a class="dropdown-item" id="option-open" href="#">打开</a></li>
+            <li><a class="dropdown-item" id="option-download" href="#">下载</a></li>
+            <li><a class="dropdown-item" id="option-batch-zip-download" href="#">打包下载</a></li>
+            <li><a class="dropdown-item" id="option-single-rename" href="#">重命名</a></li>
+            <li><a class="dropdown-item" id="option-batch-copy" href="#">复制</a></li>
+            <li><a class="dropdown-item" id="option-batch-cut" href="#">剪切</a></li>
+            <li><a class="dropdown-item" id="option-batch-paste" href="#">粘贴</a></li>
+            <li><a class="dropdown-item" id="option-batch-delete" href="#">删除</a></li>
+            <li><a class="dropdown-item" id="option-refresh" href="#">刷新</a></li>
+        </ul>
+    </div>
     <img id="hidden-image" style="display: none;" alt="" src="" loading=lazy>
     <table class="table table-hover" id="drop-area">
         <thead class="table-light">

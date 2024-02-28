@@ -223,7 +223,17 @@ $(document).on('click', '.batch-delete-btn', function () {
     });
 });
 
-//下面的代码实现了各种按钮/样式功能，建议别看了(
+$(document).on('click', '.single-open-btn', function () {
+    // 下面这个写法无效，因为它目前只对支持预览的设置onclick事件的文件有效
+    // $('.select-item:checked').first().closest('tr').find('.file_name').click();
+
+    var firstSelectedElement = $('.select-item:checked').first().closest('tr').find('.file_name')[0];
+    if (firstSelectedElement) {
+        firstSelectedElement.click();
+    }
+});
+
+//下面的代码实现了各种按钮/样式功能，建议别看了(写的头疼了
 
 //上传
 function uploadFiles(files) {
@@ -321,19 +331,39 @@ for (var i = 0; i < itemCheckboxes.length; i++) {
 
 // 为document添加键盘事件监听器
 document.addEventListener('keydown', function (event) {
-    // 如果用户按下了Ctrl+A
     if (event.ctrlKey && event.key === 'a') {
-        // 阻止默认的全选操作
         event.preventDefault();
-        // 获取所有的复选框
         var checkboxes = document.querySelectorAll('.select-item');
-        var selectAll = document.getElementById('select-all');
-        selectAll.checked = !selectAll.checked;
+        var allChecked = Array.from(checkboxes).every(checkbox => checkbox.checked);
         for (var i = 0; i < checkboxes.length; i++) {
-            checkboxes[i].checked = selectAll.checked;
-            checkboxes[i].closest('tr').classList.toggle('selected', selectAll.checked);
+            checkboxes[i].checked = !allChecked;
+            checkboxes[i].closest('tr').classList.toggle('selected', !allChecked);
         }
         updateButtons();
+    }
+    if (event.ctrlKey && event.key === 'd') {
+        event.preventDefault();
+        $('tr.selected').removeClass('selected').find('input[type="checkbox"]').prop('checked', false);
+        $('#select-all').prop('checked', false);
+        updateButtons();
+    }
+    if (event.ctrlKey && event.key === 'c') {
+        var cp = $('.batch-copy-btn');
+        if (cp.css('display') !== 'none') {
+            cp.click();
+        }
+    }
+    if (event.ctrlKey && event.key === 'x') {
+        var ct = $('.batch-cut-btn');
+        if (ct.css('display') !== 'none') {
+            ct.click();
+        }
+    }
+    if (event.ctrlKey && event.key === 'v') {
+        var pe = $('.batch-paste-btn');
+        if (pe.css('display') !== 'none') {
+            pe.click();
+        }
     }
 });
 
@@ -342,9 +372,20 @@ $(document).on('click', 'tr', function (event) {
     if ($(event.target).is('input[type="checkbox"]') || $(event.target).is('a')) {
         return;
     }
-    $(this).toggleClass('selected');
-    var checkbox = $(this).children(':first-child').find('input[type="checkbox"]');
-    checkbox.prop('checked', !checkbox.prop('checked'));
+    var checkboxes = document.querySelectorAll('.select-item');
+    // 检查是否所有的复选框都已经被选中
+    var checkedCount = Array.from(checkboxes).filter(checkbox => checkbox.checked).length;
+    // 如果选中的复选框的数量大于或等于2，那么就将allChecked设置为true
+    var allChecked = checkedCount >= 2;    // 如果Ctrl键没有被按下，取消所有其他行的选中状态
+    if (!event.ctrlKey) {
+        $('tr.selected').not(this).removeClass('selected').find('input[type="checkbox"]').prop('checked', false);
+    }
+    // 切换当前行的选中状态
+    if ((!allChecked) || (allChecked && event.ctrlKey)) {
+        $(this).toggleClass('selected');
+        var checkbox = $(this).children(':first-child').find('input[type="checkbox"]');
+        checkbox.prop('checked', !checkbox.prop('checked'));
+    }
     updateButtons();
 });
 
@@ -355,7 +396,7 @@ function updateButtons() {
     var isSingleFile = count === 1 && !checkboxes.first().data('isDirectory');
     var isSingleZip = isSingleFile && checkboxes.first().closest('tr').find('.file_icon').hasClass('fa-file-zipper');
     var hasOperation = sessionStorage.getItem('operation') !== null;  // 检查 sessionStorage 中是否存在 operation
-
+    $('.single-open-btn').toggle(count === 1);
     $('.single-download-btn').toggle(isSingleFile);
     $('.batch-zip-download-btn').toggle(count > 0 && !isSingleFile);
     $('.batch-zip-btn').toggle(count >= 1);
@@ -375,6 +416,97 @@ $(document).on('change', '.select-item', updateButtons);
 
 $(document).ready(function () {
     updateButtons();
+
+    $('tr').contextmenu(function (e) {
+        e.preventDefault();
+        if ($(e.target).is('button') || $(e.target).is('i') || $(e.target).is('a')) {
+            e.preventDefault();  // 阻止事件的默认行为
+            return;
+        }
+        // 获取点击的元素
+        var clickedElement = $(this);
+
+        if (!clickedElement.hasClass('selected')) {
+            $('tr.selected').removeClass('selected').find('input[type="checkbox"]').prop('checked', false);
+            clickedElement.addClass('selected');
+            var checkbox = clickedElement.children(':first-child').find('input[type="checkbox"]');
+            checkbox.prop('checked', true);
+            updateButtons();
+        }
+
+        $('#option-open').toggle($('.single-open-btn').css('display') !== 'none');
+        $('#option-download').toggle($('.single-download-btn').css('display') !== 'none');
+        $('#option-batch-zip-download').toggle($('.batch-zip-download-btn').css('display') !== 'none');
+        $('#option-single-rename').toggle($('.single-rename-btn').css('display') !== 'none');
+        $('#option-batch-copy').toggle($('.batch-copy-btn').css('display') !== 'none');
+        $('#option-batch-cut').toggle($('.batch-cut-btn').css('display') !== 'none');
+        $('#option-batch-paste').toggle($('.batch-paste-btn').css('display') !== 'none');
+        $('#option-batch-delete').toggle($('.batch-delete-btn').css('display') !== 'none');
+        $('#option-refresh').toggle($('.refresh-btn').css('display') !== 'none');
+
+        // 显示菜单
+        $('#contextMenu').css({
+            display: "block",
+            left: e.pageX,
+            top: e.pageY
+        }).addClass('show');
+        $('#contextMenu .dropdown-menu').addClass('show');
+    });
+    // 当用户点击菜单项时
+    $('#contextMenu a').off('click').on('click', function (e) {
+        e.preventDefault();
+        // 获取点击的菜单项
+        var clickedMenuItem = $(this).attr('id');
+
+        // 根据点击的菜单项执行相应的操作
+        switch (clickedMenuItem) {
+            case 'option-open':
+                // 模拟点击打开按钮
+                $('.single-open-btn').click();
+                break;
+            case 'option-download':
+                // 模拟点击下载按钮
+                $('.single-download-btn').click();
+                break;
+            case 'option-batch-zip-download':
+                // 模拟点击打包下载按钮
+                $('.batch-zip-download-btn').click();
+                break;
+            case 'option-single-rename':
+                // 模拟点击重命名按钮
+                $('.single-rename-btn').click();
+                break;
+            case 'option-batch-copy':
+                // 模拟点击复制按钮
+                $('.batch-copy-btn').click();
+                break;
+            case 'option-batch-cut':
+                // 模拟点击剪切按钮
+                $('.batch-cut-btn').click();
+                break;
+            case 'option-batch-paste':
+                // 模拟点击粘贴按钮
+                $('.batch-paste-btn').click();
+                break;
+            case 'option-batch-delete':
+                // 模拟点击删除按钮
+                $('.batch-delete-btn').click();
+                break;
+            case 'option-refresh':
+                // 模拟点击刷新按钮
+                $('.refresh-btn').click();
+                break;
+        }
+
+        // 隐藏菜单
+        $('#contextMenu').hide().removeClass('show');
+    });
+
+// 当用户点击其他地方时，隐藏菜单
+    $(document).click(function () {
+        $('#contextMenu').hide().removeClass('show');
+        $('#contextMenu .dropdown-menu').removeClass('show');
+    });
 });
 
 // image preview
@@ -536,3 +668,4 @@ $(document).on('click', '.create-collection-btn', function () {
     document.getElementById('collectiontasks-folder_path').value = $('.select-item:checked').first().data('relativePath');
     $('#collectionModal').modal('show');
 });
+
