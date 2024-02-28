@@ -168,7 +168,7 @@ class UserController extends Controller
                 $isCaptchaValid = $this->validateTurnstile($captchaResponse);
             }
 
-            if ($captchaResponse !== null && $isCaptchaValid) {
+            if (($captchaResponse !== null && $isCaptchaValid) || ($verifyProvider === 'None')) {
                 if ($model->login()) {
                     return $this->goBack();
                 } else {
@@ -287,7 +287,7 @@ class UserController extends Controller
                 $isCaptchaValid = $this->validateTurnstile($captchaResponse);
             }
 
-            if ($captchaResponse !== null && $isCaptchaValid) {
+            if (($captchaResponse !== null && $isCaptchaValid) || ($verifyProvider === 'None')) {
                 $raw_password = $model->password;
                 $model->password = Yii::$app->security->generatePasswordHash($raw_password);
                 $model->auth_key = Yii::$app->security->generateRandomString();
