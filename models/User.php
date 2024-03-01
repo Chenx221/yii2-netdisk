@@ -3,6 +3,7 @@
 namespace app\models;
 
 use Yii;
+use yii\db\ActiveQuery;
 use yii\db\ActiveRecord;
 use yii\web\IdentityInterface;
 
@@ -10,11 +11,23 @@ use yii\web\IdentityInterface;
  * This is the model class for table "user".
  *
  * @property int $id 用户ID
- * @property string|null $username 用户名
- * @property string|null $password 密码
- * @property string|null $auth_key authkey
- * @property string|null $email 邮箱
- * @property int|null $status 用户状态
+ * * @property string|null $username 用户名
+ * * @property string|null $password 密码
+ * * @property string|null $auth_key authkey
+ * * @property string|null $email 邮箱
+ * * @property int|null $status 账户是否启用
+ * * @property string|null $created_at 账户创建时间
+ * * @property string|null $last_login 上次登陆时间
+ * * @property string|null $last_login_ip 上次登录ip
+ * * @property string|null $bio 备注
+ * * @property string|null $role 身份
+ * * @property string|null $encryption_key 加密密钥
+ * * @property string|null $otp_secret otp密钥
+ * * @property int|null $is_encryption_enabled 启用加密
+ * * @property int|null $is_otp_enabled 启用otp
+ *
+ * @property CollectionTasks[] $collectionTasks
+ * @property Share[] $shares
  */
 class User extends ActiveRecord implements IdentityInterface
 {
@@ -24,25 +37,22 @@ class User extends ActiveRecord implements IdentityInterface
     /**
      * {@inheritdoc}
      */
-    public static function tableName()
+    public static function tableName(): string
     {
         return 'user';
     }
 
     /**
-     * // rules说明
-     * // 1. username, password, password2, email 必填
-     * // 2. username 长度在3-12之间
-     * // 3. password 长度在6-12之间
-     * // 4. password2 必须和password一致
-     * // 5. email 必须是邮箱格式
-     * // 6. username, email 必须是唯一的
-     * *
      * {@inheritdoc}
      */
-    public function rules()
+    public function rules(): array
     {
         return [
+            [['status', 'is_encryption_enabled', 'is_otp_enabled'], 'integer'],
+            [['created_at', 'last_login'], 'safe'],
+            [['bio'], 'string'],
+            [['encryption_key', 'otp_secret'], 'string', 'max' => 255],
+            [['last_login_ip'], 'string', 'max' => 45],
             [['username', 'password'], 'required', 'on' => 'login'],
             [['username', 'password', 'email', 'password2'], 'required', 'on' => 'register'],
             ['username', 'string', 'min' => 3, 'max' => 12],
@@ -57,7 +67,7 @@ class User extends ActiveRecord implements IdentityInterface
     /**
      * {@inheritdoc}
      */
-    public function attributeLabels()
+    public function attributeLabels(): array
     {
         return [
             'id' => 'ID',
@@ -66,6 +76,15 @@ class User extends ActiveRecord implements IdentityInterface
             'auth_key' => 'Auth Key',
             'email' => 'Email',
             'status' => 'Status',
+            'created_at' => 'Created At',
+            'last_login' => 'Last Login',
+            'last_login_ip' => 'Last Login Ip',
+            'bio' => 'Bio',
+            'role' => 'Role',
+            'encryption_key' => 'Encryption Key',
+            'otp_secret' => 'Otp Secret',
+            'is_encryption_enabled' => 'Is Encryption Enabled',
+            'is_otp_enabled' => 'Is Otp Enabled',
         ];
     }
 
@@ -75,7 +94,7 @@ class User extends ActiveRecord implements IdentityInterface
      * @param string|int $id the ID to be looked for
      * @return IdentityInterface|null the identity object that matches the given ID.
      */
-    public static function findIdentity($id)
+    public static function findIdentity($id): ?IdentityInterface
     {
         return static::findOne($id);
     }
@@ -88,7 +107,7 @@ class User extends ActiveRecord implements IdentityInterface
      * For example, [[\yii\filters\auth\HttpBearerAuth]] will set this parameter to be `yii\filters\auth\HttpBearerAuth`.
      * @return IdentityInterface|null the identity object that matches the given token.
      */
-    public static function findIdentityByAccessToken($token, $type = null)
+    public static function findIdentityByAccessToken($token, $type = null): ?IdentityInterface
     {
         // This method is not needed if you don't use access tokens for authentication.
         return null;
@@ -97,9 +116,9 @@ class User extends ActiveRecord implements IdentityInterface
     /**
      * Returns the ID of the user.
      *
-     * @return string|int the ID of the user
+     * @return int the ID of the user
      */
-    public function getId()
+    public function getId(): int
     {
         return $this->id;
     }
@@ -107,9 +126,9 @@ class User extends ActiveRecord implements IdentityInterface
     /**
      * Returns an auth key used to authenticate cookie-based login.
      *
-     * @return string the auth key
+     * @return string|null the auth key
      */
-    public function getAuthKey()
+    public function getAuthKey(): ?string
     {
         return $this->auth_key;
     }
@@ -120,7 +139,7 @@ class User extends ActiveRecord implements IdentityInterface
      * @param string $authKey the given auth key
      * @return bool whether the given auth key is valid.
      */
-    public function validateAuthKey($authKey)
+    public function validateAuthKey($authKey): bool
     {
         return $this->getAuthKey() === $authKey;
     }
@@ -130,7 +149,7 @@ class User extends ActiveRecord implements IdentityInterface
      *
      * @return bool 返回用户名密码验证状态
      */
-    public function login()
+    public function login(): bool
     {
         $user = User::findOne(['username' => $this->username]);
 
@@ -154,8 +173,56 @@ class User extends ActiveRecord implements IdentityInterface
      * @param $password
      * @return bool
      */
-    public function validatePassword($password)
+    public function validatePassword($password): bool
     {
         return Yii::$app->security->validatePassword($password, $this->password);
     }
+
+    /**
+     * Gets query for [[CollectionTasks]].
+     *
+     * @return ActiveQuery
+     */
+    public function getCollectionTasks(): ActiveQuery
+    {
+        return $this->hasMany(CollectionTasks::class, ['user_id' => 'id']);
+    }
+
+    /**
+     * Gets query for [[Shares]].
+     *
+     * @return ActiveQuery
+     */
+    public function getShares(): ActiveQuery
+    {
+        return $this->hasMany(Share::class, ['sharer_id' => 'id']);
+    }
+
+    /**
+     * Get either a Gravatar URL or complete image tag for a specified email address.
+     * 获取Gravatar头像url或完整的img标签
+     *
+     * @param string $email The email address
+     * @param int|string $s Size in pixels, defaults to 80px [ 1 - 2048 ]
+     * @param string $d Default imageset to use [ 404 | mp | identicon | monsterid | wavatar ]
+     * @param string $r Maximum rating (inclusive) [ g | pg | r | x ]
+     * @param boolean $img True to return a complete IMG tag False for just the URL
+     * @param array $atts Optional, additional key/value attributes to include in the IMG tag
+     * @return String containing either just a URL or a complete image tag
+     * @source https://gravatar.com/site/implement/images/php/
+     */
+    public function getGravatar(string $email, int|string $s = 80, string $d = 'mp', string $r = 'x', bool $img = false, array $atts = array() ): string
+    {
+        $url = 'https://www.gravatar.com/avatar/';
+        $url .= md5( strtolower( trim( $email ) ) );
+        $url .= "?s=$s&d=$d&r=$r";
+        if ( $img ) {
+            $url = '<img src="' . $url . '"';
+            foreach ( $atts as $key => $val )
+                $url .= ' ' . $key . '="' . $val . '"';
+            $url .= ' />';
+        }
+        return $url;
+    }
+
 }

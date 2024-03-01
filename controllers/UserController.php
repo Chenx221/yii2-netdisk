@@ -170,7 +170,15 @@ class UserController extends Controller
 
             if (($captchaResponse !== null && $isCaptchaValid) || ($verifyProvider === 'None')) {
                 if ($model->login()) {
-                    return $this->goBack();
+                    //login success
+                    $user = Yii::$app->user->identity;
+                    $user->last_login = date('Y-m-d H:i:s');
+                    $user->last_login_ip = Yii::$app->request->userIP;
+                    if ($user->save(false)) {
+                        return $this->goBack();
+                    } else {
+                        Yii::$app->session->setFlash('error', '登陆成功，但出现了内部错误');
+                    }
                 } else {
                     Yii::$app->session->setFlash('error', 'Invalid username or password.');
                 }
@@ -291,6 +299,8 @@ class UserController extends Controller
                 $raw_password = $model->password;
                 $model->password = Yii::$app->security->generatePasswordHash($raw_password);
                 $model->auth_key = Yii::$app->security->generateRandomString();
+                $model->created_at = date('Y-m-d H:i:s');
+                $model->role = 'user';
                 if ($model->save(false)) { // save without validation
                     Yii::$app->session->setFlash('success', 'Registration successful. You can now log in.');
                     return $this->redirect(['login']);
@@ -304,6 +314,22 @@ class UserController extends Controller
         }
 
         return $this->render('register', [
+            'model' => $model,
+        ]);
+    }
+
+    /**
+     * @return string|Response
+     */
+    public function actionInfo()
+    {
+        if (Yii::$app->user->isGuest) {
+            Yii::$app->session->setFlash('error', '请先登录');
+            return $this->redirect(['user/login']);
+        }
+
+        $model = Yii::$app->user->identity;
+        return $this->render('info', [
             'model' => $model,
         ]);
     }
