@@ -44,7 +44,7 @@ $this->registerLinkTag(['rel' => 'icon', 'type' => 'image/x-icon', 'href' => Yii
             ['label' => '我的文件', 'url' => ['/home/index']],
             ['label' => '分享管理', 'url' => ['/share/index']],
             ['label' => '文件收集', 'url' => ['/collection/index']],
-            ['label' => '个人设置', 'url' => ['/site/about']],
+            ['label' => '个人设置', 'url' => ['/user/info']],
             ['label' => '系统设置', 'url' => ['/site/contact']],
             ['label' => '应用下载', 'url' => ['/site/contact']],
             Yii::$app->user->isGuest
