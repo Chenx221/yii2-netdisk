@@ -1,0 +1,59 @@
+.user-profile {
+    display: flex;
+    flex-direction: row;
+    align-items: center; /* Add this line */
+    margin-top: 42px;
+    margin-bottom: 30px;
+}
+
+.user-details {
+    display: flex;
+    justify-content: space-between;
+    align-items: center; /* Add this line */
+    width: 100%; /* Take up the remaining width */
+    margin-left: 10px;
+}
+
+.user-details p {
+    margin-bottom: 0;
+}
+
+#p-username {
+    font-size: 1.25rem;
+}
+
+.user-details .user-info p {
+    font-size: 0.95rem;
+    line-height: 1.25;
+}
+
+.user-login-info {
+    display: flex;
+    justify-content: space-between;
+    width: 40%;
+}
+
+.user-last-login i, .user-last-login-ip i {
+    font-size: 1.5em;
+    margin-right: 10px;
+}
+
+.user-last-login, .user-last-login-ip {
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+}
+
+.user-last-login p, .user-last-login-ip p {
+    margin: 0;
+}
+.login-info-dv{
+    margin-left: 5px;
+}
+.login-info-dv .user-login-info-title{
+    font-weight: bold;
+}
+.login-info-dv .user-login-info-content{
+    color: rgb(100,96,100);
+    font-size: 0.95rem;
+}
