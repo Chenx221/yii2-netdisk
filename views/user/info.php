@@ -1,7 +1,6 @@
 <?php
-/*
- * 这个页面仿照Windows 11设置中的账户页面设计
- */
+//这个页面仿照Windows 11设置中的账户页面设计
+
 
 /* @var $this yii\web\View */
 /* @var $model app\models\User */
