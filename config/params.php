@@ -18,5 +18,6 @@ return [
     'Turnstile' => [
         'siteKey' => $_ENV['TURNSTILE_SITE_KEY'],
         'secret' => $_ENV['TURNSTILE_SECRET'],
-    ]
+    ],
+    'ipinfoToken' => $_ENV['IPINFO_TOKEN'],
 ];
