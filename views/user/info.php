@@ -2,7 +2,6 @@
 //这个页面仿照Windows 11设置中的账户页面设计
 
 /* @var $this yii\web\View */
-
 /* @var $model app\models\User */
 
 use app\assets\FontAwesomeAsset;
@@ -13,9 +12,9 @@ $this->title = '个人设置';
 FontAwesomeAsset::register($this);
 $this->registerCssFile('@web/css/user-info.css');
 $details = IPLocation::getDetails($model->last_login_ip);
-if (is_null($details)) {
-    echo '<script>console.log("IP位置信息功能停用或存在内部错误")</script>';
-}
+//if (is_null($details)) {
+//    echo '<script>console.log("IP位置信息功能停用或存在内部错误")</script>';
+//}
 ?>
 
 <div class="user-info">
@@ -100,10 +99,16 @@ if (is_null($details)) {
                                     <div class="legend-item">
                                         <span class="legend-color" style="background-color: rgb(52,131,250);"></span>
                                         <span>网盘已用空间</span>
+                                        <span style="margin-left: auto;">N/A GB <i
+                                                    class="fa-solid fa-arrow-up-right-from-square"
+                                                    style="font-size: 0.75rem;"></i></span>
                                     </div>
                                     <div class="legend-item">
                                         <span class="legend-color" style="background-color: rgb(196,134,0);"></span>
                                         <span>保险箱已用空间</span>
+                                        <span style="margin-left: auto;">N/A GB <i
+                                                    class="fa-solid fa-arrow-up-right-from-square"
+                                                    style="font-size: 0.75rem;"></i></span>
                                     </div>
                                 </div>
                             </div>
