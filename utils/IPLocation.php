@@ -10,14 +10,22 @@ use Yii;
 class IPLocation
 {
     private IPinfo $client;
+    private bool $is_disabled = true;
 
     public function __construct()
     {
-        $this->client = new IPinfo(Yii::$app->params['ipinfoToken']);
+        $status = Yii::$app->params['enableIpInfo'];
+        if($status){
+            $this->is_disabled = false;
+            $this->client = new IPinfo(Yii::$app->params['ipinfoToken']);
+        }
     }
     public static function getDetails(string $ip): ?Details
     {
         $instance = new self();
+        if($instance->is_disabled){
+            return null;
+        }
         try {
             return $instance->client->getDetails($ip);
         } catch (IPinfoException $e) {

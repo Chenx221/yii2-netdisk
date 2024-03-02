@@ -19,5 +19,6 @@ return [
         'siteKey' => $_ENV['TURNSTILE_SITE_KEY'],
         'secret' => $_ENV['TURNSTILE_SECRET'],
     ],
+    'enableIpInfo' => $_ENV['ENABLE_IPINFO'] === 'true',
     'ipinfoToken' => $_ENV['IPINFO_TOKEN'],
 ];

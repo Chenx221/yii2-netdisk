@@ -14,7 +14,7 @@ FontAwesomeAsset::register($this);
 $this->registerCssFile('@web/css/user-info.css');
 $details = IPLocation::getDetails($model->last_login_ip);
 if (is_null($details)) {
-    echo '<script>console.log("IP位置信息获取失败")</script>';
+    echo '<script>console.log("IP位置信息功能停用或存在内部错误")</script>';
 }
 ?>
 
@@ -54,8 +54,7 @@ if (is_null($details)) {
                         <p class="user-login-info-title">上次登录IP</p>
                         <p class="user-login-info-content">
                             <?= Html::encode($model->last_login_ip) ?>
-                            (<?= Html::encode(($details === null) ? '' : ($details->bogon ? ('Bogon IP') : ($details->city . ', ' . $details->country))) ?>
-                            )
+                            <?= Html::encode(($details === null) ? '' : '(' . ($details->bogon ? ('Bogon IP') : ($details->city . ', ' . $details->country)) . ')') ?>
                         </p>
                     </div>
                 </div>
