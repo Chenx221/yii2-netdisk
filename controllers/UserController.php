@@ -4,6 +4,7 @@ namespace app\controllers;
 
 use app\models\User;
 use app\models\UserSearch;
+use app\utils\FileSizeHelper;
 use ReCaptcha\ReCaptcha;
 use Yii;
 use yii\base\Exception;
@@ -321,7 +322,7 @@ class UserController extends Controller
     /**
      * @return string|Response
      */
-    public function actionInfo()
+    public function actionInfo(): Response|string
     {
         if (Yii::$app->user->isGuest) {
             Yii::$app->session->setFlash('error', '请先登录');
@@ -329,8 +330,17 @@ class UserController extends Controller
         }
 
         $model = Yii::$app->user->identity;
+        $dataDirectory = Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . Yii::$app->user->id;
+        $usedSpace = FileSizeHelper::getDirectorySize($dataDirectory);
+        $vaultUsedSpace = 0;  // 保险箱已用空间，暂时为0
+        $storageLimit = $model->storage_limit;
+
         return $this->render('info', [
             'model' => $model,
+            'usedSpace' => $usedSpace, // B
+            'vaultUsedSpace' => $vaultUsedSpace,
+            'storageLimit' => $storageLimit, // MB
         ]);
     }
+
 }

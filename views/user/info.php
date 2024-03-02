@@ -3,8 +3,13 @@
 
 /* @var $this yii\web\View */
 /* @var $model app\models\User */
+/* @var $usedSpace int */
+/* @var $vaultUsedSpace int */
+
+/* @var $storageLimit int */
 
 use app\assets\FontAwesomeAsset;
+use app\utils\FileSizeHelper;
 use app\utils\IPLocation;
 use yii\bootstrap5\Html;
 
@@ -12,9 +17,15 @@ $this->title = '个人设置';
 FontAwesomeAsset::register($this);
 $this->registerCssFile('@web/css/user-info.css');
 $details = IPLocation::getDetails($model->last_login_ip);
-//if (is_null($details)) {
-//    echo '<script>console.log("IP位置信息功能停用或存在内部错误")</script>';
-//}
+
+$usedSpace_F = FileSizeHelper::formatBytes($usedSpace);
+$vaultUsedSpace_F = FileSizeHelper::formatBytes($vaultUsedSpace);
+$storageLimit_F = FileSizeHelper::formatMegaBytes($storageLimit);
+$totalUsed_F = FileSizeHelper::formatBytes($usedSpace + $vaultUsedSpace);
+$is_unlimited = ($storageLimit === -1);
+$usedPercent = $is_unlimited ? 0 : round($usedSpace / $storageLimit * 100);
+$vaultUsedPercent = $is_unlimited ? 0 : round($vaultUsedSpace / $storageLimit * 100);
+$totalUsedPercent = min(($usedPercent + $vaultUsedPercent), 100);
 ?>
 
 <div class="user-info">
@@ -71,7 +82,7 @@ $details = IPLocation::getDetails($model->last_login_ip);
                             <span>存储空间</span>
                         </span>
                         <span style="margin-right: 20px">
-                            N/A <!-- 这里是你的容量显示 -->
+                            <?= $totalUsed_F . ' / ' . $storageLimit_F ?>
                         </span>
                     </span>
                 </button>
@@ -82,31 +93,34 @@ $details = IPLocation::getDetails($model->last_login_ip);
                         <div class="storage-columns">
                             <div class="storage-usage" style="width: 27%">
                                 <p>当前已使用容量</p>
-                                <span style="font-weight: 600;font-size: 1.4rem;color: black;padding-left: 2px;">N/A GB</span>
-                                <span style="font-size: 0.9rem;">/ N/A TB</span>
+                                <span style="font-weight: 600;font-size: 1.4rem;color: black;padding-left: 2px;"><?= $totalUsed_F ?>
+                                </span>
+                                <span style="font-size: 0.9rem;">/ <?= $storageLimit_F ?></span>
                             </div>
                             <div style="width: 47%">
-                                <p>N/A% 已用</p>
+                                <p><?= $totalUsedPercent ?>% 已用</p>
                                 <div class="progress">
                                     <div class="progress-bar" role="progressbar"
-                                         style="width: 25%;background-color: rgb(52,131,250)" aria-valuenow="25"
+                                         style="width: <?= $usedPercent ?>%;background-color: rgb(52,131,250)"
+                                         aria-valuenow="<?= $usedPercent ?>"
                                          aria-valuemin="0" aria-valuemax="100"></div>
                                     <div class="progress-bar" role="progressbar"
-                                         style="width: 25%;background-color: rgb(196,134,0)" aria-valuenow="25"
+                                         style="width: <?= $vaultUsedPercent ?>%;background-color: rgb(196,134,0)"
+                                         aria-valuenow="<?= $vaultUsedPercent ?>"
                                          aria-valuemin="0" aria-valuemax="100"></div>
                                 </div>
                                 <div class="storage-legend" style="color: rgb(140,139,139)">
                                     <div class="legend-item">
                                         <span class="legend-color" style="background-color: rgb(52,131,250);"></span>
                                         <span>网盘已用空间</span>
-                                        <span style="margin-left: auto;">N/A GB <i
+                                        <span style="margin-left: auto;"><?= $usedSpace_F ?> <i
                                                     class="fa-solid fa-arrow-up-right-from-square"
                                                     style="font-size: 0.75rem;"></i></span>
                                     </div>
                                     <div class="legend-item">
                                         <span class="legend-color" style="background-color: rgb(196,134,0);"></span>
                                         <span>保险箱已用空间</span>
-                                        <span style="margin-left: auto;">N/A GB <i
+                                        <span style="margin-left: auto;"><?= $vaultUsedSpace_F ?> <i
                                                     class="fa-solid fa-arrow-up-right-from-square"
                                                     style="font-size: 0.75rem;"></i></span>
                                     </div>
