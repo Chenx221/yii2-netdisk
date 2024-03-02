@@ -30,7 +30,7 @@
 .user-login-info {
     display: flex;
     justify-content: space-between;
-    width: 40%;
+    width: 45%;
 }
 
 .user-last-login i, .user-last-login-ip i {
@@ -47,13 +47,105 @@
 .user-last-login p, .user-last-login-ip p {
     margin: 0;
 }
-.login-info-dv{
+
+.login-info-dv {
     margin-left: 5px;
 }
-.login-info-dv .user-login-info-title{
+
+.login-info-dv .user-login-info-title {
     font-weight: bold;
 }
-.login-info-dv .user-login-info-content{
-    color: rgb(100,96,100);
+
+.login-info-dv .user-login-info-content {
+    color: rgb(100, 96, 100);
     font-size: 0.95rem;
 }
+
+.accordion-item {
+    margin-bottom: 5px;
+    border-top: var(--bs-accordion-border-width) solid var(--bs-accordion-border-color) !important;
+    border-radius: var(--bs-border-radius);
+
+}
+
+.accordion-button {
+    padding: 24px 22px !important;
+}
+
+.accordion-button i {
+    font-size: 24px;
+    margin-right: 18px;
+    width: 27px;
+    text-align: center;
+}
+
+.accordion-button span, .accordion-button p {
+    line-height: 24px;
+}
+
+.accordion-storage-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.accordion-storage-content span {
+    display: flex;
+    align-items: center;
+}
+
+.accordion-body {
+    padding: 40px 30px !important;
+}
+
+.storage-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.storage-columns {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    align-items: center;
+}
+
+.storage-columns span, .storage-columns p {
+    font-size: 0.75rem;
+    color: rgb(140, 139, 139);
+}
+
+.storage-columns p {
+    margin-bottom: 0.5rem !important;
+}
+
+.progress {
+    width: 100%;
+    /*margin-top: 10px;*/
+    border: 1px rgb(140, 139, 139) solid;
+    --bs-progress-bg: white !important;
+    --bs-progress-height: 12px !important;
+}
+
+.storage-legend {
+    /*display: flex;*/
+    justify-content: space-between;
+    width: 100%;
+    margin-top: 10px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.legend-color {
+    width: 6px;
+    height: 17px;
+    margin-right: 10px;
+    border-radius: 4px;
+}
+
