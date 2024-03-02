@@ -11,20 +11,21 @@ use yii\web\IdentityInterface;
  * This is the model class for table "user".
  *
  * @property int $id 用户ID
- * * @property string|null $username 用户名
- * * @property string|null $password 密码
- * * @property string|null $auth_key authkey
- * * @property string|null $email 邮箱
- * * @property int|null $status 账户是否启用
- * * @property string|null $created_at 账户创建时间
- * * @property string|null $last_login 上次登陆时间
- * * @property string|null $last_login_ip 上次登录ip
- * * @property string|null $bio 备注
- * * @property string|null $role 身份
- * * @property string|null $encryption_key 加密密钥
- * * @property string|null $otp_secret otp密钥
- * * @property int|null $is_encryption_enabled 启用加密
- * * @property int|null $is_otp_enabled 启用otp
+ * @property string|null $username 用户名
+ * @property string|null $password 密码
+ * @property string|null $auth_key authkey
+ * @property string|null $email 邮箱
+ * @property int|null $status 账户是否启用
+ * @property string|null $created_at 账户创建时间
+ * @property string|null $last_login 上次登陆时间
+ * @property string|null $last_login_ip 上次登录ip
+ * @property string|null $bio 备注
+ * @property string|null $role 身份
+ * @property string|null $encryption_key 加密密钥
+ * @property string|null $otp_secret otp密钥
+ * @property int|null $is_encryption_enabled 启用加密
+ * @property int|null $is_otp_enabled 启用otp
+ * @property int|null $storage_limit 存储容量限制,MB
  *
  * @property CollectionTasks[] $collectionTasks
  * @property Share[] $shares
@@ -85,6 +86,7 @@ class User extends ActiveRecord implements IdentityInterface
             'otp_secret' => 'Otp Secret',
             'is_encryption_enabled' => 'Is Encryption Enabled',
             'is_otp_enabled' => 'Is Otp Enabled',
+            'storage_limit' => 'Storage Limit',
         ];
     }
 
@@ -211,14 +213,14 @@ class User extends ActiveRecord implements IdentityInterface
      * @return String containing either just a URL or a complete image tag
      * @source https://gravatar.com/site/implement/images/php/
      */
-    public function getGravatar(string $email, int|string $s = 80, string $d = 'mp', string $r = 'x', bool $img = false, array $atts = array() ): string
+    public function getGravatar(string $email, int|string $s = 80, string $d = 'mp', string $r = 'x', bool $img = false, array $atts = array()): string
     {
         $url = 'https://www.gravatar.com/avatar/';
-        $url .= md5( strtolower( trim( $email ) ) );
+        $url .= md5(strtolower(trim($email)));
         $url .= "?s=$s&d=$d&r=$r";
-        if ( $img ) {
+        if ($img) {
             $url = '<img src="' . $url . '"';
-            foreach ( $atts as $key => $val )
+            foreach ($atts as $key => $val)
                 $url .= ' ' . $key . '="' . $val . '"';
             $url .= ' />';
         }
