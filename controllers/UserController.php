@@ -302,6 +302,7 @@ class UserController extends Controller
                 $model->auth_key = Yii::$app->security->generateRandomString();
                 $model->created_at = date('Y-m-d H:i:s');
                 $model->role = 'user';
+                $model->name = $model->username; //用户默认昵称为用户名，后期可以修改
                 if ($model->save(false)) { // save without validation
                     Yii::$app->session->setFlash('success', 'Registration successful. You can now log in.');
                     return $this->redirect(['login']);
@@ -334,7 +335,12 @@ class UserController extends Controller
         $usedSpace = FileSizeHelper::getDirectorySize($dataDirectory);
         $vaultUsedSpace = 0;  // 保险箱已用空间，暂时为0
         $storageLimit = $model->storage_limit;
-
+        if (Yii::$app->request->isPost && $model->load(Yii::$app->request->post())) {
+            if($model->save()){
+                Yii::$app->session->setFlash('success', '个人简介已更新');
+                return $this->refresh();
+            }
+        }
         return $this->render('info', [
             'model' => $model,
             'usedSpace' => $usedSpace, // B

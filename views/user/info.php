@@ -114,16 +114,17 @@ $totalUsedPercent = min(($usedPercent + $vaultUsedPercent), 100); //总已用百
                                     <div class="legend-item">
                                         <span class="legend-color" style="background-color: rgb(52,131,250);"></span>
                                         <span>网盘已用空间</span>
-                                        <span style="margin-left: auto;"><?= $usedSpace_F ?> <i
-                                                    class="fa-solid fa-arrow-up-right-from-square"
-                                                    style="font-size: 0.75rem;"></i></span>
+                                        <span style="margin-left: auto;"><?= $usedSpace_F ?>
+                                            <?= Html::a('<i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 0.75rem;"></i>', ['home/index']) ?>
+                                        </span>
                                     </div>
                                     <div class="legend-item">
                                         <span class="legend-color" style="background-color: rgb(196,134,0);"></span>
                                         <span>保险箱已用空间</span>
-                                        <span style="margin-left: auto;"><?= $vaultUsedSpace_F ?> <i
-                                                    class="fa-solid fa-arrow-up-right-from-square"
-                                                    style="font-size: 0.75rem;"></i></span>
+                                        <span style="margin-left: auto;"><?= $vaultUsedSpace_F ?>
+<!--                                            PENDING-->
+                                            <?= Html::a('<i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 0.75rem;"></i>', ['site/index']) ?>
+                                        </span>
                                     </div>
                                 </div>
                             </div>
@@ -142,7 +143,12 @@ $totalUsedPercent = min(($usedPercent + $vaultUsedPercent), 100); //总已用百
             </h2>
             <div id="collapseBio" class="accordion-collapse collapse">
                 <div class="accordion-body">
-                    <!-- 修改bio相关内容 -->
+                    <?php $form = yii\widgets\ActiveForm::begin(); ?>
+                    <?= $form->field($model, 'bio')->textarea(['rows' => 6])->label('简介') ?>
+                    <div class="form-group">
+                        <?= yii\helpers\Html::submitButton('保存', ['class' => 'btn btn-success']) ?>
+                    </div>
+                    <?php yii\widgets\ActiveForm::end(); ?>
                 </div>
             </div>
         </div>

@@ -12,6 +12,7 @@ use yii\web\IdentityInterface;
  *
  * @property int $id 用户ID
  * @property string|null $username 用户名
+ * @property string|null $name 昵称
  * @property string|null $password 密码
  * @property string|null $auth_key authkey
  * @property string|null $email 邮箱
@@ -57,7 +58,7 @@ class User extends ActiveRecord implements IdentityInterface
             [['username', 'password'], 'required', 'on' => 'login'],
             [['username', 'password', 'email', 'password2'], 'required', 'on' => 'register'],
             ['username', 'string', 'min' => 3, 'max' => 12],
-            ['password', 'string', 'min' => 6, 'max' => 24],
+            ['password', 'string', 'min' => 6, 'max' => 24, 'on' => 'register'],
             ['password2', 'compare', 'compareAttribute' => 'password', 'on' => 'register'],
             ['email', 'email', 'on' => 'register'],
             ['username', 'unique', 'on' => 'register'],
@@ -73,6 +74,7 @@ class User extends ActiveRecord implements IdentityInterface
         return [
             'id' => 'ID',
             'username' => 'Username',
+            'name' => 'Name',
             'password' => 'Password',
             'auth_key' => 'Auth Key',
             'email' => 'Email',
