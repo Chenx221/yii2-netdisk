@@ -32,6 +32,7 @@ class UserController extends Controller
                     'class' => VerbFilter::className(),
                     'actions' => [
                         'delete' => ['POST'],
+                        'change-password' => ['POST'],
                     ],
                 ],
             ]
@@ -323,7 +324,7 @@ class UserController extends Controller
     /**
      * @return string|Response
      */
-    public function actionInfo(): Response|string
+    public function actionInfo(string $focus = null): Response|string
     {
         if (Yii::$app->user->isGuest) {
             Yii::$app->session->setFlash('error', '请先登录');
@@ -331,14 +332,19 @@ class UserController extends Controller
         }
 
         $model = Yii::$app->user->identity;
-        $dataDirectory = Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . Yii::$app->user->id;
-        $usedSpace = FileSizeHelper::getDirectorySize($dataDirectory);
+        $usedSpace = FileSizeHelper::getDirectorySize(Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . Yii::$app->user->id);
         $vaultUsedSpace = 0;  // 保险箱已用空间，暂时为0
         $storageLimit = $model->storage_limit;
         if (Yii::$app->request->isPost && $model->load(Yii::$app->request->post())) {
-            if($model->save()){
+            if ($model->save()) {
                 Yii::$app->session->setFlash('success', '个人简介已更新');
-                return $this->refresh();
+                return $this->render('info', [
+                    'model' => $model,
+                    'usedSpace' => $usedSpace, // B
+                    'vaultUsedSpace' => $vaultUsedSpace, // B
+                    'storageLimit' => $storageLimit, // MB
+                    'focus' => 'bio',
+                ]);
             }
         }
         return $this->render('info', [
@@ -346,7 +352,31 @@ class UserController extends Controller
             'usedSpace' => $usedSpace, // B
             'vaultUsedSpace' => $vaultUsedSpace, // B
             'storageLimit' => $storageLimit, // MB
+            'focus' => $focus,
         ]);
     }
 
+    /**
+     * @return Response|string
+     * @throws Exception
+     */
+    public function actionChangePassword(): Response|string
+    {
+        if (Yii::$app->user->isGuest) {
+            return $this->goHome();
+        }
+
+        $model = Yii::$app->user->identity;
+        $model->scenario = 'changePassword';
+
+        if ($model->load(Yii::$app->request->post()) && $model->validate()) {
+            $model->password = Yii::$app->security->generatePasswordHash($model->newPassword);
+            if ($model->save(false)) {
+                Yii::$app->session->setFlash('success', 'Password changed successfully.');
+            } else {
+                Yii::$app->session->setFlash('error', 'Failed to change password.');
+            }
+        }
+        return $this->redirect(['user/info', 'focus' => 'password']);
+    }
 }

@@ -36,6 +36,10 @@ class User extends ActiveRecord implements IdentityInterface
     public $password2; // 重复密码
     public $rememberMe; // 记住我
 
+    public $oldPassword; // 旧密码 修改密码用
+    public $newPassword; // 新密码 修改密码用
+    public $newPasswordRepeat; // 重复新密码 修改密码用
+
     /**
      * {@inheritdoc}
      */
@@ -63,7 +67,26 @@ class User extends ActiveRecord implements IdentityInterface
             ['email', 'email', 'on' => 'register'],
             ['username', 'unique', 'on' => 'register'],
             ['email', 'unique', 'on' => 'register'],
+            [['oldPassword', 'newPassword', 'newPasswordRepeat'], 'required', 'on' => 'changePassword'],
+            ['oldPassword', 'validatePassword2', 'on' => 'changePassword'],
+            ['newPassword', 'string', 'min' => 6, 'max' => 24, 'on' => 'changePassword'],
+            ['newPasswordRepeat', 'compare', 'compareAttribute' => 'newPassword', 'on' => 'changePassword'],
+            ['newPassword', 'compare', 'compareAttribute' => 'oldPassword', 'operator' => '!=', 'message' => '新密码不能与旧密码相同', 'on' => 'changePassword'],
         ];
+    }
+
+    /**
+     * @param $attribute
+     * @param $params
+     * @return void
+     */
+    public function validatePassword2($attribute, $params): void
+    {
+        if (!$this->hasErrors()) {
+            if (!Yii::$app->security->validatePassword($this->$attribute, $this->password)) {
+                $this->addError($attribute, '原密码不匹配');
+            }
+        }
     }
 
     /**

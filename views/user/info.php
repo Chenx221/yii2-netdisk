@@ -8,10 +8,14 @@
 
 /* @var $storageLimit int */
 
+/* @var $focus string */
+
 use app\assets\FontAwesomeAsset;
 use app\utils\FileSizeHelper;
 use app\utils\IPLocation;
+use yii\bootstrap5\ActiveForm;
 use yii\bootstrap5\Html;
+use yii\helpers\Url;
 
 $this->title = '个人设置';
 FontAwesomeAsset::register($this);
@@ -75,8 +79,9 @@ $totalUsedPercent = min(($usedPercent + $vaultUsedPercent), 100); //总已用百
     <div class="accordion userAccordion" id="userAccordion">
         <div class="accordion-item">
             <h2 class="accordion-header" id="headingStorage">
-                <button class="accordion-button" type="button" data-bs-toggle="collapse"
-                        data-bs-target="#collapseStorage" aria-expanded="true">
+                <button class="accordion-button <?= ($focus === 'storage' || $focus === null) ? '' : 'collapsed' ?>"
+                        type="button" data-bs-toggle="collapse"
+                        data-bs-target="#collapseStorage" <?= ($focus === 'storage' || $focus === null) ? 'aria-expanded="true"' : '' ?>>
                     <span class="accordion-storage-content">
                         <span>
                             <i class="fa-solid fa-hard-drive"></i>
@@ -88,7 +93,8 @@ $totalUsedPercent = min(($usedPercent + $vaultUsedPercent), 100); //总已用百
                     </span>
                 </button>
             </h2>
-            <div id="collapseStorage" class="accordion-collapse collapse show">
+            <div id="collapseStorage"
+                 class="accordion-collapse collapse  <?= ($focus === 'storage' || $focus === null) ? 'show' : '' ?>">
                 <div class="accordion-body">
                     <div class="storage-info">
                         <div class="storage-columns">
@@ -135,13 +141,14 @@ $totalUsedPercent = min(($usedPercent + $vaultUsedPercent), 100); //总已用百
         </div>
         <div class="accordion-item">
             <h2 class="accordion-header" id="headingBio">
-                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                        data-bs-target="#collapseBio">
+                <button class="accordion-button <?= ($focus === 'bio') ? '' : 'collapsed' ?>" type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#collapseBio" <?= ($focus === 'bio') ? 'aria-expanded="true"' : '' ?>>
                     <i class="fa-solid fa-address-card"></i>
                     <span>个人简介</span>
                 </button>
             </h2>
-            <div id="collapseBio" class="accordion-collapse collapse">
+            <div id="collapseBio" class="accordion-collapse collapse  <?= ($focus === 'bio') ? 'show' : '' ?>">
                 <div class="accordion-body">
                     <?php $form = yii\widgets\ActiveForm::begin(); ?>
                     <?= $form->field($model, 'bio')->textarea(['rows' => 6])->label('简介') ?>
@@ -154,27 +161,39 @@ $totalUsedPercent = min(($usedPercent + $vaultUsedPercent), 100); //总已用百
         </div>
         <div class="accordion-item">
             <h2 class="accordion-header" id="headingPassword">
-                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                        data-bs-target="#collapsePassword">
+                <button class="accordion-button <?= ($focus === 'password') ? '' : 'collapsed' ?>" type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#collapsePassword" <?= ($focus === 'password') ? 'aria-expanded="true"' : '' ?>>
                     <i class="fa-solid fa-key"></i>
                     <span>修改密码</span>
                 </button>
             </h2>
-            <div id="collapsePassword" class="accordion-collapse collapse">
+            <div id="collapsePassword" class="accordion-collapse collapse <?= ($focus === 'password') ? 'show' : '' ?>">
                 <div class="accordion-body">
-                    <!-- 修改密码表单相关内容 -->
+                    <?php $form = ActiveForm::begin([
+                        'action' => Url::to(['user/change-password']),
+                        'method' => 'post'
+                    ]); ?>
+                    <?= $form->field($model, 'oldPassword')->passwordInput()->label('原密码') ?>
+                    <?= $form->field($model, 'newPassword')->passwordInput()->label('新密码') ?>
+                    <?= $form->field($model, 'newPasswordRepeat')->passwordInput()->label('重复新密码') ?>
+                    <div class="form-group">
+                        <?= Html::submitButton('保存', ['class' => 'btn btn-success']) ?>
+                    </div>
+                    <?php ActiveForm::end(); ?>
                 </div>
             </div>
         </div>
         <div class="accordion-item">
             <h2 class="accordion-header" id="headingAdvanced">
-                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                        data-bs-target="#collapseAdvanced">
+                <button class="accordion-button <?= ($focus === 'advanced') ? '' : 'collapsed' ?>" type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#collapseAdvanced" <?= ($focus === 'advanced') ? 'aria-expanded="true"' : '' ?>>
                     <i class="fa-solid fa-flask"></i>
                     <span>高级选项</span>
                 </button>
             </h2>
-            <div id="collapseAdvanced" class="accordion-collapse collapse">
+            <div id="collapseAdvanced" class="accordion-collapse collapse <?= ($focus === 'advanced') ? 'show' : '' ?>">
                 <div class="accordion-body">
                     <!-- 高级选项相关内容 -->
                 </div>
