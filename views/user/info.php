@@ -16,16 +16,17 @@ use yii\bootstrap5\Html;
 $this->title = '个人设置';
 FontAwesomeAsset::register($this);
 $this->registerCssFile('@web/css/user-info.css');
-$details = IPLocation::getDetails($model->last_login_ip);
+$details = IPLocation::getDetails($model->last_login_ip); // IP LOCATION
 
-$usedSpace_F = FileSizeHelper::formatBytes($usedSpace);
-$vaultUsedSpace_F = FileSizeHelper::formatBytes($vaultUsedSpace);
-$storageLimit_F = FileSizeHelper::formatMegaBytes($storageLimit);
-$totalUsed_F = FileSizeHelper::formatBytes($usedSpace + $vaultUsedSpace);
-$is_unlimited = ($storageLimit === -1);
-$usedPercent = $is_unlimited ? 0 : round($usedSpace / $storageLimit * 100);
-$vaultUsedPercent = $is_unlimited ? 0 : round($vaultUsedSpace / $storageLimit * 100);
-$totalUsedPercent = min(($usedPercent + $vaultUsedPercent), 100);
+// 容量计算
+$usedSpace_F = FileSizeHelper::formatBytes($usedSpace); //网盘已用空间 格式化文本
+$vaultUsedSpace_F = FileSizeHelper::formatBytes($vaultUsedSpace); //保险箱已用空间 格式化文本
+$storageLimit_F = FileSizeHelper::formatMegaBytes($storageLimit); //存储限制 格式化文本
+$totalUsed_F = FileSizeHelper::formatBytes($usedSpace + $vaultUsedSpace); //总已用空间 格式化文本
+$is_unlimited = ($storageLimit === -1); //检查是否为无限制容量
+$usedPercent = $is_unlimited ? 0 : round($usedSpace / ($storageLimit * 1024 * 1024) * 100); //网盘已用百分比
+$vaultUsedPercent = $is_unlimited ? 0 : round($vaultUsedSpace / ($storageLimit * 1024 * 1024) * 100); //保险箱已用百分比
+$totalUsedPercent = min(($usedPercent + $vaultUsedPercent), 100); //总已用百分比
 ?>
 
 <div class="user-info">

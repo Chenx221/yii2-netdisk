@@ -338,7 +338,7 @@ class UserController extends Controller
         return $this->render('info', [
             'model' => $model,
             'usedSpace' => $usedSpace, // B
-            'vaultUsedSpace' => $vaultUsedSpace,
+            'vaultUsedSpace' => $vaultUsedSpace, // B
             'storageLimit' => $storageLimit, // MB
         ]);
     }
