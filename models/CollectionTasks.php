@@ -14,6 +14,7 @@ use yii\db\ActiveRecord;
  * @property string $folder_path 收集目标文件夹(相对路径)
  * @property string $created_at 收集任务创建时间
  * @property string $secret 访问密钥
+ * @property int|null $status 收集任务是否启用
  *
  * @property CollectionUploaded[] $collectionUploadeds
  * @property User $user
@@ -38,7 +39,7 @@ class CollectionTasks extends ActiveRecord
         return [
             [['user_id', 'folder_path', 'secret'], 'required'],
             [['folder_path', 'secret'], 'required', 'on' => self::SCENARIO_CREATE],
-            [['user_id'], 'integer'],
+            [['user_id', 'status'], 'integer'],
             [['created_at'], 'safe'],
             [['folder_path', 'secret'], 'string', 'max' => 255],
             [['user_id'], 'exist', 'skipOnError' => true, 'targetClass' => User::class, 'targetAttribute' => ['user_id' => 'id']],
@@ -56,6 +57,7 @@ class CollectionTasks extends ActiveRecord
             'folder_path' => '收集目标文件夹(相对路径)',
             'created_at' => '任务创建时间',
             'secret' => '访问密钥',
+            'status' => 'Status',
         ];
     }
 

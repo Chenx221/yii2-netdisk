@@ -46,7 +46,7 @@ class CollectionController extends Controller
     {
         $searchModel = new CollectionSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-
+        $dataProvider->query->andWhere(['!=', 'status', 0]);
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
@@ -101,7 +101,18 @@ class CollectionController extends Controller
      */
     public function actionDelete($id)
     {
-        $this->findModel($id)->delete();
+        // 获取模型
+        $model = $this->findModel($id);
+
+        // 设置状态为禁用
+        $model->status = 0;
+
+        // 保存模型
+        if ($model->save()) {
+            Yii::$app->session->setFlash('success', 'Task delete successfully.');
+        } else {
+            Yii::$app->session->setFlash('error', 'Failed to delete task.');
+        }
 
         return $this->redirect(['index']);
     }
@@ -137,8 +148,8 @@ class CollectionController extends Controller
             $secret = $receive_secret;
         }
         $model = CollectionTasks::findOne(['id' => $id]);
-        if ($model === null) {
-            throw new NotFoundHttpException('请求的文件收集任务不存在');
+        if ($model === null | $model->status === 0) {
+            throw new NotFoundHttpException('请求的文件收集任务已失效或不存在');
         } elseif (!is_dir(Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . $model->user_id . '/' . $model->folder_path)) {
             throw new NotFoundHttpException('收集任务的目标路径不存在');
         } elseif ($secret === null) {

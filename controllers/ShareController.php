@@ -43,6 +43,7 @@ class ShareController extends Controller
     {
         $searchModel = new ShareSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->andWhere(['!=', 'status', 0]);
 
         return $this->render('index', [
             'searchModel' => $searchModel,
@@ -138,7 +139,18 @@ class ShareController extends Controller
      */
     public function actionDelete($share_id)
     {
-        $this->findModel($share_id)->delete();
+        // 获取模型
+        $model = $this->findModel($share_id);
+
+        // 设置状态为禁用
+        $model->status = 0;
+
+        // 保存模型
+        if ($model->save()) {
+            Yii::$app->session->setFlash('success', 'Share delete successfully.');
+        } else {
+            Yii::$app->session->setFlash('error', 'Failed to delete share.');
+        }
 
         return $this->redirect(['index']);
     }
@@ -164,7 +176,7 @@ class ShareController extends Controller
         $model = $this->findModel($share_id);
         //检查文件/文件夹是否存在
         $abp = Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . $model->sharer_id . '/' . $model->file_relative_path;
-        if (!file_exists($abp)) {
+        if (!file_exists($abp) || $model->status == 0) {
             throw new NotFoundHttpException('分享失效，文件或文件夹不存在');
         }
         if ($this->request->isPost) {

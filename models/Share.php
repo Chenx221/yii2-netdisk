@@ -14,6 +14,7 @@ use yii\db\ActiveRecord;
  * @property string $file_relative_path 文件的相对路径
  * @property string $access_code 分享密钥
  * @property string $creation_date 分享创建日期
+ * @property int|null $status 分享是否启用
  *
  * @property User $sharer
  */
@@ -35,7 +36,7 @@ class Share extends ActiveRecord
     {
         return [
             [['file_relative_path', 'access_code'], 'required'],
-            [['sharer_id'], 'integer'],
+            [['sharer_id', 'status'], 'integer'],
             [['creation_date'], 'safe'],
             [['file_relative_path'], 'string', 'max' => 255],
             [['access_code'], 'string', 'max' => 4],
@@ -55,6 +56,7 @@ class Share extends ActiveRecord
             'file_relative_path' => '文件位置',
             'access_code' => '访问密码',
             'creation_date' => '分享创建日期',
+            'status' => 'Status',
         ];
     }
 
