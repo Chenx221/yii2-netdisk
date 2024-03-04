@@ -2,6 +2,7 @@
 
 namespace app\models;
 
+use Yii;
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
 use app\models\CollectionTasks;
@@ -40,7 +41,7 @@ class CollectionSearch extends CollectionTasks
      */
     public function search($params)
     {
-        $query = CollectionTasks::find();
+        $query = CollectionTasks::find()->where(['user_id' => Yii::$app->user->id]);
 
         // add conditions that should always apply here
 
@@ -59,7 +60,7 @@ class CollectionSearch extends CollectionTasks
         // grid filtering conditions
         $query->andFilterWhere([
             'id' => $this->id,
-            'user_id' => $this->user_id,
+//            'user_id' => $this->user_id,
             'created_at' => $this->created_at,
         ]);
 

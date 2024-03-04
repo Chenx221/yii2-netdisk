@@ -3,6 +3,8 @@
 namespace app\models;
 
 use Yii;
+use yii\db\ActiveQuery;
+use yii\db\ActiveRecord;
 
 /**
  * This is the model class for table "share".
@@ -15,7 +17,7 @@ use Yii;
  *
  * @property User $sharer
  */
-class Share extends \yii\db\ActiveRecord
+class Share extends ActiveRecord
 {
     const SCENARIO_UPDATE = 'update';
     /**
@@ -59,7 +61,7 @@ class Share extends \yii\db\ActiveRecord
     /**
      * Gets query for [[Sharer]].
      *
-     * @return \yii\db\ActiveQuery
+     * @return ActiveQuery
      */
     public function getSharer()
     {

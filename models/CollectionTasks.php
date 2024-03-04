@@ -3,6 +3,7 @@
 namespace app\models;
 
 use Yii;
+use yii\db\ActiveQuery;
 use yii\db\ActiveRecord;
 
 /**
@@ -71,7 +72,7 @@ class CollectionTasks extends ActiveRecord
     /**
      * Gets query for [[CollectionUploadeds]].
      *
-     * @return \yii\db\ActiveQuery
+     * @return ActiveQuery
      */
     public function getCollectionUploadeds()
     {
@@ -81,7 +82,7 @@ class CollectionTasks extends ActiveRecord
     /**
      * Gets query for [[User]].
      *
-     * @return \yii\db\ActiveQuery
+     * @return ActiveQuery
      */
     public function getUser()
     {
