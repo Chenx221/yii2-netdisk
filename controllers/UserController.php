@@ -110,18 +110,23 @@ class UserController extends Controller
         ]);
     }
 
-    /**
-     * Deletes an existing User model.
-     * If deletion is successful, the browser will be redirected to the 'index' page.
-     * @param int $id ID
-     * @return Response
-     * @throws NotFoundHttpException if the model cannot be found
-     */
-    public function actionDelete($id)
+    public function actionDelete(): Response
     {
-        $this->findModel($id)->delete();
+        if (Yii::$app->user->isGuest) {
+            Yii::$app->session->setFlash('error', '滚');
+            return $this->goHome();
+        }
 
-        return $this->redirect(['index']);
+        $model = Yii::$app->user->identity;
+
+        if ($model->deleteAccount()) {
+            Yii::$app->user->logout();
+            Yii::$app->session->setFlash('success', 'Account deleted successfully.');
+        } else {
+            Yii::$app->session->setFlash('error', 'Failed to delete account.');
+        }
+
+        return $this->redirect(['user/login']);
     }
 
     /**
@@ -182,10 +187,10 @@ class UserController extends Controller
                         Yii::$app->session->setFlash('error', '登陆成功，但出现了内部错误');
                     }
                 } else {
-                    Yii::$app->session->setFlash('error', 'Invalid username or password.');
+                    Yii::$app->session->setFlash('error', '用户名密码错误或账户已禁用');
                 }
             } else {
-                Yii::$app->session->setFlash('error', 'Invalid captcha.');
+                Yii::$app->session->setFlash('error', '请等待验证码加载并完成验证');
             }
         }
         return $this->render('login', [
