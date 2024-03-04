@@ -305,6 +305,11 @@ class UserController extends Controller
                 $model->role = 'user';
                 $model->name = $model->username; //用户默认昵称为用户名，后期可以修改
                 if ($model->save(false)) { // save without validation
+                    $userFolder = Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . $model->id;
+                    if (!is_dir($userFolder)) {
+                        mkdir($userFolder);
+                    }
+
                     Yii::$app->session->setFlash('success', 'Registration successful. You can now log in.');
                     return $this->redirect(['login']);
                 } else {
@@ -379,4 +384,6 @@ class UserController extends Controller
         }
         return $this->redirect(['user/info', 'focus' => 'password']);
     }
+
+
 }
