@@ -65,7 +65,10 @@ class HomeController extends Controller
     public function actionIndex($directory = null): Response|string
     {
         if (Yii::$app->user->isGuest) {
+            Yii::$app->session->setFlash('error','请先登录');
             return $this->redirect(Yii::$app->user->loginUrl);
+        } else if (!Yii::$app->user->can('accessHome')){
+            throw new NotFoundHttpException('当前用户组不允许访问此页面');
         }
         $rootDataDirectory = Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . Yii::$app->user->id;
 

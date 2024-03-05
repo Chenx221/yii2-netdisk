@@ -1,7 +1,8 @@
 <?php
 
 use yii\db\Connection;
-
+$dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/..');
+$dotenv->load();
 return [
     'class' => Connection::class,
     'dsn' => 'mysql:host='.$_ENV['DB_HOST'].';dbname='.$_ENV['DB_NAME'],

@@ -268,4 +268,17 @@ class User extends ActiveRecord implements IdentityInterface
         return true;
     }
 
+    public function afterSave($insert, $changedAttributes): void
+    {
+        parent::afterSave($insert, $changedAttributes);
+
+        $auth = Yii::$app->authManager;
+        $role = $auth->getRole($this->role);
+        if ($role) {
+            if (!$insert) {
+                $auth->revokeAll($this->id);
+            }
+            $auth->assign($role, $this->id);
+        }
+    }
 }
