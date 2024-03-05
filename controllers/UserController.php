@@ -3,12 +3,13 @@
 namespace app\controllers;
 
 use app\models\User;
-use app\models\UserSearch;
 use app\utils\FileSizeHelper;
+use OTPHP\TOTP;
 use ReCaptcha\ReCaptcha;
 use Yii;
 use yii\base\Exception;
 use yii\base\InvalidConfigException;
+use yii\filters\AccessControl;
 use yii\httpclient\Client;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
@@ -23,16 +24,41 @@ class UserController extends Controller
     /**
      * @inheritDoc
      */
-    public function behaviors()
+    public function behaviors(): array
     {
         return array_merge(
             parent::behaviors(),
             [
+                'access' => [
+                    'class' => AccessControl::class,
+                    'rules' => [
+                        [
+                            'allow' => true,
+                            'actions' => ['delete', 'info'],
+                            'roles' => ['user'],
+                        ],
+                        [
+                            'allow' => true,
+                            'actions' => ['login', 'register'],
+                            'roles' => ['?', '@'], // everyone can access public share
+                        ],
+                        [
+                            'allow' => true,
+                            'actions' => ['logout', 'setup-two-factor', 'change-password'],
+                            'roles' => ['@'], // everyone can access public share
+                        ]
+                    ],
+                ],
                 'verbs' => [
-                    'class' => VerbFilter::className(),
+                    'class' => VerbFilter::class,
                     'actions' => [
+                        'login' => ['GET', 'POST'],
+                        'logout' => ['GET', 'POST'],
+                        'register' => ['GET', 'POST'],
                         'delete' => ['POST'],
+                        'info' => ['GET', 'POST'],
                         'change-password' => ['POST'],
+                        'setup-two-factor' => ['POST'],
                     ],
                 ],
             ]
@@ -40,93 +66,22 @@ class UserController extends Controller
     }
 
     /**
-     * Lists all User models.
-     *
-     * @return string
+     * 删除账户(仅自身)
+     * @return Response
      */
-    public function actionIndex()
-    {
-        $searchModel = new UserSearch();
-        $dataProvider = $searchModel->search($this->request->queryParams);
-
-        return $this->render('index', [
-            'searchModel' => $searchModel,
-            'dataProvider' => $dataProvider,
-        ]);
-    }
-
-    /**
-     * Displays a single User model.
-     * @param int $id ID
-     * @return string
-     * @throws NotFoundHttpException if the model cannot be found
-     */
-    public function actionView($id)
-    {
-        return $this->render('view', [
-            'model' => $this->findModel($id),
-        ]);
-    }
-
-    /**
-     * Creates a new User model.
-     * If creation is successful, the browser will be redirected to the 'view' page.
-     * @return string|Response
-     */
-    public function actionCreate()
-    {
-        $model = new User();
-
-        if ($this->request->isPost) {
-            if ($model->load($this->request->post()) && $model->save()) {
-                return $this->redirect(['view', 'id' => $model->id]);
-            }
-        } else {
-            $model->loadDefaultValues();
-        }
-
-        return $this->render('create', [
-            'model' => $model,
-        ]);
-    }
-
-    /**
-     * Updates an existing User model.
-     * If update is successful, the browser will be redirected to the 'view' page.
-     * @param int $id ID
-     * @return string|Response
-     * @throws NotFoundHttpException if the model cannot be found
-     */
-    public function actionUpdate($id)
-    {
-        $model = $this->findModel($id);
-
-        if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
-            return $this->redirect(['view', 'id' => $model->id]);
-        }
-
-        return $this->render('update', [
-            'model' => $model,
-        ]);
-    }
-
     public function actionDelete(): Response
     {
-        if (Yii::$app->user->isGuest) {
-            Yii::$app->session->setFlash('error', '滚');
-            return $this->goHome();
-        }
-
         $model = Yii::$app->user->identity;
 
         if ($model->deleteAccount()) {
             Yii::$app->user->logout();
-            Yii::$app->session->setFlash('success', 'Account deleted successfully.');
+            Yii::$app->session->setFlash('success', '账户删除成功');
+            return $this->redirect(['user/login']);
         } else {
-            Yii::$app->session->setFlash('error', 'Failed to delete account.');
+            Yii::$app->session->setFlash('error', '账户删除失败');
+            return $this->redirect(['user/info']);
         }
 
-        return $this->redirect(['user/login']);
     }
 
     /**
@@ -136,7 +91,7 @@ class UserController extends Controller
      * @return User the loaded model
      * @throws NotFoundHttpException if the model cannot be found
      */
-    protected function findModel($id)
+    protected function findModel(int $id): User
     {
         if (($model = User::findOne(['id' => $id])) !== null) {
             return $model;
@@ -150,10 +105,13 @@ class UserController extends Controller
      * visit via https://devs.chenx221.cyou:8081/index.php?r=user%2Flogin
      *
      * @return string|Response
+     * @throws InvalidConfigException
+     * @throws \yii\httpclient\Exception
      */
     public function actionLogin(): Response|string
     {
         if (!Yii::$app->user->isGuest) {
+            Yii::$app->session->setFlash('error', '账户已登录，请不要重复登录');
             return $this->goHome();
         }
 
@@ -270,10 +228,9 @@ class UserController extends Controller
      * Logs out the current user.
      * @return Response
      */
-    public function actionLogout()
+    public function actionLogout(): Response
     {
         Yii::$app->user->logout();
-
         return $this->goHome();
     }
 
@@ -285,6 +242,11 @@ class UserController extends Controller
      */
     public function actionRegister(): Response|string
     {
+        if (!Yii::$app->user->isGuest) {
+            Yii::$app->session->setFlash('error', '账户已登录，无法进行注册操作');
+            return $this->goHome();
+        }
+
         $model = new User(['scenario' => 'register']);
         if ($model->load(Yii::$app->request->post()) && $model->validate()) {
             // 根据 verifyProvider 的值选择使用哪种验证码服务
@@ -314,7 +276,6 @@ class UserController extends Controller
                     if (!is_dir($userFolder)) {
                         mkdir($userFolder);
                     }
-
                     Yii::$app->session->setFlash('success', 'Registration successful. You can now log in.');
                     return $this->redirect(['login']);
                 } else {
@@ -336,15 +297,18 @@ class UserController extends Controller
      */
     public function actionInfo(string $focus = null): Response|string
     {
-        if (Yii::$app->user->isGuest) {
-            Yii::$app->session->setFlash('error', '请先登录');
-            return $this->redirect(['user/login']);
-        }
-
         $model = Yii::$app->user->identity;
         $usedSpace = FileSizeHelper::getDirectorySize(Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . Yii::$app->user->id);
         $vaultUsedSpace = 0;  // 保险箱已用空间，暂时为0
         $storageLimit = $model->storage_limit;
+        $totp_secret = null;
+        $totp_url = null;
+        if (!$model->is_otp_enabled) {
+            $totp = TOTP::generate();
+            $totp_secret = $totp->getSecret();
+            $totp->setLabel('NetDisk_'.$model->name);
+            $totp_url = $totp->getProvisioningUri();
+        }
         if (Yii::$app->request->isPost && $model->load(Yii::$app->request->post())) {
             if ($model->save()) {
                 Yii::$app->session->setFlash('success', '个人简介已更新');
@@ -354,6 +318,8 @@ class UserController extends Controller
                     'vaultUsedSpace' => $vaultUsedSpace, // B
                     'storageLimit' => $storageLimit, // MB
                     'focus' => 'bio',
+                    'totp_secret' => $totp_secret,
+                    'totp_url' => $totp_url,
                 ]);
             }
         }
@@ -363,6 +329,8 @@ class UserController extends Controller
             'vaultUsedSpace' => $vaultUsedSpace, // B
             'storageLimit' => $storageLimit, // MB
             'focus' => $focus,
+            'totp_secret' => $totp_secret,
+            'totp_url' => $totp_url,
         ]);
     }
 
@@ -372,10 +340,6 @@ class UserController extends Controller
      */
     public function actionChangePassword(): Response|string
     {
-        if (Yii::$app->user->isGuest) {
-            return $this->goHome();
-        }
-
         $model = Yii::$app->user->identity;
         $model->scenario = 'changePassword';
 
@@ -390,5 +354,21 @@ class UserController extends Controller
         return $this->redirect(['user/info', 'focus' => 'password']);
     }
 
+    /**
+     * @return string
+     */
+    public function actionSetupTwoFactor(): string
+    {
+        $user = Yii::$app->user->identity;
+        $totp = TOTP::create();
+        $user->otp_secret = $totp->getSecret();
+        $user->is_otp_enabled = true;
+        $user->save(false);
+
+        $otpauth = $totp->getProvisioningUri($user->username);
+        $qrCodeUrl = 'https://api.qrserver.com/v1/create-qr-code/?data=' . urlencode($otpauth);
+
+        return $this->render('setup-two-factor', ['qrCodeUrl' => $qrCodeUrl]);
+    }
 
 }

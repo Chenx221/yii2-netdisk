@@ -5,14 +5,21 @@
 /* @var $model app\models\User */
 /* @var $usedSpace int */
 /* @var $vaultUsedSpace int */
-
 /* @var $storageLimit int */
-
 /* @var $focus string */
+/* @var $totp_secret string */
+
+/* @var $totp_url string */
 
 use app\assets\FontAwesomeAsset;
 use app\utils\FileSizeHelper;
 use app\utils\IPLocation;
+use Endroid\QrCode\Color\Color;
+use Endroid\QrCode\Encoding\Encoding;
+use Endroid\QrCode\ErrorCorrectionLevel;
+use Endroid\QrCode\QrCode;
+use Endroid\QrCode\RoundBlockSizeMode;
+use Endroid\QrCode\Writer\PngWriter;
 use yii\bootstrap5\ActiveForm;
 use yii\bootstrap5\Html;
 use yii\bootstrap5\Modal;
@@ -35,6 +42,20 @@ $is_unlimited = ($storageLimit === -1); //检查是否为无限制容量
 $usedPercent = $is_unlimited ? 0 : round($usedSpace / ($storageLimit * 1024 * 1024) * 100); //网盘已用百分比
 $vaultUsedPercent = $is_unlimited ? 0 : round($vaultUsedSpace / ($storageLimit * 1024 * 1024) * 100); //保险箱已用百分比
 $totalUsedPercent = min(($usedPercent + $vaultUsedPercent), 100); //总已用百分比
+
+// QR-CODE
+if(!is_null($totp_secret)){
+    $writer = new PngWriter();
+    $qrCode = QrCode::create($totp_url)
+        ->setEncoding(new Encoding('UTF-8'))
+        ->setErrorCorrectionLevel(ErrorCorrectionLevel::Low)
+        ->setSize(300)
+        ->setMargin(10)
+        ->setRoundBlockSizeMode(RoundBlockSizeMode::Margin)
+        ->setForegroundColor(new Color(0, 0, 0))
+        ->setBackgroundColor(new Color(255, 255, 255));
+    $result = $writer->write($qrCode);
+}
 ?>
 
     <div class="user-info">
@@ -217,6 +238,8 @@ $totalUsedPercent = min(($usedPercent + $vaultUsedPercent), 100); //总已用百
                                         <input class="form-check-input" type="checkbox" role="switch" id="totp-enabled">
                                         <label class="form-check-label" for="totp-enabled">启用 TOTP</label>
                                     </div>
+                                    <!--暂时放在这里-->
+                                    <img src="<?= is_null($totp_secret)?'':$result->getDataUri() ?>" alt="qrcode"/>
                                 </div>
                             </li>
                             <li class="list-group-item">
@@ -275,11 +298,11 @@ echo Html::tag('div', '确定要删除这个账户？', ['class' => 'modal-body'
 echo Html::beginForm(['user/delete'], 'post', ['id' => 'delete-form']);
 
 echo '<div>';
-echo Html::checkbox('deleteConfirm', false, ['label' => '确认','id'=>'deleteConfirm']);
+echo Html::checkbox('deleteConfirm', false, ['label' => '确认', 'id' => 'deleteConfirm']);
 echo '</div>';
 
 echo '<div class="text-end">';
-echo Html::submitButton('继续删除', ['class' => 'btn btn-danger', 'disabled' => true,'id' => 'deleteButton']);
+echo Html::submitButton('继续删除', ['class' => 'btn btn-danger', 'disabled' => true, 'id' => 'deleteButton']);
 echo '</div>';
 
 echo Html::endForm();
