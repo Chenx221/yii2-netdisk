@@ -4,12 +4,18 @@ namespace app\controllers;
 
 use app\models\Share;
 use app\models\ShareSearch;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
+use RuntimeException;
 use Yii;
+use yii\filters\AccessControl;
 use yii\web\Controller;
 use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
+use yii\web\Request;
 use yii\web\Response;
+use ZipArchive;
 
 /**
  * ShareController implements the CRUD actions for Share model.
@@ -19,15 +25,36 @@ class ShareController extends Controller
     /**
      * @inheritDoc
      */
-    public function behaviors()
+    public function behaviors(): array
     {
         return array_merge(
             parent::behaviors(),
             [
+                'access' => [
+                    'class' => AccessControl::class,
+                    'rules' => [
+                        [
+                            'allow' => true,
+                            'actions' => ['index', 'view', 'create', 'update', 'delete'],
+                            'roles' => ['user'],
+                        ],
+                        [
+                            'allow' => true,
+                            'actions' => ['access', 'download'],
+                            'roles' => ['?', '@'], // everyone can access public share
+                        ]
+                    ],
+                ],
                 'verbs' => [
-                    'class' => VerbFilter::className(),
+                    'class' => VerbFilter::class,
                     'actions' => [
+                        'index' => ['GET'],
+                        'view' => ['GET'],
+                        'create' => ['POST'],
+                        'update' => ['GET', 'POST'],
                         'delete' => ['POST'],
+                        'access' => ['GET', 'POST'],
+                        'download' => ['GET'],
                     ],
                 ],
             ]
@@ -39,16 +66,19 @@ class ShareController extends Controller
      *
      * @return string
      */
-    public function actionIndex()
+    public function actionIndex(): string
     {
         $searchModel = new ShareSearch();
-        $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andWhere(['!=', 'status', 0]);
-
-        return $this->render('index', [
-            'searchModel' => $searchModel,
-            'dataProvider' => $dataProvider,
-        ]);
+        if ($this->request instanceof Request) {
+            $dataProvider = $searchModel->search($this->request->queryParams);
+            $dataProvider->query->andWhere(['!=', 'status', 0]);
+            return $this->render('index', [
+                'searchModel' => $searchModel,
+                'dataProvider' => $dataProvider,
+            ]);
+        } else {
+            throw new RuntimeException('Invalid request type');
+        }
     }
 
     /**
@@ -57,7 +87,7 @@ class ShareController extends Controller
      * @return string
      * @throws NotFoundHttpException if the model cannot be found
      */
-    public function actionView($share_id)
+    public function actionView(int $share_id): string
     {
         return $this->render('view', [
             'model' => $this->findModel($share_id),
@@ -73,7 +103,7 @@ class ShareController extends Controller
     {
         $model = new Share();
 
-        if ($this->request->isPost) {
+        if ($this->request instanceof Request && $this->request->isPost) {
             if ($model->load($this->request->post())) {
                 //对access_code进行检测
                 if (empty($model->access_code) || !preg_match('/^[a-zA-Z0-9]{4}$/', $model->access_code)) {
@@ -94,10 +124,8 @@ class ShareController extends Controller
                     return $this->redirect(['view', 'share_id' => $model->share_id]);
                 }
             }
-        } else {
-            $model->loadDefaultValues();
         }
-
+        // 看看就好，不给用get的
         return $this->render('create', [
             'model' => $model,
         ]);
@@ -110,12 +138,12 @@ class ShareController extends Controller
      * @return string|Response
      * @throws NotFoundHttpException if the model cannot be found
      */
-    public function actionUpdate($share_id)
+    public function actionUpdate(int $share_id): Response|string
     {
         $model = $this->findModel($share_id);
         $model->scenario = Share::SCENARIO_UPDATE;  // 设置模型为 'update' 场景
 
-        if ($this->request->isPost) {
+        if ($this->request instanceof Request && $this->request->isPost) {
             $postData = $this->request->post();
             if (isset($postData['Share']['access_code'])) {  // 只加载 'access_code' 字段
                 $model->access_code = $postData['Share']['access_code'];
@@ -133,11 +161,12 @@ class ShareController extends Controller
     /**
      * Deletes an existing Share model.
      * If deletion is successful, the browser will be redirected to the 'index' page.
+     * 注: 不是真的删除
      * @param int $share_id Share ID
      * @return Response
      * @throws NotFoundHttpException if the model cannot be found
      */
-    public function actionDelete($share_id)
+    public function actionDelete(int $share_id): Response
     {
         // 获取模型
         $model = $this->findModel($share_id);
@@ -162,24 +191,33 @@ class ShareController extends Controller
      * @return Share the loaded model
      * @throws NotFoundHttpException if the model cannot be found
      */
-    protected function findModel($share_id): Share
+    protected function findModel(int $share_id, bool $is_public = false): Share
     {
-        if (($model = Share::findOne(['share_id' => $share_id])) !== null) {
+        // Not Allow to access other user's share manage page
+        // public share can be accessed by anyone
+        if (($model = Share::findOne(['share_id' => $share_id])) !== null && ($is_public || $model->sharer_id == Yii::$app->user->id)) {
             return $model;
         }
 
-        throw new NotFoundHttpException('The requested page does not exist.');
+        throw new NotFoundHttpException('没有权限访问这个页面或请求的页面不存在');
     }
 
+    /**
+     * 分享的公开访问点
+     * @param $share_id
+     * @param $access_code
+     * @return string
+     * @throws NotFoundHttpException
+     */
     public function actionAccess($share_id, $access_code = null): string
     {
-        $model = $this->findModel($share_id);
+        $model = $this->findModel($share_id, true);
         //检查文件/文件夹是否存在
         $abp = Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . $model->sharer_id . '/' . $model->file_relative_path;
         if (!file_exists($abp) || $model->status == 0) {
             throw new NotFoundHttpException('分享失效，文件或文件夹不存在');
         }
-        if ($this->request->isPost) {
+        if ($this->request instanceof Request && $this->request->isPost) {
             $access_code = $this->request->post('Share')['access_code'];
             if ($access_code === $model->access_code) {
                 // 访问密码正确，显示文件信息和下载按钮
@@ -210,14 +248,14 @@ class ShareController extends Controller
      * @throws ForbiddenHttpException
      * @throws NotFoundHttpException
      */
-    public function actionDownload($share_id)
+    public function actionDownload($share_id): Response|\yii\console\Response
     {
         $access_granted = Yii::$app->session->get('access_granted', []);
         if (!isset($access_granted[$share_id]) || !$access_granted[$share_id]) {
-            throw new \yii\web\ForbiddenHttpException('你没有权限下载这个文件');
+            throw new ForbiddenHttpException('你没有权限下载这个文件');
         }
 
-        $model = $this->findModel($share_id);
+        $model = $this->findModel($share_id, true);
 
         $absolutePath = Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . $model->sharer_id . '/' . $model->file_relative_path;
         if (is_file($absolutePath)) {
@@ -225,9 +263,9 @@ class ShareController extends Controller
         } else if (is_dir($absolutePath)) {
             // 如果是文件夹，压缩后发送
             $zipPath = $absolutePath . '.zip';
-            $zip = new \ZipArchive();
-            $zip->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
-            $files = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($absolutePath));
+            $zip = new ZipArchive();
+            $zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE);
+            $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($absolutePath));
             foreach ($files as $file) {
                 if (!$file->isDir()) {
                     $filePath = $file->getRealPath();
@@ -237,7 +275,7 @@ class ShareController extends Controller
             }
             $zip->close();
             return Yii::$app->response->sendFile($zipPath);
-        }else{
+        } else {
             throw new NotFoundHttpException('异常，文件不存在');
         }
     }

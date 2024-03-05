@@ -17,13 +17,13 @@ class CollectionUploadedController extends Controller
     /**
      * @inheritDoc
      */
-    public function behaviors()
+    public function behaviors(): array
     {
         return array_merge(
             parent::behaviors(),
             [
                 'verbs' => [
-                    'class' => VerbFilter::className(),
+                    'class' => VerbFilter::class,
                     'actions' => [
                     ],
                 ],
@@ -39,7 +39,7 @@ class CollectionUploadedController extends Controller
      * @return CollectionUploaded the loaded model
      * @throws NotFoundHttpException if the model cannot be found
      */
-    protected function findModel($id)
+    protected function findModel(int $id): CollectionUploaded
     {
         if (($model = CollectionUploaded::findOne(['id' => $id])) !== null) {
             return $model;

@@ -16,6 +16,7 @@ use wapmorgan\UnifiedArchive\Exceptions\UnsupportedOperationException;
 use wapmorgan\UnifiedArchive\UnifiedArchive;
 use Yii;
 use yii\bootstrap5\ActiveForm;
+use yii\filters\AccessControl;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use yii\web\Controller;
@@ -33,6 +34,16 @@ class HomeController extends Controller
         return array_merge(
             parent::behaviors(),
             [
+                'access' => [
+                    'class' => AccessControl::class,
+                    'rules' => [
+                        [
+                            'allow' => true,
+                            'actions' => ['index', 'download', 'preview', 'rename', 'delete', 'upload', 'new-folder', 'download-folder', 'multi-ff-zip-dl', 'zip', 'unzip', 'paste'],
+                            'roles' => ['user'],
+                        ],
+                    ],
+                ],
                 'verbs' => [
                     'class' => VerbFilter::class,
                     'actions' => [
@@ -64,12 +75,12 @@ class HomeController extends Controller
      */
     public function actionIndex($directory = null): Response|string
     {
-        if (Yii::$app->user->isGuest) {
-            Yii::$app->session->setFlash('error','请先登录');
-            return $this->redirect(Yii::$app->user->loginUrl);
-        } else if (!Yii::$app->user->can('accessHome')){
-            throw new NotFoundHttpException('当前用户组不允许访问此页面');
-        }
+//        if (Yii::$app->user->isGuest) {
+//            Yii::$app->session->setFlash('error','请先登录');
+//            return $this->redirect(Yii::$app->user->loginUrl);
+//        } else if (!Yii::$app->user->can('accessHome')){
+//            throw new NotFoundHttpException('当前用户组不允许访问此页面');
+//        }
         $rootDataDirectory = Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . Yii::$app->user->id;
 
         if ($directory === '.' || $directory == null) {
@@ -335,7 +346,7 @@ class HomeController extends Controller
      *
      * @return int|Response
      */
-    public function actionUpload()
+    public function actionUpload(): Response|int
     {
         $model = new UploadForm();
         $model->targetDir = Yii::$app->request->post('targetDir', '.');
