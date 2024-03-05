@@ -16,6 +16,117 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
+-- Table structure for table `auth_assignment`
+--
+
+DROP TABLE IF EXISTS `auth_assignment`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `auth_assignment` (
+  `item_name` varchar(64) NOT NULL,
+  `user_id` varchar(64) NOT NULL,
+  `created_at` int(11) DEFAULT NULL,
+  PRIMARY KEY (`item_name`,`user_id`),
+  KEY `idx-auth_assignment-user_id` (`user_id`),
+  CONSTRAINT `auth_assignment_ibfk_1` FOREIGN KEY (`item_name`) REFERENCES `auth_item` (`name`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `auth_assignment`
+--
+
+LOCK TABLES `auth_assignment` WRITE;
+/*!40000 ALTER TABLE `auth_assignment` DISABLE KEYS */;
+INSERT INTO `auth_assignment` VALUES ('admin','4',1709616656),('user','1',1709616611),('user','2',1709616611),('user','3',1709616611);
+/*!40000 ALTER TABLE `auth_assignment` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `auth_item`
+--
+
+DROP TABLE IF EXISTS `auth_item`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `auth_item` (
+  `name` varchar(64) NOT NULL,
+  `type` smallint(6) NOT NULL,
+  `description` text DEFAULT NULL,
+  `rule_name` varchar(64) DEFAULT NULL,
+  `data` blob DEFAULT NULL,
+  `created_at` int(11) DEFAULT NULL,
+  `updated_at` int(11) DEFAULT NULL,
+  PRIMARY KEY (`name`),
+  KEY `rule_name` (`rule_name`),
+  KEY `idx-auth_item-type` (`type`),
+  CONSTRAINT `auth_item_ibfk_1` FOREIGN KEY (`rule_name`) REFERENCES `auth_rule` (`name`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `auth_item`
+--
+
+LOCK TABLES `auth_item` WRITE;
+/*!40000 ALTER TABLE `auth_item` DISABLE KEYS */;
+INSERT INTO `auth_item` VALUES ('accessHome',2,'访问文件管理',NULL,NULL,1709616611,1709616611),('admin',1,NULL,NULL,NULL,1709616611,1709616611),('user',1,NULL,NULL,NULL,1709616611,1709616611);
+/*!40000 ALTER TABLE `auth_item` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `auth_item_child`
+--
+
+DROP TABLE IF EXISTS `auth_item_child`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `auth_item_child` (
+  `parent` varchar(64) NOT NULL,
+  `child` varchar(64) NOT NULL,
+  PRIMARY KEY (`parent`,`child`),
+  KEY `child` (`child`),
+  CONSTRAINT `auth_item_child_ibfk_1` FOREIGN KEY (`parent`) REFERENCES `auth_item` (`name`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `auth_item_child_ibfk_2` FOREIGN KEY (`child`) REFERENCES `auth_item` (`name`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `auth_item_child`
+--
+
+LOCK TABLES `auth_item_child` WRITE;
+/*!40000 ALTER TABLE `auth_item_child` DISABLE KEYS */;
+INSERT INTO `auth_item_child` VALUES ('user','accessHome');
+/*!40000 ALTER TABLE `auth_item_child` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `auth_rule`
+--
+
+DROP TABLE IF EXISTS `auth_rule`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `auth_rule` (
+  `name` varchar(64) NOT NULL,
+  `data` blob DEFAULT NULL,
+  `created_at` int(11) DEFAULT NULL,
+  `updated_at` int(11) DEFAULT NULL,
+  PRIMARY KEY (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `auth_rule`
+--
+
+LOCK TABLES `auth_rule` WRITE;
+/*!40000 ALTER TABLE `auth_rule` DISABLE KEYS */;
+/*!40000 ALTER TABLE `auth_rule` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `collection_tasks`
 --
 
@@ -28,6 +139,7 @@ CREATE TABLE `collection_tasks` (
   `folder_path` varchar(255) NOT NULL COMMENT '收集目标文件夹(相对路径)',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp() COMMENT '收集任务创建时间',
   `secret` varchar(255) NOT NULL COMMENT '访问密钥',
+  `status` tinyint(1) DEFAULT 1 COMMENT '收集任务是否启用',
   PRIMARY KEY (`id`) USING BTREE,
   KEY `user_id` (`user_id`) USING BTREE,
   CONSTRAINT `collection_tasks_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
@@ -40,7 +152,7 @@ CREATE TABLE `collection_tasks` (
 
 LOCK TABLES `collection_tasks` WRITE;
 /*!40000 ALTER TABLE `collection_tasks` DISABLE KEYS */;
-INSERT INTO `collection_tasks` VALUES (1,1,'PsQREdit 2.4.3.exe123123','2024-02-23 06:24:22','2333333'),(2,2,'PsQREdit 2.4.3.exe123123','2024-02-23 06:34:10','666');
+INSERT INTO `collection_tasks` VALUES (1,1,'PsQREdit 2.4.3.exe123123','2024-02-23 06:24:22','2333333',1),(2,2,'PsQREdit 2.4.3.exe123123','2024-02-23 06:34:10','666',1);
 /*!40000 ALTER TABLE `collection_tasks` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -99,6 +211,30 @@ INSERT INTO `country` VALUES ('AU','Australia',24016400),('BR','Brazil',20572200
 UNLOCK TABLES;
 
 --
+-- Table structure for table `migration`
+--
+
+DROP TABLE IF EXISTS `migration`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `migration` (
+  `version` varchar(180) NOT NULL,
+  `apply_time` int(11) DEFAULT NULL,
+  PRIMARY KEY (`version`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `migration`
+--
+
+LOCK TABLES `migration` WRITE;
+/*!40000 ALTER TABLE `migration` DISABLE KEYS */;
+INSERT INTO `migration` VALUES ('m000000_000000_base',1709607583),('m140506_102106_rbac_init',1709607803),('m170907_052038_rbac_add_index_on_auth_assignment_user_id',1709607803),('m180523_151638_rbac_updates_indexes_without_prefix',1709607804),('m200409_110543_rbac_update_mssql_trigger',1709607804),('m240305_042554_init_rbac',1709616611);
+/*!40000 ALTER TABLE `migration` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `share`
 --
 
@@ -111,10 +247,11 @@ CREATE TABLE `share` (
   `file_relative_path` varchar(255) NOT NULL COMMENT '文件的相对路径',
   `access_code` varchar(4) NOT NULL COMMENT '分享密钥',
   `creation_date` datetime NOT NULL DEFAULT current_timestamp() COMMENT '分享创建日期',
+  `status` tinyint(1) DEFAULT 1 COMMENT '分享是否启用',
   PRIMARY KEY (`share_id`) USING BTREE,
   KEY `sharer_id` (`sharer_id`) USING BTREE,
   CONSTRAINT `share_ibfk_1` FOREIGN KEY (`sharer_id`) REFERENCES `user` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci ROW_FORMAT=DYNAMIC;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci ROW_FORMAT=DYNAMIC;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -123,7 +260,7 @@ CREATE TABLE `share` (
 
 LOCK TABLES `share` WRITE;
 /*!40000 ALTER TABLE `share` DISABLE KEYS */;
-INSERT INTO `share` VALUES (2,2,'WePE_32_V2.3.iso','6666','2024-02-16 14:48:07'),(3,1,'WePE_32_V2.3.iso','0000','2024-02-16 15:11:35'),(4,1,'WePE_32_V2.3_副本.iso','c7hg','2024-02-17 15:35:32'),(5,1,'PsQREdit 2.4.3.exe123123/PsQREdit 2.4.3.7z','wcvy','2024-02-17 15:37:03'),(6,1,'test','6666','2024-02-17 15:45:44');
+INSERT INTO `share` VALUES (2,2,'WePE_32_V2.3.iso','6666','2024-02-16 14:48:07',1),(3,1,'WePE_32_V2.3.iso','0000','2024-02-16 15:11:35',1),(4,1,'WePE_32_V2.3_副本.iso','c7hg','2024-02-17 15:35:32',1),(5,1,'PsQREdit 2.4.3.exe123123/PsQREdit 2.4.3.7z','wcvy','2024-02-17 15:37:03',1),(6,1,'test','6666','2024-02-17 15:45:44',1),(7,4,'01 Deep Sleep Sheep.m4a','1111','2024-03-04 16:24:07',0);
 /*!40000 ALTER TABLE `share` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -137,6 +274,7 @@ DROP TABLE IF EXISTS `user`;
 CREATE TABLE `user` (
   `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '用户ID',
   `username` varchar(255) DEFAULT NULL COMMENT '用户名',
+  `name` varchar(255) DEFAULT NULL COMMENT '昵称',
   `password` varchar(255) DEFAULT NULL COMMENT '密码',
   `auth_key` varchar(255) DEFAULT NULL COMMENT 'authkey',
   `email` varchar(255) DEFAULT NULL COMMENT '邮箱',
@@ -152,7 +290,7 @@ CREATE TABLE `user` (
   `is_otp_enabled` tinyint(1) DEFAULT 0 COMMENT '启用otp',
   `storage_limit` bigint(20) DEFAULT -1 COMMENT '存储容量限制,MB',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci ROW_FORMAT=DYNAMIC;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci ROW_FORMAT=DYNAMIC;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -161,7 +299,7 @@ CREATE TABLE `user` (
 
 LOCK TABLES `user` WRITE;
 /*!40000 ALTER TABLE `user` DISABLE KEYS */;
-INSERT INTO `user` VALUES (1,'chenx221','$2y$13$2d6BZn/3g0mC0HsLj0hTXuLKZjq/t2EcV6nR9H8SO6UXvFWQxu0OC','CxQfOU9W6Vwijbv-a4fcukFihFuoIPR3','chenx221@yandex.com',1,'2024-03-01 06:08:04','2024-03-02 10:43:56','::1',NULL,'user',NULL,NULL,0,0,-1),(2,'chenx2210','$2y$13$Y3IZtFPU7vfAKlkeaQzTI.6lSfo/F/qmv2VFybG7wmh5yX49uc29m','4en_00n5mhDST7AJdyk_CCfdoQcG5IS9','chenx2210@outlook.com',1,'2024-03-01 06:08:04',NULL,NULL,NULL,'user',NULL,NULL,0,0,-1);
+INSERT INTO `user` VALUES (1,'chenx221','chenx221','$2y$13$uSvq3bPE7IneFL9f8fiDiO2AnXreroMiA.hOmujGjazfO/G.yo3wy','CxQfOU9W6Vwijbv-a4fcukFihFuoIPR3','chenx221@yandex.com',1,'2024-03-01 06:08:04','2024-03-05 04:52:40','::1','你好世界1234123123','user',NULL,NULL,0,0,4096),(2,'chenx2210','chenx2210','$2y$13$Y3IZtFPU7vfAKlkeaQzTI.6lSfo/F/qmv2VFybG7wmh5yX49uc29m','4en_00n5mhDST7AJdyk_CCfdoQcG5IS9','chenx2210@outlook.com',1,'2024-03-01 06:08:04',NULL,NULL,NULL,'user',NULL,NULL,0,0,-1),(3,'demo','demo','$2y$13$MKq55jcWKnMW8zleaP68y.f1orVoXWcRsWqoP4gyqPuRzvxNvYGRe','G02zKldhVVkqxlIFcFzYDz3q7HaWDzMW','demo@chenx221.cyou',1,'2024-03-04 07:26:48','2024-03-04 07:27:01','::1',NULL,'user',NULL,NULL,0,0,-1),(4,'demo1','demo1','$2y$13$VXO1jbDN31HjfqvIMOde1Ol4pr66QrnCYCwUgyASaodgQrk8yBt3i','JsF4ILeMqpVTwdSvi2V240S5HTGeLMcx','demo1@chenx221.cyou',1,'2024-03-04 07:31:41','2024-03-05 05:30:56','::1',NULL,'admin',NULL,NULL,0,0,16);
 /*!40000 ALTER TABLE `user` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -178,4 +316,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2024-03-02 19:12:14
+-- Dump completed on 2024-03-05 13:32:38
