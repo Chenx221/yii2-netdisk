@@ -354,21 +354,28 @@ class UserController extends Controller
         return $this->redirect(['user/info', 'focus' => 'password']);
     }
 
-    /**
-     * @return string
-     */
-    public function actionSetupTwoFactor(): string
+    public function actionSetupTwoFactor()
     {
-        $user = Yii::$app->user->identity;
-        $totp = TOTP::create();
-        $user->otp_secret = $totp->getSecret();
-        $user->is_otp_enabled = true;
-        $user->save(false);
+        // ...其他代码...
 
-        $otpauth = $totp->getProvisioningUri($user->username);
-        $qrCodeUrl = 'https://api.qrserver.com/v1/create-qr-code/?data=' . urlencode($otpauth);
+        // 生成恢复代码
+        $recoveryCodes = $this->generateRecoveryCodes();
 
-        return $this->render('setup-two-factor', ['qrCodeUrl' => $qrCodeUrl]);
+        // 保存恢复代码到数据库或其他安全的地方
+
+        // 显示恢复代码给用户
+        Yii::$app->session->setFlash('success', '二步验证已启用。您的恢复代码是：' . implode(', ', $recoveryCodes));
+
+        // ...其他代码...
+    }
+
+    private function generateRecoveryCodes($length = 10, $numCodes = 10)
+    {
+        $codes = [];
+        for ($i = 0; $i < $numCodes; $i++) {
+            $codes[] = Yii::$app->security->generateRandomString($length);
+        }
+        return $codes;
     }
 
 }

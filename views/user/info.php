@@ -12,6 +12,7 @@
 /* @var $totp_url string */
 
 use app\assets\FontAwesomeAsset;
+use app\models\User;
 use app\utils\FileSizeHelper;
 use app\utils\IPLocation;
 use Endroid\QrCode\Color\Color;
@@ -44,7 +45,7 @@ $vaultUsedPercent = $is_unlimited ? 0 : round($vaultUsedSpace / ($storageLimit *
 $totalUsedPercent = min(($usedPercent + $vaultUsedPercent), 100); //总已用百分比
 
 // QR-CODE
-if(!is_null($totp_secret)){
+if (!is_null($totp_secret)) {
     $writer = new PngWriter();
     $qrCode = QrCode::create($totp_url)
         ->setEncoding(new Encoding('UTF-8'))
@@ -56,6 +57,9 @@ if(!is_null($totp_secret)){
         ->setBackgroundColor(new Color(255, 255, 255));
     $result = $writer->write($qrCode);
 }
+
+// totp
+$user = new User();
 ?>
 
     <div class="user-info">
@@ -235,11 +239,13 @@ if(!is_null($totp_secret)){
                                 </h5>
                                 <div>
                                     <div class="form-check form-switch">
-                                        <input class="form-check-input" type="checkbox" role="switch" id="totp-enabled">
-                                        <label class="form-check-label" for="totp-enabled">启用 TOTP</label>
+                                        <input class="form-check-input" type="checkbox" role="switch" id="totp-enabled"
+                                               data-bs-toggle="modal"
+                                               data-bs-target="#totpSetupModal">
+                                        <label class="form-check-label" for="totp-enabled" data-bs-toggle="modal"
+                                               data-bs-target="#totpSetupModal">启用 TOTP</label>
                                     </div>
                                     <!--暂时放在这里-->
-                                    <img src="<?= is_null($totp_secret)?'':$result->getDataUri() ?>" alt="qrcode"/>
                                 </div>
                             </li>
                             <li class="list-group-item">
@@ -306,6 +312,51 @@ echo Html::submitButton('继续删除', ['class' => 'btn btn-danger', 'disabled'
 echo '</div>';
 
 echo Html::endForm();
+
+Modal::end();
+
+Modal::begin([
+    'title' => '<h4>需要进一步操作以启用二步验证</h4>',
+    'id' => 'totpSetupModal',
+    'size' => 'model-xl',
+]);
+/*<img src="<?= is_null($totp_secret) ? '' : $result->getDataUri() ?>" alt="qrcode"/>*/
+?>
+    <div class="row">
+        <div class="col-md-6 text-center center">
+            <img src="<?= is_null($totp_secret) ? '' : $result->getDataUri() ?>" alt="QR Code" class="img-fluid">
+        </div>
+        <div class="col-md-6">
+            <p>使用兼容TOTP的应用程序扫描左侧二维码以添加二步验证</p>
+            <p>推荐以下二步验证器：:</p>
+            <ul>
+                <li>
+                    <a href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2&hl=en_US">Google
+                        Authenticator</a></li>
+                <li><a href="https://play.google.com/store/apps/details?id=com.azure.authenticator&hl=en_US">Microsoft Authenticator</a></li>
+                <li><a href="https://play.google.com/store/apps/details?id=com.authy.authy&hl=en">Authy</a></li>
+                <!-- Add more applications as needed -->
+            </ul>
+            <div class="input-group mb-3">
+                <label for="totp_secret">无法扫描?使用下面的密钥来添加</label>
+                <input type="text" class="form-control" value="<?= $totp_secret ?>" id="totp_secret" readonly>
+                <button class="btn btn-outline-secondary" type="button"
+                        onclick="navigator.clipboard.writeText('<?= $totp_secret ?>')">Copy
+                </button>
+            </div>
+            <?php $form = ActiveForm::begin([
+                'action' => ['user/actionSetupTwoFactor'],
+                'method' => 'post'
+            ]); ?>
+
+            <?= Html::activeHiddenInput($user, 'totp_secret', ['value' => $totp_secret]) ?>
+            <?= $form->field($user, 'totp_input')->textInput()->label('最后一步! 输入TOTP应用程序上显示的密码以启用二步验证') ?>
+            <?= Html::submitButton('启用二步验证', ['class' => 'btn btn-primary']) ?>
+
+            <?php ActiveForm::end(); ?>
+        </div>
+    </div>
+<?php
 
 Modal::end();
 $this->registerJsFile('@web/js/user-info.js', ['depends' => [JqueryAsset::class], 'position' => View::POS_END]);

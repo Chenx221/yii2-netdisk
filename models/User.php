@@ -27,6 +27,7 @@ use yii\web\IdentityInterface;
  * @property int|null $is_encryption_enabled 启用加密
  * @property int|null $is_otp_enabled 启用otp
  * @property int|null $storage_limit 存储容量限制,MB
+ * @property string|null $recovery_codes OTP恢复代码
  *
  * @property CollectionTasks[] $collectionTasks
  * @property Share[] $shares
@@ -39,6 +40,7 @@ class User extends ActiveRecord implements IdentityInterface
     public $oldPassword; // 旧密码 修改密码用
     public $newPassword; // 新密码 修改密码用
     public $newPasswordRepeat; // 重复新密码 修改密码用
+    public $totp_input; // otp用户输入值
 
     /**
      * {@inheritdoc}
@@ -57,7 +59,7 @@ class User extends ActiveRecord implements IdentityInterface
             [['status', 'is_encryption_enabled', 'is_otp_enabled'], 'integer'],
             [['created_at', 'last_login'], 'safe'],
             [['bio'], 'string'],
-            [['encryption_key', 'otp_secret'], 'string', 'max' => 255],
+            [['encryption_key', 'otp_secret','recovery_codes'], 'string', 'max' => 255],
             [['last_login_ip'], 'string', 'max' => 45],
             [['username', 'password'], 'required', 'on' => 'login'],
             [['username', 'password', 'email', 'password2'], 'required', 'on' => 'register'],
@@ -112,6 +114,8 @@ class User extends ActiveRecord implements IdentityInterface
             'is_encryption_enabled' => 'Is Encryption Enabled',
             'is_otp_enabled' => 'Is Otp Enabled',
             'storage_limit' => 'Storage Limit',
+            'recovery_codes' => 'Recovery Codes',
+
         ];
     }
 
