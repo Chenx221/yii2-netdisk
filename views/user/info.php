@@ -1,5 +1,5 @@
 <?php
-//这个页面仿照Windows 11设置中的账户页面设计
+//这个页面部分仿照Windows 11设置中的账户页面设计
 
 /* @var $this yii\web\View */
 /* @var $model app\models\User */
@@ -10,6 +10,8 @@
 /* @var $totp_secret string */
 
 /* @var $totp_url string */
+
+/* @var $is_otp_enabled bool */
 
 use app\assets\FontAwesomeAsset;
 use app\models\User;
@@ -239,13 +241,11 @@ $user = new User();
                                 </h5>
                                 <div>
                                     <div class="form-check form-switch">
-                                        <input class="form-check-input" type="checkbox" role="switch" id="totp-enabled"
-                                               data-bs-toggle="modal"
-                                               data-bs-target="#totpSetupModal">
+                                        <input class="form-check-input" type="checkbox" role="switch"
+                                               id="totp-enabled" <?= $is_otp_enabled ? 'checked' : '' ?>>
                                         <label class="form-check-label" for="totp-enabled" data-bs-toggle="modal"
                                                data-bs-target="#totpSetupModal">启用 TOTP</label>
                                     </div>
-                                    <!--暂时放在这里-->
                                 </div>
                             </li>
                             <li class="list-group-item">
@@ -254,9 +254,7 @@ $user = new User();
                                     备用码
                                 </h5>
                                 <div>
-                                    <button id="generate-backup-codes" class="btn btn-outline-primary btn-sm">
-                                        生成备用码
-                                    </button>
+                                    <?= Html::a('获取恢复代码(请妥善保存)', Url::to(['user/download-recovery-codes']), ['class' => 'btn btn-outline-primary btn-sm', 'id' => 'generate-backup-codes']) ?>
                                 </div>
                             </li>
                         </ul>
@@ -333,7 +331,8 @@ Modal::begin([
                 <li>
                     <a href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2&hl=en_US">Google
                         Authenticator</a></li>
-                <li><a href="https://play.google.com/store/apps/details?id=com.azure.authenticator&hl=en_US">Microsoft Authenticator</a></li>
+                <li><a href="https://play.google.com/store/apps/details?id=com.azure.authenticator&hl=en_US">Microsoft
+                        Authenticator</a></li>
                 <li><a href="https://play.google.com/store/apps/details?id=com.authy.authy&hl=en">Authy</a></li>
                 <!-- Add more applications as needed -->
             </ul>
@@ -344,16 +343,18 @@ Modal::begin([
                         onclick="navigator.clipboard.writeText('<?= $totp_secret ?>')">Copy
                 </button>
             </div>
-            <?php $form = ActiveForm::begin([
-                'action' => ['user/actionSetupTwoFactor'],
-                'method' => 'post'
-            ]); ?>
-
-            <?= Html::activeHiddenInput($user, 'totp_secret', ['value' => $totp_secret]) ?>
-            <?= $form->field($user, 'totp_input')->textInput()->label('最后一步! 输入TOTP应用程序上显示的密码以启用二步验证') ?>
-            <?= Html::submitButton('启用二步验证', ['class' => 'btn btn-primary']) ?>
-
-            <?php ActiveForm::end(); ?>
+            <?php
+            if (!$is_otp_enabled) {
+                $form = ActiveForm::begin([
+                    'action' => ['user/setup-two-factor'],
+                    'method' => 'post'
+                ]);
+                echo Html::activeHiddenInput($user, 'otp_secret', ['value' => $totp_secret]);
+                echo $form->field($user, 'totp_input')->textInput()->label('最后一步! 输入TOTP应用程序上显示的密码以启用二步验证');
+                echo Html::submitButton('启用二步验证', ['class' => 'btn btn-primary']);
+                ActiveForm::end();
+            }
+            ?>
         </div>
     </div>
 <?php

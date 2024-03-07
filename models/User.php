@@ -58,8 +58,8 @@ class User extends ActiveRecord implements IdentityInterface
         return [
             [['status', 'is_encryption_enabled', 'is_otp_enabled'], 'integer'],
             [['created_at', 'last_login'], 'safe'],
-            [['bio'], 'string'],
-            [['encryption_key', 'otp_secret','recovery_codes'], 'string', 'max' => 255],
+            [['bio', 'totp_input'], 'string'],
+            [['encryption_key', 'otp_secret', 'recovery_codes'], 'string', 'max' => 255],
             [['last_login_ip'], 'string', 'max' => 45],
             [['username', 'password'], 'required', 'on' => 'login'],
             [['username', 'password', 'email', 'password2'], 'required', 'on' => 'register'],

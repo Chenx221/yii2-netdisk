@@ -14,6 +14,7 @@ use yii\httpclient\Client;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
+use yii\web\RangeNotSatisfiableHttpException;
 use yii\web\Response;
 
 /**
@@ -35,17 +36,17 @@ class UserController extends Controller
                         [
                             'allow' => true,
                             'actions' => ['delete', 'info'],
-                            'roles' => ['user'],
+                            'roles' => ['user'], // only user can do these
                         ],
                         [
                             'allow' => true,
-                            'actions' => ['login', 'register'],
+                            'actions' => ['login', 'register','verify-two-factor'],
                             'roles' => ['?', '@'], // everyone can access public share
                         ],
                         [
                             'allow' => true,
-                            'actions' => ['logout', 'setup-two-factor', 'change-password'],
-                            'roles' => ['@'], // everyone can access public share
+                            'actions' => ['logout', 'setup-two-factor', 'change-password', 'download-recovery-codes', 'remove-two-factor'],
+                            'roles' => ['@'], // only logged-in user can do these
                         ]
                     ],
                 ],
@@ -59,6 +60,9 @@ class UserController extends Controller
                         'info' => ['GET', 'POST'],
                         'change-password' => ['POST'],
                         'setup-two-factor' => ['POST'],
+                        'download-recovery-codes' => ['GET'],
+                        'remove-two-factor' => ['POST'],
+                        'verify-two-factor' => ['GET','POST'],
                     ],
                 ],
             ]
@@ -134,15 +138,22 @@ class UserController extends Controller
             }
 
             if (($captchaResponse !== null && $isCaptchaValid) || ($verifyProvider === 'None')) {
-                if ($model->login()) {
-                    //login success
-                    $user = Yii::$app->user->identity;
-                    $user->last_login = date('Y-m-d H:i:s');
-                    $user->last_login_ip = Yii::$app->request->userIP;
-                    if ($user->save(false)) {
-                        return $this->goBack();
+                // 验证用户名和密码
+                $user = User::findOne(['username' => $model->username]);
+                if ($user !== null && $user->validatePassword($model->password)) {
+                    // 如果用户启用了二步验证，将用户重定向到二步验证页面
+                    if ($user->is_otp_enabled) {
+                        Yii::$app->session->set('login_verification', ['id' => $user->id]);
+                        return $this->redirect(['user/verify-two-factor']);
                     } else {
-                        Yii::$app->session->setFlash('error', '登陆成功，但出现了内部错误');
+                        //login without 2FA
+                        $user->last_login = date('Y-m-d H:i:s');
+                        $user->last_login_ip = Yii::$app->request->userIP;
+                        if (!$user->save(false)){
+                            Yii::$app->session->setFlash('error', '登陆成功，但出现了内部错误');
+                        }
+                        Yii::$app->user->login($user, $model->rememberMe ? 3600 * 24 * 30 : 0);
+                        return $this->goHome();
                     }
                 } else {
                     Yii::$app->session->setFlash('error', '用户名密码错误或账户已禁用');
@@ -152,6 +163,41 @@ class UserController extends Controller
             }
         }
         return $this->render('login', [
+            'model' => $model,
+        ]);
+    }
+
+    /**
+     * @return Response|string
+     */
+    public function actionVerifyTwoFactor(): Response|string
+    {
+        if (!Yii::$app->session->has('login_verification')) {
+            Yii::$app->session->setFlash('error', '非法访问');
+            return $this->goHome();
+        }
+
+        $model = new User();
+        $user = User::findOne(Yii::$app->session->get('login_verification')['id']);
+
+        if ($model->load(Yii::$app->request->post())) {
+            // 验证二步验证代码
+            $otp = TOTP::createFromSecret($user->otp_secret);
+            if ($otp->verify($model->totp_input)) {
+                $user->last_login = date('Y-m-d H:i:s');
+                $user->last_login_ip = Yii::$app->request->userIP;
+                if (!$user->save(false)){
+                    Yii::$app->session->setFlash('error', '登陆成功，但出现了内部错误');
+                }
+                Yii::$app->user->login($user, $model->rememberMe ? 3600 * 24 * 30 : 0);
+                Yii::$app->session->remove('login_verification');
+                return $this->goHome();
+            } else {
+                Yii::$app->session->setFlash('error', '二步验证代码错误');
+            }
+        }
+
+        return $this->render('verifyTwoFactor', [
             'model' => $model,
         ]);
     }
@@ -293,6 +339,7 @@ class UserController extends Controller
     }
 
     /**
+     * @param string|null $focus
      * @return string|Response
      */
     public function actionInfo(string $focus = null): Response|string
@@ -306,7 +353,7 @@ class UserController extends Controller
         if (!$model->is_otp_enabled) {
             $totp = TOTP::generate();
             $totp_secret = $totp->getSecret();
-            $totp->setLabel('NetDisk_'.$model->name);
+            $totp->setLabel('NetDisk_' . $model->name);
             $totp_url = $totp->getProvisioningUri();
         }
         if (Yii::$app->request->isPost && $model->load(Yii::$app->request->post())) {
@@ -320,6 +367,7 @@ class UserController extends Controller
                     'focus' => 'bio',
                     'totp_secret' => $totp_secret,
                     'totp_url' => $totp_url,
+                    'is_otp_enabled' => $model->is_otp_enabled
                 ]);
             }
         }
@@ -331,10 +379,12 @@ class UserController extends Controller
             'focus' => $focus,
             'totp_secret' => $totp_secret,
             'totp_url' => $totp_url,
+            'is_otp_enabled' => $model->is_otp_enabled == 1
         ]);
     }
 
     /**
+     * 更改密码
      * @return Response|string
      * @throws Exception
      */
@@ -354,28 +404,88 @@ class UserController extends Controller
         return $this->redirect(['user/info', 'focus' => 'password']);
     }
 
-    public function actionSetupTwoFactor()
+    /**
+     * 启用二步验证
+     * @return Response
+     * @throws Exception
+     */
+    public function actionSetupTwoFactor(): Response
     {
-        // ...其他代码...
+        $user = Yii::$app->user->identity;
 
-        // 生成恢复代码
-        $recoveryCodes = $this->generateRecoveryCodes();
+        if ($user->load(Yii::$app->request->post())) {
+            $totp_secret = $user->otp_secret;
+            $totp_input = $user->totp_input;
 
-        // 保存恢复代码到数据库或其他安全的地方
-
-        // 显示恢复代码给用户
-        Yii::$app->session->setFlash('success', '二步验证已启用。您的恢复代码是：' . implode(', ', $recoveryCodes));
-
-        // ...其他代码...
+            $otp = TOTP::createFromSecret($totp_secret);
+            if ($otp->verify($totp_input)) {
+                $recoveryCodes = $this->generateRecoveryCodes();
+                $user->is_otp_enabled = 1;
+                $user->recovery_codes = implode(',', $recoveryCodes);
+                $user->save();
+                Yii::$app->session->setFlash('success', '二步验证已启用');
+            } else {
+                Yii::$app->session->setFlash('error', '二步验证启用失败，请重新添加');
+            }
+        }
+        return $this->redirect(['user/info']);
     }
 
-    private function generateRecoveryCodes($length = 10, $numCodes = 10)
+    /**
+     * 移除二步验证
+     */
+    public function actionRemoveTwoFactor(): void
+    {
+        $user = Yii::$app->user->identity;
+        if ($user->is_otp_enabled) {
+            $user->otp_secret = null;
+            $user->is_otp_enabled = 0;
+            $user->recovery_codes = null;
+            $user->save();
+            Yii::$app->session->setFlash('success', '二步验证已关闭');
+        } else {
+            Yii::$app->session->setFlash('error', '二步验证未启用,无需关闭');
+        }
+    }
+
+    /**
+     * 生成10组随机的恢复代码
+     * @return array
+     * @throws Exception
+     */
+    private function generateRecoveryCodes(): array
     {
         $codes = [];
-        for ($i = 0; $i < $numCodes; $i++) {
-            $codes[] = Yii::$app->security->generateRandomString($length);
+        for ($i = 0; $i < 10; $i++) {
+            $codes[] = Yii::$app->security->generateRandomString(10);
         }
         return $codes;
     }
 
+    /**
+     * 获取恢复代码(以txt文本的形式提供)
+     * @return Response|\yii\console\Response
+     * @throws RangeNotSatisfiableHttpException
+     */
+    public function actionDownloadRecoveryCodes(): Response|\yii\console\Response
+    {
+        // 获取当前登录的用户模型
+        $user = Yii::$app->user->identity;
+
+        // 检查用户是否启用了 TOTP
+        if ($user->is_otp_enabled) {
+            // 获取恢复代码
+            $recoveryCodesString = implode("\n", explode(',', $user->recovery_codes));
+            // 发送恢复代码给用户
+            return Yii::$app->response->sendContentAsFile(
+                $recoveryCodesString,
+                'recovery_codes.txt',
+                ['mimeType' => 'text/plain']
+            );
+        } else {
+            // 如果用户没有启用 TOTP，返回一个错误消息
+            Yii::$app->session->setFlash('error', '获取失败，您还没有启用二步验证。');
+            return $this->redirect(['user/info']);
+        }
+    }
 }
