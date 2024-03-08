@@ -28,6 +28,7 @@ use yii\web\IdentityInterface;
  * @property int|null $is_otp_enabled 启用otp
  * @property int|null $storage_limit 存储容量限制,MB
  * @property string|null $recovery_codes OTP恢复代码
+ * @property int|null $dark_mode 夜间模式(0 off,1 on,2 auto)
  *
  * @property CollectionTasks[] $collectionTasks
  * @property Share[] $shares
@@ -56,7 +57,7 @@ class User extends ActiveRecord implements IdentityInterface
     public function rules(): array
     {
         return [
-            [['status', 'is_encryption_enabled', 'is_otp_enabled'], 'integer'],
+            [['status', 'is_encryption_enabled', 'is_otp_enabled','dark_mode'], 'integer'],
             [['created_at', 'last_login'], 'safe'],
             [['bio', 'totp_input'], 'string'],
             [['encryption_key', 'otp_secret', 'recovery_codes'], 'string', 'max' => 255],
@@ -115,7 +116,7 @@ class User extends ActiveRecord implements IdentityInterface
             'is_otp_enabled' => 'Is Otp Enabled',
             'storage_limit' => 'Storage Limit',
             'recovery_codes' => 'Recovery Codes',
-
+            'dark_mode' =>'Dark Mode'
         ];
     }
 
