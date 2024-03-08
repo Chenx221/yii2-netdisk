@@ -334,6 +334,8 @@ Modal::begin([
                 <li><a href="https://play.google.com/store/apps/details?id=com.azure.authenticator&hl=en_US">Microsoft
                         Authenticator</a></li>
                 <li><a href="https://play.google.com/store/apps/details?id=com.authy.authy&hl=en">Authy</a></li>
+                <!--这是广告吗-->
+                <li><a href="https://git.chenx221.cyou/chenx221/OTP/releases">自制TOTP验证器(Windows)</a></li>
                 <!-- Add more applications as needed -->
             </ul>
             <div class="input-group mb-3">
