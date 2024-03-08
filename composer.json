@@ -47,7 +47,8 @@
     "ipinfo/ipinfo": "^3.1",
     "spomky-labs/otphp": "^11.2",
     "ext-gd": "*",
-    "endroid/qr-code": "^5.0"
+    "endroid/qr-code": "^5.0",
+    "bower-asset/bootstrap": "^5.3"
   },
   "require-dev": {
     "yiisoft/yii2-debug": "~2.1.0",
