@@ -131,7 +131,7 @@ $user = new User();
                             <div class="storage-columns">
                                 <div class="storage-usage" style="width: 27%">
                                     <p>当前已使用容量</p>
-                                    <span style="font-weight: 600;font-size: 1.4rem;color: black;padding-left: 2px;"><?= $totalUsed_F ?>
+                                    <span id="current"><?= $totalUsed_F ?>
                                 </span>
                                     <span style="font-size: 0.9rem;">/ <?= $storageLimit_F ?></span>
                                 </div>
@@ -229,7 +229,6 @@ $user = new User();
                 <div id="collapseAdvanced"
                      class="accordion-collapse collapse <?= ($focus === 'advanced') ? 'show' : '' ?>">
                     <div class="accordion-body">
-                        <!--TODO:二步验证、passwordless-->
                         <h4>二步验证</h4>
                         <hr>
                         <p>使用除您密码之外的第二种方法来增强您账号的安全性。</p>
@@ -260,14 +259,8 @@ $user = new User();
                         </ul>
                         <br>
 
-                        <h4>无密码认证</h4>
-                        <hr>
-                        <p>遵循 FIDO2 标准为无密码身份验证设置您的账号。</p>
-                        <br>
-
                         <h4>主题</h4>
                         <hr>
-                        <p>可以在</p>
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" role="switch" id="useDarkTheme">
                             <label class="form-check-label" for="useDarkTheme">启用夜间模式</label>

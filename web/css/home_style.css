@@ -1,10 +1,17 @@
 nav {
     --bs-breadcrumb-divider: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8'%3E%3Cpath d='M2.5 0L1 1.5 3.5 4 1 6.5 2.5 8l4-4-4-4z' fill='%236c757d'/%3E%3C/svg%3E");
 }
+
 table a {
     text-decoration-line: none;
     color: black;
 }
+html[data-bs-theme="dark"] table a {
+    color: inherit; /* 或者你想要的任何颜色 */
+}
+/*.table-dark-a {*/
+/*    color: var(--bs-table-color-state, var(--bs-table-color-type, var(--bs-table-color)));*/
+/*}*/
 
 .file_icon {
     font-size: xx-large;
@@ -24,9 +31,11 @@ table a {
     font-size: large;
     line-height: 2;
 }
-.selector-col{
+
+.selector-col {
     width: 0;
 }
+
 .name-col {
     width: 50%;
 }
@@ -83,6 +92,7 @@ table tbody .selected {
 table .selected a {
     color: black !important;
 }
+
 table tr td:first-child, table tr th:first-child {
     display: none;
 }
