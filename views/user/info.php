@@ -272,7 +272,7 @@ $darkMode = Yii::$app->user->identity->dark_mode;
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" role="switch"
                                    id="followSystemTheme" <?= $darkMode === 2 ? 'checked' : '' ?>>
-                            <label class="form-check-label" for="autoTheme">跟随设备主题</label>
+                            <label class="form-check-label" for="followSystemTheme">跟随设备主题</label>
                         </div>
                         <br>
 
