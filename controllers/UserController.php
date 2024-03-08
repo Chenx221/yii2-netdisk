@@ -183,18 +183,40 @@ class UserController extends Controller
 
         if ($model->load(Yii::$app->request->post())) {
             // 验证二步验证代码
-            $otp = TOTP::createFromSecret($user->otp_secret);
-            if ($otp->verify($model->totp_input)) {
-                $user->last_login = date('Y-m-d H:i:s');
-                $user->last_login_ip = Yii::$app->request->userIP;
-                if (!$user->save(false)) {
-                    Yii::$app->session->setFlash('error', '登陆成功，但出现了内部错误');
+            if(!is_null($model->totp_input)){
+                $otp = TOTP::createFromSecret($user->otp_secret);
+                if ($otp->verify($model->totp_input)) {
+                    $user->last_login = date('Y-m-d H:i:s');
+                    $user->last_login_ip = Yii::$app->request->userIP;
+                    if (!$user->save(false)) {
+                        Yii::$app->session->setFlash('error', '登陆成功，但出现了内部错误');
+                    }
+                    Yii::$app->user->login($user, $model->rememberMe ? 3600 * 24 * 30 : 0);
+                    Yii::$app->session->remove('login_verification');
+                    return $this->goHome();
+                } else {
+                    Yii::$app->session->setFlash('error', '二步验证代码错误');
                 }
-                Yii::$app->user->login($user, $model->rememberMe ? 3600 * 24 * 30 : 0);
-                Yii::$app->session->remove('login_verification');
-                return $this->goHome();
-            } else {
-                Yii::$app->session->setFlash('error', '二步验证代码错误');
+            }elseif (!is_null($model->recoveryCode_input)) {
+                $recoveryCodes = explode(',', $user->recovery_codes);
+                if (in_array($model->recoveryCode_input, $recoveryCodes)) {
+                    //remove the used recovery code
+                    $recoveryCodes = array_diff($recoveryCodes, [$model->recoveryCode_input]);
+                    $user->recovery_codes = implode(',', $recoveryCodes);
+                    $user->last_login = date('Y-m-d H:i:s');
+                    $user->last_login_ip = Yii::$app->request->userIP;
+                    if (!$user->save(false)) {
+                        Yii::$app->session->setFlash('error', '登陆成功，但出现了内部错误');
+                    }
+                    Yii::$app->session->setFlash('success', '登陆成功，但请注意已经使用的恢复代码已失效');
+                    Yii::$app->user->login($user, $model->rememberMe ? 3600 * 24 * 30 : 0);
+                    Yii::$app->session->remove('login_verification');
+                    return $this->goHome();
+                } else {
+                    Yii::$app->session->setFlash('error', '恢复代码错误');
+                }
+            }else{
+                Yii::$app->session->setFlash('error', '请输入二步验证代码或恢复代码');
             }
         }
 

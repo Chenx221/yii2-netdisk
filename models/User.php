@@ -42,6 +42,7 @@ class User extends ActiveRecord implements IdentityInterface
     public $newPassword; // 新密码 修改密码用
     public $newPasswordRepeat; // 重复新密码 修改密码用
     public $totp_input; // otp用户输入值
+    public $recoveryCode_input; // 恢复代码用户输入
 
     /**
      * {@inheritdoc}
@@ -59,7 +60,7 @@ class User extends ActiveRecord implements IdentityInterface
         return [
             [['status', 'is_encryption_enabled', 'is_otp_enabled','dark_mode'], 'integer'],
             [['created_at', 'last_login'], 'safe'],
-            [['bio', 'totp_input'], 'string'],
+            [['bio', 'totp_input','recoveryCode_input'], 'string'],
             [['encryption_key', 'otp_secret', 'recovery_codes'], 'string', 'max' => 255],
             [['last_login_ip'], 'string', 'max' => 45],
             [['username', 'password'], 'required', 'on' => 'login'],

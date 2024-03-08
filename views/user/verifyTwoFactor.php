@@ -23,6 +23,13 @@ $this->params['breadcrumbs'][] = $this->title;
                 <?= Html::submitButton('提交', ['class' => 'btn btn-primary']) ?>
             </div>
             <?php ActiveForm::end(); ?>
+            <hr>
+            <?php $form = ActiveForm::begin(); ?>
+            <?= $form->field($model, 'recoveryCode_input')->textInput()->label('丢失所有验证设备? 使用恢复代码') ?>
+            <div class="form-group">
+                <?= Html::submitButton('恢复账户', ['class' => 'btn btn-primary']) ?>
+            </div>
+            <?php ActiveForm::end(); ?>
         </div>
     </div>
 </div><!-- user-login-2fa -->
