@@ -62,6 +62,9 @@ if (!is_null($totp_secret)) {
 
 // totp
 $user = new User();
+
+// Dark Mode
+$darkMode = Yii::$app->user->identity->dark_mode;
 ?>
 
     <div class="user-info">
@@ -262,12 +265,14 @@ $user = new User();
                         <h4>主题</h4>
                         <hr>
                         <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" role="switch" id="useDarkTheme">
+                            <input class="form-check-input" type="checkbox" role="switch"
+                                   id="useDarkTheme" <?= $darkMode === 0 ? '' : ($darkMode === 1 ? 'checked' : 'disabled') ?>>
                             <label class="form-check-label" for="useDarkTheme">启用夜间模式</label>
                         </div>
                         <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" role="switch" id="autoTheme">
-                            <label class="form-check-label" for="autoTheme">Auto</label>
+                            <input class="form-check-input" type="checkbox" role="switch"
+                                   id="followSystemTheme" <?= $darkMode === 2 ? 'checked' : '' ?>>
+                            <label class="form-check-label" for="autoTheme">跟随设备主题</label>
                         </div>
                         <br>
 

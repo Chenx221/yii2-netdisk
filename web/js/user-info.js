@@ -18,5 +18,18 @@ $(document).ready(function () {
     $('#totpSetupModal').on('hidden.bs.modal', function () {
         $('#totp-enabled').prop('checked', false);
     });
+    $('#useDarkTheme').change(function() {
+        var darkMode = this.checked ? 1 : 0;
+        $.post('index.php?r=user%2Fset-theme', {dark_mode: darkMode}, function() {
+            location.reload();
+        });
+    });
 
+    $('#followSystemTheme').change(function() {
+        $('#useDarkTheme').prop('checked', false);
+        var darkMode = this.checked ? 2 : 0;
+        $.post('index.php?r=user%2Fset-theme', {dark_mode: darkMode}, function() {
+            location.reload();
+        });
+    });
 });

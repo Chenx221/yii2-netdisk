@@ -40,12 +40,12 @@ class UserController extends Controller
                         ],
                         [
                             'allow' => true,
-                            'actions' => ['login', 'register','verify-two-factor'],
+                            'actions' => ['login', 'register', 'verify-two-factor'],
                             'roles' => ['?', '@'], // everyone can access public share
                         ],
                         [
                             'allow' => true,
-                            'actions' => ['logout', 'setup-two-factor', 'change-password', 'download-recovery-codes', 'remove-two-factor'],
+                            'actions' => ['logout', 'setup-two-factor', 'change-password', 'download-recovery-codes', 'remove-two-factor', 'set-theme'],
                             'roles' => ['@'], // only logged-in user can do these
                         ]
                     ],
@@ -62,7 +62,8 @@ class UserController extends Controller
                         'setup-two-factor' => ['POST'],
                         'download-recovery-codes' => ['GET'],
                         'remove-two-factor' => ['POST'],
-                        'verify-two-factor' => ['GET','POST'],
+                        'verify-two-factor' => ['GET', 'POST'],
+                        'set-theme' => ['POST'],
                     ],
                 ],
             ]
@@ -149,7 +150,7 @@ class UserController extends Controller
                         //login without 2FA
                         $user->last_login = date('Y-m-d H:i:s');
                         $user->last_login_ip = Yii::$app->request->userIP;
-                        if (!$user->save(false)){
+                        if (!$user->save(false)) {
                             Yii::$app->session->setFlash('error', '登陆成功，但出现了内部错误');
                         }
                         Yii::$app->user->login($user, $model->rememberMe ? 3600 * 24 * 30 : 0);
@@ -186,7 +187,7 @@ class UserController extends Controller
             if ($otp->verify($model->totp_input)) {
                 $user->last_login = date('Y-m-d H:i:s');
                 $user->last_login_ip = Yii::$app->request->userIP;
-                if (!$user->save(false)){
+                if (!$user->save(false)) {
                     Yii::$app->session->setFlash('error', '登陆成功，但出现了内部错误');
                 }
                 Yii::$app->user->login($user, $model->rememberMe ? 3600 * 24 * 30 : 0);
@@ -487,5 +488,18 @@ class UserController extends Controller
             Yii::$app->session->setFlash('error', '获取失败，您还没有启用二步验证。');
             return $this->redirect(['user/info']);
         }
+    }
+
+    /**
+     * 更改用户主题
+     * @return Response
+     */
+    public function actionSetTheme(): Response
+    {
+        $darkMode = Yii::$app->request->post('dark_mode', 0);
+        $user = Yii::$app->user->identity;
+        $user->dark_mode = $darkMode;
+        $user->save();
+        return $this->asJson(['success' => true]);
     }
 }
