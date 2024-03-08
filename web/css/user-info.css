@@ -6,6 +6,40 @@
     margin-bottom: 30px;
 }
 
+.avatar-container {
+    position: relative;
+}
+
+.avatar {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+}
+
+.avatar-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.125);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    border-radius: 50%;
+}
+
+.avatar-overlay i {
+    color: white;
+    font-size: 2em;
+}
+
+.avatar-container:hover .avatar-overlay {
+    opacity: 1;
+}
+
 .user-details {
     display: flex;
     justify-content: space-between;

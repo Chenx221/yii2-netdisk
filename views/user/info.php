@@ -72,7 +72,12 @@ $darkMode = Yii::$app->user->identity->dark_mode;
         <h1><?= Html::encode($this->title) ?></h1>
 
         <div class="user-profile">
-            <?= $model->getGravatar(email: $model->email, s: 100, img: true, atts: ['alt' => 'User Avatar', 'style' => 'border-radius: 50%']) ?>
+            <div class="avatar-container">
+                <?= $model->getGravatar(email: $model->email, s: 100, img: true, atts: ['alt' => 'User Avatar', 'class' => 'avatar']) ?>
+                <div class="avatar-overlay">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                </div>
+            </div>
             <div class="user-details">
                 <div class="user-info">
                     <p id="p-username"><?= Html::encode($model->username) ?></p>
@@ -163,8 +168,7 @@ $darkMode = Yii::$app->user->identity->dark_mode;
                                             <span class="legend-color" style="background-color: rgb(196,134,0);"></span>
                                             <span>保险箱已用空间</span>
                                             <span style="margin-left: auto;"><?= $vaultUsedSpace_F ?>
-<!--                                            PENDING-->
-                                            <?= Html::a('<i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 0.75rem;"></i>', ['site/index']) ?>
+                                                <?= Html::a('<i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 0.75rem;"></i>', ['site/index']) ?>
                                         </span>
                                         </div>
                                     </div>
