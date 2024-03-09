@@ -9,7 +9,7 @@ $(document).ready(function () {
     $('#totp-enabled').change(function () {
         if (this.checked) {
             $('#totpSetupModal').modal('show');
-        }else {
+        } else {
             $.post('index.php?r=user%2Fremove-two-factor', function () {
                 location.reload();
             });
@@ -18,18 +18,22 @@ $(document).ready(function () {
     $('#totpSetupModal').on('hidden.bs.modal', function () {
         $('#totp-enabled').prop('checked', false);
     });
-    $('#useDarkTheme').change(function() {
+    $('#useDarkTheme').change(function () {
         var darkMode = this.checked ? 1 : 0;
-        $.post('index.php?r=user%2Fset-theme', {dark_mode: darkMode}, function() {
+        $.post('index.php?r=user%2Fset-theme', {dark_mode: darkMode}, function () {
             location.reload();
         });
     });
 
-    $('#followSystemTheme').change(function() {
+    $('#followSystemTheme').change(function () {
         $('#useDarkTheme').prop('checked', false);
         var darkMode = this.checked ? 2 : 0;
-        $.post('index.php?r=user%2Fset-theme', {dark_mode: darkMode}, function() {
+        $.post('index.php?r=user%2Fset-theme', {dark_mode: darkMode}, function () {
             location.reload();
         });
     });
+});
+
+document.querySelector('.avatar-container').addEventListener('click', function () {
+    $('#avatarModal').modal('show');
 });

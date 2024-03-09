@@ -94,9 +94,11 @@
     color: rgb(100, 96, 100);
     font-size: 0.95rem;
 }
+
 html[data-bs-theme="dark"] .login-info-dv .user-login-info-content {
     color: inherit;
 }
+
 .accordion-item {
     margin-bottom: 5px;
     border-top: var(--bs-accordion-border-width) solid var(--bs-accordion-border-color) !important;
@@ -152,9 +154,11 @@ html[data-bs-theme="dark"] .login-info-dv .user-login-info-content {
     font-size: 0.75rem;
     color: rgb(140, 139, 139);
 }
+
 html[data-bs-theme="dark"] .storage-columns span, .storage-columns p {
     color: inherit;
 }
+
 .storage-columns p {
     margin-bottom: 0.5rem !important;
 }
@@ -187,12 +191,18 @@ html[data-bs-theme="dark"] .storage-columns span, .storage-columns p {
     border-radius: 4px;
 }
 
-#current{
+#current {
     font-weight: 600;
     font-size: 1.4rem;
     color: black;
     padding-left: 2px;
 }
-html[data-bs-theme="dark"] #current{
+
+html[data-bs-theme="dark"] #current {
     color: inherit;
+}
+
+#info_icon {
+    font-size: 2em;
+    line-height: 1.5;
 }

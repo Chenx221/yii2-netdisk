@@ -294,6 +294,18 @@ $darkMode = Yii::$app->user->identity->dark_mode;
     </div>
 <?php
 Modal::begin([
+    'title' => '<h4>更改用户头像</h4>',
+    'id' => 'avatarModal',
+//    'size' => 'modal-sm',
+]);
+
+echo Html::tag('div', '<i class="fa-solid fa-circle-info" id="info_icon"></i>
+<p>要修改头像，请前往Gravatar<a href="https://gravatar.com/" target=”_blank”><i class="fa-solid fa-arrow-up-right-from-square"></i></a>，使用相同的电子邮箱地址创建/登录账户后对头像进行管理</p>
+<br>Q: 修改头像后不起作用?<br>A: 尝试ctrl+F5强制刷新或清除cache后刷新页面<br><a href="https://support.gravatar.com/" target=”_blank”>更多帮助</a>', ['class' => 'modal-body']);
+
+Modal::end();
+
+Modal::begin([
     'title' => '<h4>确定？</h4>',
     'id' => 'deleteAccountModal',
     'size' => 'modal-sm',
