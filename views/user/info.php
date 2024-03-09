@@ -80,7 +80,10 @@ $darkMode = Yii::$app->user->identity->dark_mode;
             </div>
             <div class="user-details">
                 <div class="user-info">
-                    <p id="p-username"><?= Html::encode($model->username) ?></p>
+                    <p id="p-username" class="editable-username" title="用户昵称(用户名)">
+                        <?= Html::encode($model->name . '(' . $model->username. ')') ?>
+                        <i class="fa-solid fa-pen-to-square edit-icon"></i>
+                    </p>
                     <p><?= Html::encode($model->email) ?></p>
                     <p>
                         <?php
@@ -118,9 +121,9 @@ $darkMode = Yii::$app->user->identity->dark_mode;
         <div class="accordion userAccordion" id="userAccordion">
             <div class="accordion-item">
                 <h2 class="accordion-header" id="headingStorage">
-                    <button class="accordion-button <?= ($focus === 'storage' || $focus === null) ? '' : 'collapsed' ?>"
+                    <button class="accordion-button <?= ($focus === 'storage') ? '' : 'collapsed' ?>"
                             type="button" data-bs-toggle="collapse"
-                            data-bs-target="#collapseStorage" <?= ($focus === 'storage' || $focus === null) ? 'aria-expanded="true"' : '' ?>>
+                            data-bs-target="#collapseStorage" <?= ($focus === 'storage') ? 'aria-expanded="true"' : '' ?>>
                     <span class="accordion-storage-content">
                         <span>
                             <i class="fa-solid fa-hard-drive"></i>
@@ -133,7 +136,7 @@ $darkMode = Yii::$app->user->identity->dark_mode;
                     </button>
                 </h2>
                 <div id="collapseStorage"
-                     class="accordion-collapse collapse  <?= ($focus === 'storage' || $focus === null) ? 'show' : '' ?>">
+                     class="accordion-collapse collapse  <?= ($focus === 'storage') ? 'show' : '' ?>">
                     <div class="accordion-body">
                         <div class="storage-info">
                             <div class="storage-columns">
@@ -293,10 +296,10 @@ $darkMode = Yii::$app->user->identity->dark_mode;
         </div>
     </div>
 <?php
+// 修改用户头像的Modal
 Modal::begin([
     'title' => '<h4>更改用户头像</h4>',
     'id' => 'avatarModal',
-//    'size' => 'modal-sm',
 ]);
 
 echo Html::tag('div', '<i class="fa-solid fa-circle-info" id="info_icon"></i>
@@ -305,6 +308,24 @@ echo Html::tag('div', '<i class="fa-solid fa-circle-info" id="info_icon"></i>
 
 Modal::end();
 
+// 修改用户昵称的Modal
+Modal::begin([
+    'title' => '<h4>修改用户昵称</h4>',
+    'id' => 'changeAccountName',
+    'size' => 'modal-sm',
+]);
+
+$form = ActiveForm::begin([
+    'action' => ['user/change-name'],
+    'method' => 'post'
+]);
+echo $form->field($user, 'name')->textInput()->label('新的用户昵称:');
+echo Html::submitButton('确认修改', ['class' => 'btn btn-primary']);
+ActiveForm::end();
+
+Modal::end();
+
+// 删除账户Modal
 Modal::begin([
     'title' => '<h4>确定？</h4>',
     'id' => 'deleteAccountModal',
@@ -327,12 +348,12 @@ echo Html::endForm();
 
 Modal::end();
 
+// 二步验证Modal
 Modal::begin([
     'title' => '<h4>需要进一步操作以启用二步验证</h4>',
     'id' => 'totpSetupModal',
     'size' => 'model-xl',
 ]);
-/*<img src="<?= is_null($totp_secret) ? '' : $result->getDataUri() ?>" alt="qrcode"/>*/
 ?>
     <div class="row">
         <div class="col-md-6 text-center center">

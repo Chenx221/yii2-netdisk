@@ -206,3 +206,21 @@ html[data-bs-theme="dark"] #current {
     font-size: 2em;
     line-height: 1.5;
 }
+
+.editable-username {
+    cursor: pointer;
+
+}
+
+.editable-username:hover {
+    text-decoration: underline;
+}
+
+.editable-username .edit-icon {
+    display: none;
+    font-size: 0.75em;
+}
+
+.editable-username:hover .edit-icon {
+    display: inline;
+}

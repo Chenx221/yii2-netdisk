@@ -37,3 +37,8 @@ $(document).ready(function () {
 document.querySelector('.avatar-container').addEventListener('click', function () {
     $('#avatarModal').modal('show');
 });
+
+document.querySelector('.editable-username').addEventListener('click', function () {
+    // 在这里添加你的代码来显示一个模态框或其他你想要的东西
+    $('#changeAccountName').modal('show');
+});

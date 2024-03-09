@@ -45,8 +45,8 @@ class UserController extends Controller
                         ],
                         [
                             'allow' => true,
-                            'actions' => ['logout', 'setup-two-factor', 'change-password', 'download-recovery-codes', 'remove-two-factor', 'set-theme'],
-                            'roles' => ['@'], // only logged-in user can do these
+                            'actions' => ['logout', 'setup-two-factor', 'change-password', 'download-recovery-codes', 'remove-two-factor', 'set-theme', 'change-name'],
+                            'roles' => ['@'], // only logged-in user can do these ( admin included )
                         ]
                     ],
                 ],
@@ -64,6 +64,7 @@ class UserController extends Controller
                         'remove-two-factor' => ['POST'],
                         'verify-two-factor' => ['GET', 'POST'],
                         'set-theme' => ['POST'],
+                        'change-name' => ['POST'],
                     ],
                 ],
             ]
@@ -183,7 +184,7 @@ class UserController extends Controller
 
         if ($model->load(Yii::$app->request->post())) {
             // 验证二步验证代码
-            if(!is_null($model->totp_input)){
+            if (!is_null($model->totp_input)) {
                 $otp = TOTP::createFromSecret($user->otp_secret);
                 if ($otp->verify($model->totp_input)) {
                     $user->last_login = date('Y-m-d H:i:s');
@@ -197,7 +198,7 @@ class UserController extends Controller
                 } else {
                     Yii::$app->session->setFlash('error', '二步验证代码错误');
                 }
-            }elseif (!is_null($model->recoveryCode_input)) {
+            } elseif (!is_null($model->recoveryCode_input)) {
                 $recoveryCodes = explode(',', $user->recovery_codes);
                 if (in_array($model->recoveryCode_input, $recoveryCodes)) {
                     //remove the used recovery code
@@ -215,7 +216,7 @@ class UserController extends Controller
                 } else {
                     Yii::$app->session->setFlash('error', '恢复代码错误');
                 }
-            }else{
+            } else {
                 Yii::$app->session->setFlash('error', '请输入二步验证代码或恢复代码');
             }
         }
@@ -362,6 +363,10 @@ class UserController extends Controller
     }
 
     /**
+     * 显示用户信息
+     * 同时接收post请求来修改用户bio
+     * 支持参数focus指定页面加载时自动展开哪一块区域 [null,storage,bio,password,advanced]
+     *
      * @param string|null $focus
      * @return string|Response
      */
@@ -508,7 +513,7 @@ class UserController extends Controller
         } else {
             // 如果用户没有启用 TOTP，返回一个错误消息
             Yii::$app->session->setFlash('error', '获取失败，您还没有启用二步验证。');
-            return $this->redirect(['user/info']);
+            return $this->redirect(['user/info', 'focus' => 'advanced']);
         }
     }
 
@@ -523,5 +528,20 @@ class UserController extends Controller
         $user->dark_mode = $darkMode;
         $user->save();
         return $this->asJson(['success' => true]);
+    }
+
+    /**
+     * 修改用户昵称
+     * @return Response
+     */
+    public function actionChangeName(): Response
+    {
+        $model = Yii::$app->user->identity;
+        if ($model->load(Yii::$app->request->post()) && $model->save()) {
+            Yii::$app->session->setFlash('success', '昵称已更新');
+        } else {
+            Yii::$app->session->setFlash('error', '昵称更新失败');
+        }
+        return $this->redirect(['user/info']);
     }
 }
