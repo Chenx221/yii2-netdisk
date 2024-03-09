@@ -121,7 +121,7 @@ $this->registerCssFile('@web/css/home_style.css');
     </div>
     <img id="hidden-image" style="display: none;" alt="" src="" loading=lazy>
     <table class="table table-hover" id="drop-area">
-        <thead class="table-light">
+        <thead>
         <tr>
             <th scope="col" class="selector-col"><label for="select-all" hidden></label><input type="checkbox"
                                                                                                id="select-all"></th>
