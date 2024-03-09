@@ -6,6 +6,7 @@ use app\models\NewFolderForm;
 use app\models\RenameForm;
 use app\models\UploadForm;
 use app\models\ZipForm;
+use app\utils\FileSizeHelper;
 use app\utils\FileTypeDetector;
 use Exception;
 use RecursiveDirectoryIterator;
@@ -75,6 +76,7 @@ class HomeController extends Controller
      */
     public function actionIndex($directory = null): Response|string
     {
+        $model = Yii::$app->user->identity;
 //        if (Yii::$app->user->isGuest) {
 //            Yii::$app->session->setFlash('error','请先登录');
 //            return $this->redirect(Yii::$app->user->loginUrl);
@@ -101,10 +103,16 @@ class HomeController extends Controller
             $rawType = is_file($absolutePath) ? mime_content_type($absolutePath) : null;
             $directoryContents[$key] = ['name' => $item, 'type' => $type, 'lastModified' => $lastModified, 'size' => $size, 'rawType' => $rawType];
         }
+        $usedSpace = FileSizeHelper::getDirectorySize(Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . Yii::$app->user->id);
+        $vaultUsedSpace = 0;  // 保险箱已用空间，暂时为0
+        $storageLimit = $model->storage_limit;
         return $this->render('index', [
             'directoryContents' => $directoryContents,
             'parentDirectory' => $parentDirectory,
             'directory' => $directory,  // 将$directory传递给视图
+            'usedSpace' => $usedSpace, // B
+            'vaultUsedSpace' => $vaultUsedSpace, // B
+            'storageLimit' => $storageLimit, // MB
         ]);
     }
 

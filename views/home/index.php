@@ -3,6 +3,9 @@
 /* @var $this yii\web\View */
 /* @var $directoryContents array 文件和文件夹内容数组 */
 /* @var $parentDirectory string 父目录 */
+/* @var $usedSpace int */
+/* @var $vaultUsedSpace int */
+/* @var $storageLimit int */
 
 /* @var $directory string 当前路径 */
 
@@ -14,6 +17,7 @@ use app\models\NewFolderForm;
 use app\models\RenameForm;
 use app\models\Share;
 use app\models\ZipForm;
+use app\utils\FileSizeHelper;
 use yii\bootstrap5\ActiveForm;
 use yii\bootstrap5\Html;
 use app\assets\FontAwesomeAsset;
@@ -25,6 +29,13 @@ use yii\web\View;
 
 $this->title = '文件管理';
 $this->params['breadcrumbs'][] = $this->title;
+$totalUsed_F = FileSizeHelper::formatBytes($usedSpace + $vaultUsedSpace); //总已用空间 格式化文本
+$storageLimit_F = FileSizeHelper::formatMegaBytes($storageLimit); //存储限制 格式化文本
+$is_unlimited = ($storageLimit === -1); //检查是否为无限制容量
+$usedPercent = $is_unlimited ? 0 : round($usedSpace / ($storageLimit * 1024 * 1024) * 100); //网盘已用百分比
+$vaultUsedPercent = $is_unlimited ? 0 : round($vaultUsedSpace / ($storageLimit * 1024 * 1024) * 100); //保险箱已用百分比
+$totalUsedPercent = min(($usedPercent + $vaultUsedPercent), 100); //总已用百分比
+
 FontAwesomeAsset::register($this);
 JqueryAsset::register($this);
 ViewerJsAsset::register($this);
@@ -65,16 +76,12 @@ $this->registerCssFile('@web/css/home_style.css');
                     <li><?= Html::button('上传文件', ['class' => 'dropdown-item file-upload-btn']) ?></li>
                     <!--                上传文件功能将会覆盖已存在的同名文件，这点请注意-->
                     <li><?= Html::button('上传文件夹', ['class' => 'dropdown-item folder-upload-btn']) ?></li>
-                    <!--                上传文件夹功能不支持IOS设备以及Firefox for Android，上传时会跳过空文件夹-->
-                    <li>
-                        <hr class="dropdown-divider">
-                    </li>
-                    <li>
-                        <!--尚未实现-->
-                        <?= Html::button('离线下载', ['class' => 'dropdown-item offline-download-btn', 'disabled' => true]) ?>
-                    </li>
                 </ul>
             </div>
+            <button type="button" class="btn btn-primary" data-bs-toggle="popover" data-bs-title="容量使用情况"
+                    data-bs-placement="bottom" data-bs-content="已用:<?= $totalUsed_F ?>/ <?= $storageLimit_F ?>"><i
+                        class="fa-solid fa-info"></i>
+            </button>
         </div>
     </div>
 
