@@ -5,6 +5,7 @@
 
 namespace app\models;
 
+use app\utils\FileSizeHelper;
 use Yii;
 use yii\base\Model;
 use yii\web\UploadedFile;
@@ -14,14 +15,14 @@ class UploadForm extends Model
     public UploadedFile|null $uploadFile;
     public $targetDir; //相对路径
 
-    public function rules()
+    public function rules(): array
     {
         return [
             [['uploadFile'], 'file', 'skipOnEmpty' => false, 'checkExtensionByMimeType' => false], //这规则奇怪的放走近科学都可以拍好几集了
         ];
     }
 
-    public function upload()
+    public function upload(): bool
     {
         if ($this->validate()) {
             if ($this->targetDir === null) {
@@ -39,6 +40,9 @@ class UploadForm extends Model
             $directory = dirname($absolutePath . '/' . $fileName);
             if (!is_dir($directory)) {
                 mkdir($directory, 0777, true);
+            }
+            if (!FileSizeHelper::hasEnoughSpace($this->uploadFile->size)) {
+                return false;
             }
             $this->uploadFile->saveAs($absolutePath . '/' . $fileName);
             return true;

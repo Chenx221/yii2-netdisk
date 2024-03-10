@@ -5,6 +5,7 @@ namespace app\controllers;
 use app\models\CollectionTasks;
 use app\models\CollectionSearch;
 use app\models\CollectionUploaded;
+use app\utils\FileSizeHelper;
 use Ramsey\Uuid\Uuid;
 use RuntimeException;
 use Yii;
@@ -52,8 +53,8 @@ class CollectionController extends Controller
                         'view' => ['GET'],
                         'create' => ['POST'],
                         'delete' => ['POST'],
-                        'access' => ['GET'],
-                        'upload' => ['POST'],
+                        'access' => ['GET'],  //剩余空间检查√
+                        'upload' => ['POST'],  //剩余空间检查√
                     ],
                 ],
             ]
@@ -179,6 +180,8 @@ class CollectionController extends Controller
             throw new NotFoundHttpException('请求的文件收集任务已失效或不存在');
         } elseif (!is_dir(Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . $model->user_id . '/' . $model->folder_path)) {
             throw new NotFoundHttpException('收集任务的目标路径不存在');
+        } elseif (!FileSizeHelper::hasEnoughSpace(0, $model->user_id)) {
+            throw new NotFoundHttpException('由于该用户存储空间已耗尽，请求的文件收集任务暂停');
         } elseif ($secret === null) {
             return $this->render('_gateway', [
                 'model' => new CollectionTasks(),
@@ -219,6 +222,9 @@ class CollectionController extends Controller
         $task = $this->findModel($taskId, true); //CollectionTasks::findOne($taskId);
         $userId = $task->user_id;
         $folderPath = $task->folder_path;
+        if (!FileSizeHelper::hasEnoughSpace(0, $userId)) {
+            throw new NotFoundHttpException('由于该用户存储空间已耗尽，请求的文件收集任务暂停');
+        }
 
         // 创建一个新的CollectionUploaded模型实例，并设置其属性值
         $model = new CollectionUploaded();

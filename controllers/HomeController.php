@@ -50,16 +50,16 @@ class HomeController extends Controller
                     'actions' => [
                         'index' => ['GET'],
                         'download' => ['GET'],
-                        'preview' =>['GET'],
+                        'preview' => ['GET'],
                         'rename' => ['POST'],
                         'delete' => ['POST'],
-                        'upload' => ['POST'],
+                        'upload' => ['POST'], //剩余空间检查√
                         'new-folder' => ['POST'],
                         'download-folder' => ['GET'],
                         'multi-ff-zip-dl' => ['POST'],
-                        'zip' => ['POST'],
-                        'unzip' => ['POST'],
-                        'paste' => ['POST'],
+                        'zip' => ['POST'], //剩余空间检查√
+                        'unzip' => ['POST'], //剩余空间检查√
+                        'paste' => ['POST'], //剩余空间检查√
                     ],
                 ],
             ]
@@ -222,6 +222,7 @@ class HomeController extends Controller
         // 结束脚本执行
         exit;
     }
+
     /**
      * 重命名文件或文件夹
      * @return string|Response|null
@@ -368,6 +369,9 @@ class HomeController extends Controller
             if (!preg_match($this->pattern, $model->uploadFile->fullPath) || str_contains($model->uploadFile->fullPath, '..')) {
                 continue;
             }
+            if (!FileSizeHelper::hasEnoughSpace($model->uploadFile->size)) {
+                continue;
+            }
             if ($model->upload()) {
                 $successCount++;
             }
@@ -375,21 +379,21 @@ class HomeController extends Controller
         if ($sp === 'editSaving') {
             if ($successCount === $totalCount) {
                 Yii::$app->response->statusCode = 200;
-                return $this->asJson(['status' => 200, 'message' => 'All files uploaded successfully.']);
-            } else{
-                Yii::$app->response->statusCode = 500;
-                return $this->asJson(['status' => 500, 'message' => 'Failed to upload files.']);
-            }
-        }else {
-            if ($successCount === $totalCount) {
-                Yii::$app->session->setFlash('success', 'All files uploaded successfully.');
-            } elseif ($successCount > 0) {
-                Yii::$app->session->setFlash('warning', 'Some files uploaded successfully.');
+                return $this->asJson(['status' => 200, 'message' => '文件上传成功']);
             } else {
-                Yii::$app->session->setFlash('error', 'Failed to upload files.');
+                Yii::$app->response->statusCode = 500;
+                return $this->asJson(['status' => 500, 'message' => '文件上传失败']);
+            }
+        } else {
+            if ($successCount === $totalCount) {
+                Yii::$app->session->setFlash('success', '文件上传成功');
+            } elseif ($successCount > 0) {
+                Yii::$app->session->setFlash('warning', '部分文件上传失败，这可能是用户剩余空间不足导致');
+            } else {
+                Yii::$app->session->setFlash('error', '文件上传失败，这可能是用户剩余空间不足导致');
             }
             //返回状态码200
-            return Yii::$app->response->statusCode = 200; // 如果出错请删掉return}
+            return Yii::$app->response->statusCode = 200;
         }
     }
 
@@ -572,7 +576,7 @@ class HomeController extends Controller
     {
         $model = new ZipForm();
         $relativePaths = json_decode(Yii::$app->request->post('relativePath'), true);
-        $targetDirectory = Yii::$app->request->post('targetDirectory')??'.';
+        $targetDirectory = Yii::$app->request->post('targetDirectory') ?? '.';
         if ($model->load(Yii::$app->request->post()) && $model->validate()) {
             if (str_contains($targetDirectory, '..')) {
                 throw new NotFoundHttpException('Invalid target directory.');
@@ -593,7 +597,16 @@ class HomeController extends Controller
             $zipPath = Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . Yii::$app->user->id . '/' . $targetDirectory . '/' . $model->zipFilename . '.' . $model->zipFormat;
             try {
                 UnifiedArchive::create($absolutePaths, $zipPath);
-                Yii::$app->session->setFlash('success', '打包成功');
+                // 获取新的压缩文件的大小
+                $zipSize = filesize($zipPath);
+                // 检查新的压缩文件的大小是否超过用户的存储限制
+                if (!FileSizeHelper::hasEnoughSpace()) {
+                    // 如果超过，删除这个新的压缩文件，并显示一个错误消息
+                    unlink($zipPath);
+                    Yii::$app->session->setFlash('error', '打包失败,空间不足');
+                } else {
+                    Yii::$app->session->setFlash('success', '打包成功');
+                }
             } catch (FileAlreadyExistsException) {
                 Yii::$app->session->setFlash('error', '目标文件夹已存在同名压缩档案');
             } catch (UnsupportedOperationException) {
@@ -629,15 +642,25 @@ class HomeController extends Controller
 
         try {
             $archive->extract($targetDirectory);
-            Yii::$app->session->setFlash('success', 'Folder created successfully.');
             Yii::$app->response->format = Response::FORMAT_JSON;
-            return [
-                'status' => 200,
-                'directory' => pathinfo($relativePath, PATHINFO_FILENAME) . '_' . $now_time,
-            ];
+            if (!FileSizeHelper::hasEnoughSpace()) {
+                $this->deleteDirectory($targetDirectory);
+                Yii::$app->session->setFlash('error', '解压失败,空间不足');
+                return [
+                    'status' => 500,
+                    'directory' => pathinfo($relativePath, PATHINFO_FILENAME) . '_' . $now_time,
+                    'parentDirectory' => dirname($relativePath),
+                ];
+            }else{
+                Yii::$app->session->setFlash('success', '解压成功');
+                return [
+                    'status' => 200,
+                    'directory' => pathinfo($relativePath, PATHINFO_FILENAME) . '_' . $now_time,
+                ];
+            }
         } catch (ArchiveExtractionException) {
             $this->deleteDirectory($targetDirectory);
-            Yii::$app->session->setFlash('error', 'Failed to extract the archive.');
+            Yii::$app->session->setFlash('error', '解压过程中出现错误');
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'status' => 500,
@@ -676,6 +699,13 @@ class HomeController extends Controller
 
             // 检查目标路径是否已经存在同名文件或目录
             if ($operation === 'copy' && file_exists($targetPath)) {
+                $sourceFileSize = filesize($sourcePath);
+
+                // 检查是否有足够的空间进行复制操作
+                if (!FileSizeHelper::hasEnoughSpace($sourceFileSize)) {
+                    Yii::$app->session->setFlash('error', 'Not enough space to copy the file.');
+                    return $this->redirect(['index', 'directory' => $targetDirectory]);
+                }
                 $pathInfo = pathinfo($targetPath);
                 $i = 1;
                 do {
@@ -688,7 +718,11 @@ class HomeController extends Controller
 
             // 根据操作类型执行相应的操作
             if ($operation === 'copy') {
-                // 如果是复制操作
+                $sourceSize = is_dir($sourcePath) ? FileSizeHelper::getDirectorySize($sourcePath) : filesize($sourcePath);
+                if (!FileSizeHelper::hasEnoughSpace($sourceSize)) {
+                    Yii::$app->session->setFlash('error', 'Not enough space to copy.');
+                    return $this->redirect(['index', 'directory' => $targetDirectory]);
+                }
                 if (is_dir($sourcePath)) {
                     // 如果源路径是目录，递归复制目录
                     if (!$this->copyDirectory($sourcePath, $targetPath)) {

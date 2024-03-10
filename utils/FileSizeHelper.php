@@ -2,8 +2,11 @@
 
 namespace app\utils;
 
+use app\models\User;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
+use Yii;
+use yii\web\NotFoundHttpException;
 
 class FileSizeHelper
 {
@@ -23,6 +26,30 @@ class FileSizeHelper
             }
         }
         return $size;
+    }
+
+    /**
+     * 判断用户home是否有足够的容量存放文件
+     * @param int $file_size 文件大小B(可选,如果文件已经添加到网盘时，不需要这个参数)
+     * @return bool
+     */
+    public static function hasEnoughSpace(int $file_size = 0, int $user_id = null): bool
+    {
+        if ($user_id === null) {
+            $user_id = Yii::$app->user->id;
+        }
+        $userHomeDir = Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . $user_id;
+        $userHomeDirSize_MB = self::getDirectorySize($userHomeDir) / 1024 / 1024;
+        $file_size_MB = $file_size / 1024 / 1024;
+        $user = User::findOne($user_id);
+        if ($user === null) {
+            throw new NotFoundHttpException('User not found.');
+        }
+        $limit = $user->storage_limit;
+        if ($limit == -1) {
+            return true;
+        }
+        return $userHomeDirSize_MB + $file_size_MB <= $limit;
     }
 
     /**
@@ -50,7 +77,7 @@ class FileSizeHelper
      */
     public static function formatMegaBytes($megabytes, $precision = 2): string
     {
-        if($megabytes===-1){
+        if ($megabytes === -1) {
             return '∞';
         }
         $bytes = $megabytes * pow(1024, 2); // Convert megabytes to bytes
