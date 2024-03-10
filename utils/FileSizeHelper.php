@@ -38,18 +38,38 @@ class FileSizeHelper
         if ($user_id === null) {
             $user_id = Yii::$app->user->id;
         }
-        $userHomeDir = Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . $user_id;
-        $userHomeDirSize_MB = self::getDirectorySize($userHomeDir) / 1024 / 1024;
-        $file_size_MB = $file_size / 1024 / 1024;
+        $userHomeDirSize = self::getUserHomeDirSize($user_id);
+        $userHomeDirSize_MB = $userHomeDirSize / 1024 / 1024;
+        $userVaultDirSize = self::getUserVaultDirSize($user_id);
+        $userVaultDirSize_MB = $userVaultDirSize / 1024 / 1024;
+
+        $file_size_MB = $file_size / 1024 / 1024; // 即将新增的文件
+
         $user = User::findOne($user_id);
-        if ($user === null) {
-            throw new NotFoundHttpException('User not found.');
-        }
         $limit = $user->storage_limit;
         if ($limit == -1) {
             return true;
         }
-        return $userHomeDirSize_MB + $file_size_MB <= $limit;
+
+        return $userHomeDirSize_MB + $userVaultDirSize_MB + $file_size_MB <= $limit;
+    }
+
+    public static function getUserHomeDirSize(int $user_id = null): int
+    {
+        if ($user_id === null) {
+            $user_id = Yii::$app->user->id;
+        }
+        $userHomeDir = Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . $user_id;
+        return self::getDirectorySize($userHomeDir);
+    }
+
+    public static function getUserVaultDirSize(int $user_id = null): int
+    {
+        if ($user_id === null) {
+            $user_id = Yii::$app->user->id;
+        }
+        $userHomeDir = Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . $user_id . '.secret';
+        return self::getDirectorySize($userHomeDir);
     }
 
     /**
