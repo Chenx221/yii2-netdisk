@@ -103,8 +103,8 @@ class HomeController extends Controller
             $rawType = is_file($absolutePath) ? mime_content_type($absolutePath) : null;
             $directoryContents[$key] = ['name' => $item, 'type' => $type, 'lastModified' => $lastModified, 'size' => $size, 'rawType' => $rawType];
         }
-        $usedSpace = FileSizeHelper::getDirectorySize(Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . Yii::$app->user->id);
-        $vaultUsedSpace = 0;  // 保险箱已用空间，暂时为0
+        $usedSpace = FileSizeHelper::getUserHomeDirSize();
+        $vaultUsedSpace = FileSizeHelper::getUserVaultDirSize();
         $storageLimit = $model->storage_limit;
         return $this->render('index', [
             'directoryContents' => $directoryContents,

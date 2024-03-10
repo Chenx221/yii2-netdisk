@@ -80,7 +80,7 @@ $this->registerCssFile('@web/css/home_style.css');
             </div>
             <button type="button" class="btn btn-primary" data-bs-toggle="popover" data-bs-title="容量使用情况"
                     data-bs-placement="bottom"
-                    data-bs-content="已用:<?= $totalUsed_F ?>/ <?= $storageLimit_F ?><?= $freeSpace == 'unlimited' ? '' : ($freeSpace <= 0 ? ' 容量超限' : '') ?>">
+                    data-bs-content="已用:<?= $totalUsed_F ?>/ <?= $storageLimit_F ?><?= $freeSpace == 'unlimited' ? '' : ($freeSpace <= 0 ? ' 容量超限,功能受限' : '') ?>">
                 <i
                         class="fa-solid fa-info"></i>
             </button>
