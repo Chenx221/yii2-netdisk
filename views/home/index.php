@@ -35,7 +35,7 @@ $is_unlimited = ($storageLimit === -1); //检查是否为无限制容量
 $usedPercent = $is_unlimited ? 0 : round($usedSpace / ($storageLimit * 1024 * 1024) * 100); //网盘已用百分比
 $vaultUsedPercent = $is_unlimited ? 0 : round($vaultUsedSpace / ($storageLimit * 1024 * 1024) * 100); //保险箱已用百分比
 $totalUsedPercent = min(($usedPercent + $vaultUsedPercent), 100); //总已用百分比
-
+$freeSpace = $is_unlimited ? 'unlimited' : ($storageLimit * 1024 * 1024 - $usedSpace - $vaultUsedSpace); //剩余空间
 FontAwesomeAsset::register($this);
 JqueryAsset::register($this);
 ViewerJsAsset::register($this);
@@ -67,7 +67,7 @@ $this->registerCssFile('@web/css/home_style.css');
                         data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="fa-solid fa-arrow-up-from-bracket"></i> 上传文件
                 </button>
-                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton" style="z-index: 1080;">
                     <li hidden>
                         <input type="file" id="file-input" name="uploadFile" multiple>
                         <input type="file" id="folder-input" name="uploadFile" multiple webkitdirectory>
@@ -79,7 +79,9 @@ $this->registerCssFile('@web/css/home_style.css');
                 </ul>
             </div>
             <button type="button" class="btn btn-primary" data-bs-toggle="popover" data-bs-title="容量使用情况"
-                    data-bs-placement="bottom" data-bs-content="已用:<?= $totalUsed_F ?>/ <?= $storageLimit_F ?>"><i
+                    data-bs-placement="bottom"
+                    data-bs-content="已用:<?= $totalUsed_F ?>/ <?= $storageLimit_F ?><?= $freeSpace == 'unlimited' ? '' : ($freeSpace <= 0 ? ' 容量超限' : '') ?>">
+                <i
                         class="fa-solid fa-info"></i>
             </button>
         </div>
