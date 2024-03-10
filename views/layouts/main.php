@@ -44,10 +44,10 @@ $darkMode = Yii::$app->user->isGuest ? 0 : Yii::$app->user->identity->dark_mode;
         'items' => [
             ['label' => '首页', 'url' => ['/site/index']],
             ['label' => '我的文件', 'url' => ['/home/index']],
+            ['label' => '文件保险箱', 'url' => ['/vault/index']],
             ['label' => '分享管理', 'url' => ['/share/index']],
             ['label' => '文件收集', 'url' => ['/collection/index']],
             ['label' => '个人设置', 'url' => ['/user/info']],
-//            ['label' => '系统设置', 'url' => ['/site/contact']],
 //            ['label' => '应用下载', 'url' => ['/site/contact']],
             Yii::$app->user->isGuest
                 ? ['label' => '登录', 'url' => ['/user/login']]

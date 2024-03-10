@@ -346,6 +346,10 @@ class UserController extends Controller
                     if (!is_dir($userFolder)) {
                         mkdir($userFolder);
                     }
+                    $secretFolder = Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . $model->id.'.secret';
+                    if (!is_dir($secretFolder)) {
+                        mkdir($secretFolder);
+                    }
                     Yii::$app->session->setFlash('success', 'Registration successful. You can now log in.');
                     return $this->redirect(['login']);
                 } else {
@@ -373,8 +377,8 @@ class UserController extends Controller
     public function actionInfo(string $focus = null): Response|string
     {
         $model = Yii::$app->user->identity;
-        $usedSpace = FileSizeHelper::getDirectorySize(Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . Yii::$app->user->id);
-        $vaultUsedSpace = 0;  // 保险箱已用空间，暂时为0
+        $usedSpace = FileSizeHelper::getUserHomeDirSize();
+        $vaultUsedSpace = FileSizeHelper::getUserVaultDirSize();
         $storageLimit = $model->storage_limit;
         $totp_secret = null;
         $totp_url = null;

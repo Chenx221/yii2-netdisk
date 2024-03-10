@@ -22,7 +22,7 @@ class UploadForm extends Model
         ];
     }
 
-    public function upload(): bool
+    public function upload(int $is_vault_file = 0): bool
     {
         if ($this->validate()) {
             if ($this->targetDir === null) {
@@ -32,6 +32,9 @@ class UploadForm extends Model
                 return false;
             }
             $userHomeDir = Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . Yii::$app->user->id;
+            if ($is_vault_file == 1) {
+                $userHomeDir .= '.secret';
+            }
             $absolutePath = $userHomeDir . '/' . $this->targetDir;
             if (!is_dir($absolutePath)) {
                 return false;
