@@ -29,6 +29,7 @@ use yii\web\IdentityInterface;
  * @property int|null $storage_limit 存储容量限制,MB
  * @property string|null $recovery_codes OTP恢复代码
  * @property int|null $dark_mode 夜间模式(0 off,1 on,2 auto)
+ * @property string|null $vault_secret 保险箱密钥
  *
  * @property CollectionTasks[] $collectionTasks
  * @property Share[] $shares
@@ -44,6 +45,8 @@ class User extends ActiveRecord implements IdentityInterface
     public $totp_input; // otp用户输入值
     public $recoveryCode_input; // 恢复代码用户输入
 
+    public $input_vault_secret; // 保险箱密码
+
     /**
      * {@inheritdoc}
      */
@@ -58,10 +61,10 @@ class User extends ActiveRecord implements IdentityInterface
     public function rules(): array
     {
         return [
-            [['status', 'is_encryption_enabled', 'is_otp_enabled','dark_mode'], 'integer'],
+            [['status', 'is_encryption_enabled', 'is_otp_enabled', 'dark_mode'], 'integer'],
             [['created_at', 'last_login'], 'safe'],
-            [['bio', 'totp_input','recoveryCode_input','name'], 'string'],
-            [['encryption_key', 'otp_secret', 'recovery_codes'], 'string', 'max' => 255],
+            [['bio', 'totp_input', 'recoveryCode_input', 'name'], 'string'],
+            [['encryption_key', 'otp_secret', 'recovery_codes', 'vault_secret', 'input_vault_secret'], 'string', 'max' => 255],
             [['last_login_ip'], 'string', 'max' => 45],
             [['username', 'password'], 'required', 'on' => 'login'],
             [['username', 'password', 'email', 'password2'], 'required', 'on' => 'register'],
@@ -117,7 +120,8 @@ class User extends ActiveRecord implements IdentityInterface
             'is_otp_enabled' => 'Is Otp Enabled',
             'storage_limit' => 'Storage Limit',
             'recovery_codes' => 'Recovery Codes',
-            'dark_mode' =>'Dark Mode'
+            'dark_mode' => 'Dark Mode',
+            'vault_secret' => 'Vault Secret'
         ];
     }
 

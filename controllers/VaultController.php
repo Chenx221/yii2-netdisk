@@ -57,7 +57,11 @@ class VaultController extends Controller
     public function actionIndex($directory = null): Response|string
     {
         $model = Yii::$app->user->identity;
-
+        if ($model->vault_secret === null) {
+            return $this->render('_init',[
+                'model' => $model,
+            ]);
+        }//TODO
         $rootDataDirectory = Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . Yii::$app->user->id . '.secret';
 
         if ($directory === '.' || $directory == null) {
