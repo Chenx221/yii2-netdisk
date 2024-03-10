@@ -44,7 +44,7 @@ $totalUsed_F = FileSizeHelper::formatBytes($usedSpace + $vaultUsedSpace); //总�
 $is_unlimited = ($storageLimit === -1); //检查是否为无限制容量
 $usedPercent = $is_unlimited ? 0 : round($usedSpace / ($storageLimit * 1024 * 1024) * 100); //网盘已用百分比
 $vaultUsedPercent = $is_unlimited ? 0 : round($vaultUsedSpace / ($storageLimit * 1024 * 1024) * 100); //保险箱已用百分比
-$totalUsedPercent = min(($usedPercent + $vaultUsedPercent), 100); //总已用百分比
+$totalUsedPercent = $usedPercent + $vaultUsedPercent; //总已用百分比
 
 // QR-CODE
 if (!is_null($totp_secret)) {
@@ -171,7 +171,7 @@ $darkMode = Yii::$app->user->identity->dark_mode;
                                             <span class="legend-color" style="background-color: rgb(196,134,0);"></span>
                                             <span>保险箱已用空间</span>
                                             <span style="margin-left: auto;"><?= $vaultUsedSpace_F ?>
-                                                <?= Html::a('<i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 0.75rem;"></i>', ['site/index']) ?>
+                                                <?= Html::a('<i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 0.75rem;"></i>', ['vault/index']) ?>
                                         </span>
                                         </div>
                                     </div>
