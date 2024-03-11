@@ -17,7 +17,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
     <div class="row">
         <div class="col-lg-5">
-            <?php $form = ActiveForm::begin(); ?>
+            <?php $form = ActiveForm::begin(['id' => 'init-vault-form', 'action' => ['vault/init'], 'method' => 'post']); ?>
             <?= $form->field($model, 'input_vault_secret')->label('保险箱密码(建议不要与登陆密码相同)')->passwordInput(['autofocus' => true]) ?>
             <div class="form-group">
                 <?= Html::submitButton('初始化保险箱', ['class' => 'btn btn-primary']) ?>

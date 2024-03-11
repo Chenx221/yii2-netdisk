@@ -120,7 +120,10 @@ $this->registerCssFile('@web/css/home_style.css');
                 </td>
                 <td>
                     <?= Html::tag('i', '', ['class' => $item['type'] . ' file_icon']) ?>
-                    <?= Html::a($item['name'], ['vault/download', 'relativePath' => $relativePath], ['class' => 'file_name']) ?>
+<!--                    --><?php //= Html::a($item['name'], ['vault/download', 'relativePath' => $relativePath], ['class' => 'file_name']) ?>
+                    <?= Html::beginTag('span', ['class' => 'file_name']) ?>
+                    <?= $item['name'] ?>
+                    <?= Html::endTag('span') ?>
                 </td>
                 <td class="file_info">
                     <?= date('Y-m-d H:i:s', $item['lastModified']) ?>
@@ -134,7 +137,8 @@ $this->registerCssFile('@web/css/home_style.css');
                         'class' => 'btn btn-outline-primary download-btn',
                         'data-bs-toggle' => 'tooltip',
                         'data-bs-placement' => 'top',
-                        'data-bs-title' => '下载'
+                        'data-bs-title' => '下载',
+                        'data-filename' => $item['name'],
                     ]) ?>
                     <?= Html::button(Html::tag('i', '', ['class' => 'fa-regular fa-trash-can']), ['value' => $relativePath, 'class' => 'btn btn-outline-danger delete-btn', 'data-bs-toggle' => 'tooltip', 'data-bs-placement' => 'top', 'data-bs-title' => '删除']) ?>
                 </td>
@@ -160,5 +164,6 @@ echo Html::endForm();
 
 Modal::end();
 $this->registerJsFile('@web/js/vault_script.js', ['depends' => [JqueryAsset::class], 'position' => View::POS_END]);
+$this->registerJsFile('@web/js/vault_core.js', ['position' => View::POS_END]);
 ?>
 

@@ -7,9 +7,11 @@
 namespace app\controllers;
 
 use app\models\UploadForm;
+use app\models\User;
 use app\utils\FileSizeHelper;
 use app\utils\FileTypeDetector;
 use Yii;
+use yii\base\Exception;
 use yii\filters\AccessControl;
 use yii\filters\VerbFilter;
 use yii\web\Controller;
@@ -31,7 +33,7 @@ class VaultController extends Controller
                     'rules' => [
                         [
                             'allow' => true,
-                            'actions' => ['index', 'download', 'delete', 'upload'],
+                            'actions' => ['index', 'download', 'delete', 'upload', 'init', 'auth'],
                             'roles' => ['user'],
                         ],
                     ],
@@ -43,6 +45,8 @@ class VaultController extends Controller
                         'download' => ['GET'],
                         'delete' => ['POST'],
                         'upload' => ['POST'],
+                        'init' => ['POST'],
+                        'auth' => ['POST'],
                     ],
                 ],
             ]
@@ -57,11 +61,15 @@ class VaultController extends Controller
     public function actionIndex($directory = null): Response|string
     {
         $model = Yii::$app->user->identity;
-        if ($model->vault_secret === null) {
-            return $this->render('_init',[
+        if (empty($model->vault_secret)) {
+            return $this->render('_init', [
                 'model' => $model,
             ]);
-        }//TODO
+        } elseif (Yii::$app->session->get('vault_auth') !== true) {
+            return $this->render('_gateway', [
+                'model' => new User(),
+            ]);
+        }
         $rootDataDirectory = Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . Yii::$app->user->id . '.secret';
 
         if ($directory === '.' || $directory == null) {
@@ -243,5 +251,46 @@ class VaultController extends Controller
             //返回状态码200
             return Yii::$app->response->statusCode = 200;
         }
+    }
+
+    /**
+     * 初始化文件保险箱密码
+     * @return Response
+     * @throws Exception
+     */
+    public function actionInit(): Response
+    {
+        $model = Yii::$app->user->identity; // 获取当前用户模型
+        if ($model->load(Yii::$app->request->post()) && $model->validate() && !empty($model->input_vault_secret)) {
+            $model->vault_secret = Yii::$app->getSecurity()->generatePasswordHash($model->input_vault_secret);
+            if ($model->save(false)) { // 保存用户模型
+                Yii::$app->session->setFlash('success', '保险箱初始化成功，请牢记密码，否则无法恢复保险箱内文件');
+            } else {
+                Yii::$app->session->setFlash('error', '保险箱初始化失败');
+            }
+        } else {
+            Yii::$app->session->setFlash('error', '设定的密码未通过验证');
+        }
+        return $this->redirect('index.php?r=vault%2Findex'); // render里面好像只能这么写了
+    }
+
+    /**
+     * @return Response
+     */
+    public function actionAuth(): Response
+    {
+        $user = Yii::$app->user->identity;
+        $model = new User();
+        if ($model->load(Yii::$app->request->post()) && !empty($model->vault_secret)) {
+            if (Yii::$app->getSecurity()->validatePassword($model->vault_secret, $user->vault_secret)) {
+                Yii::$app->session->set('vault_auth', true);
+                Yii::$app->session->setFlash('success', '文件保险箱密码验证成功');
+                return $this->redirect('index.php?r=vault%2Findex');
+            }
+            Yii::$app->session->setFlash('error', '保险箱密码错误');
+        } else {
+            Yii::$app->session->setFlash('error', '密码未通过验证');
+        }
+        return $this->redirect('index.php?r=vault%2Findex');
     }
 }

@@ -2,8 +2,15 @@ var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggl
 var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
     return new bootstrap.Tooltip(tooltipTriggerEl)
 });
-$(document).on('click', '.download-btn', function () {
-    window.location.href = $(this).attr('value');
+$(document).on('click', '.download-btn', async function() {
+    const downloadUrl = $(this).attr('value');
+    const filename = $(this).data('filename');
+
+    try {
+        await downloadAndDecryptFile(downloadUrl, vaultRawKey, filename);
+    } catch (error) {
+        console.error('Error downloading or decrypting the file:', error);
+    }
 });
 $(document).on('click', '.delete-btn', function () {
     var relativePath = $(this).attr('value');
@@ -16,26 +23,34 @@ $(document).on('click', '.file-upload-btn', function () {
 $('#file-input').on('change', function () {
     uploadFiles(this.files);
 });
-$('#folder-input').on('change', function () {
-    uploadFiles(this.files);
-});
 $(document).on('click', '.refresh-btn', function () {
     window.location.reload();
 });
 $(document).on('click', '.single-download-btn', function () {
-    var relativePath = $('.select-item:checked').first().data('relativePath');
-    window.location.href = 'index.php?r=vault%2Fdownload&relativePath=' + encodeURIComponent(relativePath);
+    var downloadBtn = $('.select-item:checked').closest('tr').find('.download-btn');
+    if (downloadBtn.length > 0) {
+        downloadBtn.trigger('click');
+    } else {
+        console.error('No file selected for download.');
+    }
 });
 
-function uploadFiles(files) {
+async function uploadFiles(files) {
+    // 这里问gpt的，加密方面实在不会
     $('#progress-bar').show();
     var formData = new FormData();
-    for (var i = 0; i < files.length; i++) {
-        formData.append('files[]', files[i]);
-    }
+    var encryptionPromises = Array.from(files).map(file => encryptFile(file, vaultRawKey));
+    var encryptedFiles = await Promise.all(encryptionPromises);
+
+    encryptedFiles.forEach(function (encryptedFile, index) {
+        formData.append('files[]', new File([encryptedFile], files[index].name, {type: files[index].type}));
+    });
+
+    // 添加其他数据到 FormData 中
     formData.append('targetDir', $('#target-dir').val());
     formData.append('_csrf', $('meta[name="csrf-token"]').attr('content'));
 
+    // 创建 XMLHttpRequest 对象并发送 FormData
     var xhr = new XMLHttpRequest();
     xhr.upload.onprogress = function (event) {
         if (event.lengthComputable) {
