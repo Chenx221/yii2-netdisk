@@ -30,6 +30,7 @@ use yii\web\IdentityInterface;
  * @property string|null $recovery_codes OTP恢复代码
  * @property int|null $dark_mode 夜间模式(0 off,1 on,2 auto)
  * @property string|null $vault_secret 保险箱密钥
+ * @property string|null $vault_salt 保险箱加密密钥盐
  *
  * @property CollectionTasks[] $collectionTasks
  * @property Share[] $shares
@@ -63,7 +64,7 @@ class User extends ActiveRecord implements IdentityInterface
         return [
             [['status', 'is_encryption_enabled', 'is_otp_enabled', 'dark_mode'], 'integer'],
             [['created_at', 'last_login'], 'safe'],
-            [['bio', 'totp_input', 'recoveryCode_input', 'name'], 'string'],
+            [['bio', 'totp_input', 'recoveryCode_input', 'name','vault_salt'], 'string'],
             ['input_vault_secret', 'string', 'min' => 6, 'max' => 24],
             [['encryption_key', 'otp_secret', 'recovery_codes', 'vault_secret'], 'string', 'max' => 255],
             [['last_login_ip'], 'string', 'max' => 45],
@@ -122,7 +123,8 @@ class User extends ActiveRecord implements IdentityInterface
             'storage_limit' => 'Storage Limit',
             'recovery_codes' => 'Recovery Codes',
             'dark_mode' => 'Dark Mode',
-            'vault_secret' => 'Vault Secret'
+            'vault_secret' => 'Vault Secret',
+            'vault_salt' => 'Vault Salt',
         ];
     }
 

@@ -19,7 +19,7 @@ $this->params['breadcrumbs'][] = $this->title;
         <div class="row">
             <div class="col-lg-5">
                 <?php $form = ActiveForm::begin(['id' => 'gateway-vault-form', 'action' => ['vault/auth'], 'method' => 'post']); ?>
-                <?= $form->field($model, 'vault_secret')->passwordInput()->label('保险箱密码(不是登陆密码)') ?>
+                <?= $form->field($model, 'vault_secret')->passwordInput(['id'=>'password'])->label('保险箱密码(不是登陆密码)') ?>
                 <div class="form-group">
                     <?= Html::submitButton('确认', ['class' => 'btn btn-primary']) ?>
                 </div>

@@ -33,7 +33,7 @@ class VaultController extends Controller
                     'rules' => [
                         [
                             'allow' => true,
-                            'actions' => ['index', 'download', 'delete', 'upload', 'init', 'auth'],
+                            'actions' => ['index', 'download', 'delete', 'upload', 'init', 'auth', 'get-salt'],
                             'roles' => ['user'],
                         ],
                     ],
@@ -47,6 +47,7 @@ class VaultController extends Controller
                         'upload' => ['POST'],
                         'init' => ['POST'],
                         'auth' => ['POST'],
+                        'get-salt' => ['GET'],
                     ],
                 ],
             ]
@@ -263,6 +264,7 @@ class VaultController extends Controller
         $model = Yii::$app->user->identity; // 获取当前用户模型
         if ($model->load(Yii::$app->request->post()) && $model->validate() && !empty($model->input_vault_secret)) {
             $model->vault_secret = Yii::$app->getSecurity()->generatePasswordHash($model->input_vault_secret);
+            $model->vault_salt = Yii::$app->getSecurity()->generateRandomString(64);
             if ($model->save(false)) { // 保存用户模型
                 Yii::$app->session->setFlash('success', '保险箱初始化成功，请牢记密码，否则无法恢复保险箱内文件');
             } else {
@@ -292,5 +294,17 @@ class VaultController extends Controller
             Yii::$app->session->setFlash('error', '密码未通过验证');
         }
         return $this->redirect('index.php?r=vault%2Findex');
+    }
+
+    /**
+     * 获取保险箱密码盐
+     * GET
+     * @return array
+     */
+    public function actionGetSalt(): array
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $user = Yii::$app->user->identity;
+        return ['vault_salt' => $user->vault_salt];
     }
 }

@@ -1,6 +1,15 @@
 const vaultRawKey = sessionStorage.getItem('vaultRawKey');
-async function generateEncryptionKeyFromPassword(password) {
+
+async function getSaltFromBackend() {
+    const response = await fetch('index.php?r=vault%2Fget-salt');
+    const data = await response.json();
+    return data.vault_salt;
+}
+
+async function deriveKey(password) {
     const passwordBuffer = new TextEncoder().encode(password);
+    const salt = await getSaltFromBackend();
+    const saltBuffer = new TextEncoder().encode(salt);
     const key = await window.crypto.subtle.importKey(
         'raw',
         passwordBuffer,
@@ -11,102 +20,58 @@ async function generateEncryptionKeyFromPassword(password) {
     return await window.crypto.subtle.deriveKey(
         {
             name: 'PBKDF2',
-            salt: new Uint8Array([]),
+            salt: saltBuffer,
             iterations: 100000,
             hash: 'SHA-256'
         },
         key,
         {name: 'AES-GCM', length: 256},
-        false,
+        false, // 是否允许导出
         ['encrypt', 'decrypt']
     );
 }
-// 加密文件
+
 async function encryptFile(file, password) {
-    const iv = window.crypto.getRandomValues(new Uint8Array(12)); // 生成随机 IV
-    const passwordBuffer = new TextEncoder().encode(password);
-    const key = await window.crypto.subtle.importKey(
-        'raw',
-        passwordBuffer,
-        {name: 'PBKDF2'},
-        false,
-        ['deriveKey']
+    const iv = window.crypto.getRandomValues(new Uint8Array(12));
+    const derivedKey = await deriveKey(password);
+    // console.log(password);
+    const plaintextData = await file.arrayBuffer();
+    const encryptedData = await window.crypto.subtle.encrypt(
+        {name: 'AES-GCM', iv: iv, tagLength: 128},
+        derivedKey,
+        plaintextData
     );
-    const derivedKey = await window.crypto.subtle.deriveKey(
-        {
-            name: 'PBKDF2',
-            salt: new Uint8Array([]),
-            iterations: 100000,
-            hash: 'SHA-256'
-        },
-        key,
-        {name: 'AES-GCM', length: 256},
-        false,
-        ['encrypt', 'decrypt']
-    );
-
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = function(event) {
-            const plaintextData = event.target.result;
-            window.crypto.subtle.encrypt(
-                { name: 'AES-GCM', iv: iv }, // 使用随机生成的 IV
-                derivedKey,
-                plaintextData
-            ).then(encryptedData => {
-                const encryptedBlob = new Blob([iv, encryptedData], {type: file.type});
-                resolve(encryptedBlob);
-            }).catch(error => {
-                reject(error);
-            });
-        };
-        reader.readAsArrayBuffer(file);
-    });
+    return new Blob([iv, encryptedData], {type: file.type});
 }
 
-// 解密文件
 async function decryptFile(encryptedFile, password) {
-    return new Promise((resolve, reject) => {
-        const fileReader = new FileReader();
-        fileReader.onload = async function(event) {
-            try {
-                const encryptedData = new Uint8Array(event.target.result);
-                const iv = encryptedData.slice(0, 12); // 从密文中提取 IV
-                const ciphertext = encryptedData.slice(12);
-                const passwordBuffer = new TextEncoder().encode(password);
-                const key = await window.crypto.subtle.importKey(
-                    'raw',
-                    passwordBuffer,
-                    {name: 'PBKDF2'},
-                    false,
-                    ['deriveKey']
-                );
-                const derivedKey = await window.crypto.subtle.deriveKey(
-                    {
-                        name: 'PBKDF2',
-                        salt: new Uint8Array([]),
-                        iterations: 100000,
-                        hash: 'SHA-256'
-                    },
-                    key,
-                    {name: 'AES-GCM', length: 256},
-                    false,
-                    ['encrypt', 'decrypt']
-                );
-                const decryptedData = await window.crypto.subtle.decrypt(
-                    { name: 'AES-GCM', iv: iv }, // 使用从密文中提取的 IV
-                    derivedKey,
-                    ciphertext
-                );
-                const decryptedFile = new Blob([decryptedData], { type: encryptedFile.type });
-                resolve(decryptedFile);
-            } catch (error) {
-                reject(error);
-            }
-        };
-        fileReader.readAsArrayBuffer(encryptedFile);
-    });
+    const encryptedData = new Uint8Array(await encryptedFile.arrayBuffer());
+    const iv = encryptedData.slice(0, 12);
+    const ciphertext = encryptedData.slice(12);
+    const derivedKey = await deriveKey(password);
+    const decryptedData = await window.crypto.subtle.decrypt(
+        {name: 'AES-GCM', iv: iv, tagLength: 128},
+        derivedKey,
+        ciphertext
+    );
+    return new Blob([decryptedData], {type: encryptedFile.type});
 }
+// async function decryptFile(encryptedFile, password) {
+//     const encryptedData = new Uint8Array(await encryptedFile.arrayBuffer());
+//     const iv = encryptedData.slice(0, 12);
+//     const ciphertext = encryptedData.slice(12);
+//     const derivedKey = await deriveKey(password);
+//     const keyData = await window.crypto.subtle.exportKey('raw', derivedKey);
+//     const keyBytes = new Uint8Array(keyData);
+//     // console.log('Key:', keyBytes);
+//     // console.log(password);
+//     const decryptedData = await window.crypto.subtle.decrypt(
+//         {name: 'AES-GCM', iv: iv, tagLength: 128},
+//         derivedKey,
+//         ciphertext
+//     );
+//     return new Blob([decryptedData], {type: encryptedFile.type});
+// }
 async function downloadAndDecryptFile(url, password, filename) {
     const response = await fetch(url);
     const encryptedFile = await response.blob();
