@@ -7,6 +7,7 @@ return [
     'senderEmail' => 'noreply@example.com',
     'senderName' => 'Example.com mailer',
     // data directory is used to store uploaded files by the user (e.g. root dir for every user's home)
+    'domain' => $_ENV['DOMAIN'],
     'dataDirectory' => '@app/data',
     'verifyProvider' => $_ENV['VERIFY_PROVIDER'],
     'reCAPTCHA' => [
