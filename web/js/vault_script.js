@@ -10,6 +10,7 @@ $(document).on('click', '.download-btn', async function() {
         await downloadAndDecryptFile(downloadUrl, vaultRawKey, filename);
     } catch (error) {
         console.error('Error downloading or decrypting the file:', error);
+        // 到这一步出错的话 保险箱内文件怕是抢救不回来了
     }
 });
 $(document).on('click', '.delete-btn', function () {

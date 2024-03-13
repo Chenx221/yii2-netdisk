@@ -255,7 +255,7 @@ class VaultController extends Controller
     }
 
     /**
-     * 初始化文件保险箱密码
+     * 初始化文件保险箱
      * @return Response
      * @throws Exception
      */
@@ -277,6 +277,7 @@ class VaultController extends Controller
     }
 
     /**
+     * 保险箱密码验证
      * @return Response
      */
     public function actionAuth(): Response
