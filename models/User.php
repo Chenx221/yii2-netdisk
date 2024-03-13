@@ -33,6 +33,7 @@ use yii\web\IdentityInterface;
  * @property string|null $vault_salt 保险箱加密密钥盐
  *
  * @property CollectionTasks[] $collectionTasks
+ * @property PublicKeyCredentialSource[] $publicKeyCredentialSources
  * @property Share[] $shares
  */
 class User extends ActiveRecord implements IdentityInterface
@@ -64,7 +65,7 @@ class User extends ActiveRecord implements IdentityInterface
         return [
             [['status', 'is_encryption_enabled', 'is_otp_enabled', 'dark_mode'], 'integer'],
             [['created_at', 'last_login'], 'safe'],
-            [['bio', 'totp_input', 'recoveryCode_input', 'name','vault_salt'], 'string'],
+            [['bio', 'totp_input', 'recoveryCode_input', 'name', 'vault_salt'], 'string'],
             ['input_vault_secret', 'string', 'min' => 6, 'max' => 24],
             [['encryption_key', 'otp_secret', 'recovery_codes', 'vault_secret'], 'string', 'max' => 255],
             [['last_login_ip'], 'string', 'max' => 45],
@@ -226,6 +227,16 @@ class User extends ActiveRecord implements IdentityInterface
     public function getCollectionTasks(): ActiveQuery
     {
         return $this->hasMany(CollectionTasks::class, ['user_id' => 'id']);
+    }
+
+    /**
+     * Gets query for [[PublicKeyCredentialSources]].
+     *
+     * @return ActiveQuery
+     */
+    public function getPublicKeyCredentialSources(): ActiveQuery
+    {
+        return $this->hasMany(PublicKeyCredentialSource::class, ['user_id' => 'id']);
     }
 
     /**

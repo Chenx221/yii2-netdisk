@@ -2,10 +2,30 @@
 
 namespace app\controllers;
 
+use app\models\PublicKeyCredentialSource;
 use app\models\User;
 use app\utils\FileSizeHelper;
 use OTPHP\TOTP;
+use Random\RandomException;
 use ReCaptcha\ReCaptcha;
+use Symfony\Component\Serializer\Serializer;
+use Throwable;
+use Webauthn\AttestationStatement\AttestationStatementSupportManager;
+use Webauthn\AttestationStatement\NoneAttestationStatementSupport;
+use Webauthn\AuthenticationExtensions\ExtensionOutputCheckerHandler;
+use Webauthn\AuthenticatorAssertionResponse;
+use Webauthn\AuthenticatorAssertionResponseValidator;
+use Webauthn\AuthenticatorAttestationResponse;
+use Webauthn\AuthenticatorAttestationResponseValidator;
+use Webauthn\Exception\AuthenticatorResponseVerificationException;
+use Webauthn\PublicKeyCredential;
+use Webauthn\PublicKeyCredentialCreationOptions;
+use Webauthn\PublicKeyCredentialDescriptor;
+use Webauthn\PublicKeyCredentialRequestOptions;
+use Webauthn\PublicKeyCredentialRpEntity;
+use Webauthn\PublicKeyCredentialUserEntity;
+use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
+use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Yii;
 use yii\base\Exception;
 use yii\base\InvalidConfigException;
@@ -129,13 +149,13 @@ class UserController extends Controller
             $captchaResponse = null;
             $isCaptchaValid = false;
             if ($verifyProvider === 'reCAPTCHA') {
-                $captchaResponse = Yii::$app->request->post('g-recaptcha-response', null);
+                $captchaResponse = Yii::$app->request->post('g-recaptcha-response');
                 $isCaptchaValid = $this->validateRecaptcha($captchaResponse);
             } elseif ($verifyProvider === 'hCaptcha') {
-                $captchaResponse = Yii::$app->request->post('h-captcha-response', null);
+                $captchaResponse = Yii::$app->request->post('h-captcha-response');
                 $isCaptchaValid = $this->validateHcaptcha($captchaResponse);
             } elseif ($verifyProvider === 'Turnstile') {
-                $captchaResponse = Yii::$app->request->post('cf-turnstile-response', null);
+                $captchaResponse = Yii::$app->request->post('cf-turnstile-response');
                 $isCaptchaValid = $this->validateTurnstile($captchaResponse);
             }
 
@@ -324,13 +344,13 @@ class UserController extends Controller
             $captchaResponse = null;
             $isCaptchaValid = false;
             if ($verifyProvider === 'reCAPTCHA') {
-                $captchaResponse = Yii::$app->request->post('g-recaptcha-response', null);
+                $captchaResponse = Yii::$app->request->post('g-recaptcha-response');
                 $isCaptchaValid = $this->validateRecaptcha($captchaResponse);
             } elseif ($verifyProvider === 'hCaptcha') {
-                $captchaResponse = Yii::$app->request->post('h-captcha-response', null);
+                $captchaResponse = Yii::$app->request->post('h-captcha-response');
                 $isCaptchaValid = $this->validateHcaptcha($captchaResponse);
             } elseif ($verifyProvider === 'Turnstile') {
-                $captchaResponse = Yii::$app->request->post('cf-turnstile-response', null);
+                $captchaResponse = Yii::$app->request->post('cf-turnstile-response');
                 $isCaptchaValid = $this->validateTurnstile($captchaResponse);
             }
 
@@ -346,7 +366,7 @@ class UserController extends Controller
                     if (!is_dir($userFolder)) {
                         mkdir($userFolder);
                     }
-                    $secretFolder = Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . $model->id.'.secret';
+                    $secretFolder = Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . $model->id . '.secret';
                     if (!is_dir($secretFolder)) {
                         mkdir($secretFolder);
                     }
@@ -548,4 +568,151 @@ class UserController extends Controller
         }
         return $this->redirect(['user/info']);
     }
+
+    /**
+     * @return Response
+     * @throws RandomException
+     */
+    public function actionCreateCredentialOptions(): Response
+    {
+        $id = Yii::$app->params['domain'] ?? null;
+        $user = Yii::$app->user->identity;
+
+        $rpEntity = PublicKeyCredentialRpEntity::create(
+            'NetDisk Application',
+            $id
+        );
+
+        $hash = md5(strtolower(trim($user->email)));
+        $gravatarUrl = "https://www.gravatar.com/avatar/$hash";
+
+        $userEntity = PublicKeyCredentialUserEntity::create(
+            $user->username,
+            $user->id,
+            $user->name,
+            $gravatarUrl
+        );
+
+        $challenge = random_bytes(16);
+        $publicKeyCredentialCreationOptions =
+            PublicKeyCredentialCreationOptions::create(
+                $rpEntity,
+                $userEntity,
+                $challenge
+            );
+
+        // 将选项存储在会话中，以便在后续的验证步骤中使用
+        Yii::$app->session->set('publicKeyCredentialCreationOptions', $publicKeyCredentialCreationOptions);
+
+        // 将选项发送给客户端
+        return $this->asJson($publicKeyCredentialCreationOptions);
+    }
+
+    /**
+     * @return void
+     */
+    public function actionCreateCredential(): void
+    {
+        $data = Yii::$app->request->post('publicKeyCredential');
+        $serializer = new Serializer([new ObjectNormalizer()], [new JsonEncoder()]);
+        $publicKeyCredential = $serializer->deserialize($data, PublicKeyCredential::class, 'json');
+        $authenticatorAttestationResponse = $publicKeyCredential->response;
+        if (!$authenticatorAttestationResponse instanceof AuthenticatorAttestationResponse) {
+            //e.g. process here with a redirection to the public key creation page.
+        }
+        $attestationStatementSupportManager = AttestationStatementSupportManager::create();
+        $attestationStatementSupportManager->add(NoneAttestationStatementSupport::create());
+        $extensionOutputCheckerHandler = ExtensionOutputCheckerHandler::create();
+        $authenticatorAttestationResponseValidator = AuthenticatorAttestationResponseValidator::create(
+            $attestationStatementSupportManager,
+            null, //Deprecated Public Key Credential Source Repository. Please set null.
+            null, //Deprecated Token Binding Handler. Please set null.
+            $extensionOutputCheckerHandler
+        );
+        $publicKeyCredentialCreationOptions = Yii::$app->session->get('publicKeyCredentialCreationOptions');
+        try {
+            $publicKeyCredentialSource = $authenticatorAttestationResponseValidator->check(
+                $authenticatorAttestationResponse,
+                $publicKeyCredentialCreationOptions,
+                Yii::$app->params['domain'] ?? null
+            );
+            // 创建一个PublicKeyCredentialSourceRepository对象
+            $publicKeyCredentialSourceRepository = new PublicKeyCredentialSource();
+
+            // 保存PublicKeyCredentialSource对象到数据库
+            $publicKeyCredentialSourceRepository->saveCredential($publicKeyCredentialSource);
+
+            Yii::$app->session->setFlash('success', '公钥凭证已创建');
+        } catch (Throwable $e) {
+            //e.g. process here with a redirection to the public key creation page.
+            //show error message
+        }
+    }
+
+    /**
+     * @return Response
+     * @throws RandomException
+     */
+    public function actionRequestAssertionOptions(): Response
+    {
+        $user = Yii::$app->user->identity;
+
+        $publicKeyCredentialSourceRepository = new PublicKeyCredentialSource();
+        $registeredAuthenticators = $publicKeyCredentialSourceRepository->findAllForUserEntity($user);
+
+        $allowedCredentials = array_map(
+            static function (PublicKeyCredentialSource $credential): PublicKeyCredentialDescriptor {
+                return $credential->getPublicKeyCredentialDescriptor();
+            },
+            $registeredAuthenticators
+        );
+        $publicKeyCredentialRequestOptions =
+            PublicKeyCredentialRequestOptions::create(
+                random_bytes(32), // Challenge
+                allowCredentials: $allowedCredentials
+            );
+        Yii::$app->session->set('publicKeyCredentialRequestOptions', $publicKeyCredentialRequestOptions);
+
+        return $this->asJson($publicKeyCredentialRequestOptions);
+    }
+
+    /**
+     *
+     * @return void
+     */
+    public function actionVerifyAssertion(): void
+    {
+        $data = Yii::$app->request->post('publicKeyCredential');
+        $serializer = new Serializer([new ObjectNormalizer()], [new JsonEncoder()]);
+        $publicKeyCredential = $serializer->deserialize($data, PublicKeyCredential::class, 'json');
+        $authenticatorAssertionResponse = $publicKeyCredential->response;
+        if (!$authenticatorAssertionResponse instanceof AuthenticatorAssertionResponse) {
+            //e.g. process here with a redirection to the public key login/MFA page.
+        }
+        $publicKeyCredentialSourceRepository = new PublicKeyCredentialSource();
+        $publicKeyCredentialSource = $publicKeyCredentialSourceRepository->findOneByCredentialId(
+            $publicKeyCredential->rawId
+        );
+        if ($publicKeyCredentialSource === null) {
+            // Throw an exception if the credential is not found.
+            // It can also be rejected depending on your security policy (e.g. disabled by the user because of loss)
+        }
+        $authenticatorAssertionResponseValidator = AuthenticatorAssertionResponseValidator::create();
+        $publicKeyCredentialRequestOptions = Yii::$app->session->get('publicKeyCredentialRequestOptions');
+        try {
+            $publicKeyCredentialSource = $authenticatorAssertionResponseValidator->check(
+                $publicKeyCredentialSource,
+                $authenticatorAssertionResponse,
+                $publicKeyCredentialRequestOptions,
+                Yii::$app->params['domain'] ?? null,
+                null //Deprecated Token Binding Handler. Please set null.
+            );
+        } catch (AuthenticatorResponseVerificationException $e) {
+        }
+
+// Optional, but highly recommended, you can save the credential source as it may be modified
+// during the verification process (counter may be higher).
+        $publicKeyCredentialSourceRepository->saveCredential($publicKeyCredentialSource);
+    }
+
 }
