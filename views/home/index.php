@@ -78,11 +78,14 @@ $this->registerCssFile('@web/css/home_style.css');
                     <li><?= Html::button('上传文件夹', ['class' => 'dropdown-item folder-upload-btn']) ?></li>
                 </ul>
             </div>
+            <!--TODO:文件搜索功能-->
+            <button type="button" class="btn btn-primary">
+                <i class="fa-solid fa-magnifying-glass"></i>
+            </button>
             <button type="button" class="btn btn-primary" data-bs-toggle="popover" data-bs-title="容量使用情况"
                     data-bs-placement="bottom"
                     data-bs-content="已用:<?= $totalUsed_F ?>/ <?= $storageLimit_F ?><?= $freeSpace == 'unlimited' ? '' : ($freeSpace <= 0 ? ' 容量超限,功能受限' : '') ?>">
-                <i
-                        class="fa-solid fa-info"></i>
+                <i class="fa-solid fa-info"></i>
             </button>
         </div>
     </div>
