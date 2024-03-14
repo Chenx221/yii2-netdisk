@@ -49,9 +49,11 @@
     "ext-gd": "*",
     "endroid/qr-code": "^5.0",
     "bower-asset/bootstrap": "^5.3",
-    "web-auth/webauthn-lib": "^4.8",
     "npm-asset/simplewebauthn--browser": "^9.0",
-    "symfony/serializer": "^7.0"
+    "symfony/serializer": "^7.0",
+    "symfony/property-access": "^7.0",
+    "phpdocumentor/reflection-docblock": "^5.3",
+    "web-auth/webauthn-lib": "^4.8"
   },
   "require-dev": {
     "yiisoft/yii2-debug": "~2.1.0",
