@@ -8,6 +8,6 @@ class SimpleWebAuthnBrowser extends AssetBundle
 {
     public $sourcePath = '@npm/simplewebauthn--browser/dist/bundle';
     public $js = [
-        'index.js',
+        'index.umd.min.js',
     ];
 }

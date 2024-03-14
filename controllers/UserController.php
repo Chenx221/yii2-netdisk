@@ -2,7 +2,7 @@
 
 namespace app\controllers;
 
-use app\models\PublicKeyCredentialSource;
+use app\models\PublicKeyCredentialSourceRepository;
 use app\models\User;
 use app\utils\FileSizeHelper;
 use OTPHP\TOTP;
@@ -10,19 +10,32 @@ use Random\RandomException;
 use ReCaptcha\ReCaptcha;
 use Symfony\Component\Serializer\Serializer;
 use Throwable;
+use Webauthn\AttestationStatement\AttestationObjectLoader;
 use Webauthn\AttestationStatement\AttestationStatementSupportManager;
 use Webauthn\AttestationStatement\NoneAttestationStatementSupport;
-use Webauthn\AuthenticationExtensions\ExtensionOutputCheckerHandler;
 use Webauthn\AuthenticatorAssertionResponse;
 use Webauthn\AuthenticatorAssertionResponseValidator;
 use Webauthn\AuthenticatorAttestationResponse;
 use Webauthn\AuthenticatorAttestationResponseValidator;
+use Webauthn\CeremonyStep\CeremonyStepManager;
+use Webauthn\CeremonyStep\CeremonyStepManagerFactory;
+use Webauthn\Denormalizer\AttestationObjectDenormalizer;
+use Webauthn\Denormalizer\AttestationStatementDenormalizer;
+use Webauthn\Denormalizer\AuthenticatorAssertionResponseDenormalizer;
+use Webauthn\Denormalizer\AuthenticatorAttestationResponseDenormalizer;
+use Webauthn\Denormalizer\AuthenticatorDataDenormalizer;
+use Webauthn\Denormalizer\AuthenticatorResponseDenormalizer;
+use Webauthn\Denormalizer\CollectedClientDataDenormalizer;
+use Webauthn\Denormalizer\PublicKeyCredentialDenormalizer;
+use Webauthn\Denormalizer\WebauthnSerializerFactory;
 use Webauthn\Exception\AuthenticatorResponseVerificationException;
 use Webauthn\PublicKeyCredential;
 use Webauthn\PublicKeyCredentialCreationOptions;
 use Webauthn\PublicKeyCredentialDescriptor;
+use Webauthn\PublicKeyCredentialLoader;
 use Webauthn\PublicKeyCredentialRequestOptions;
 use Webauthn\PublicKeyCredentialRpEntity;
+use Webauthn\PublicKeyCredentialSource;
 use Webauthn\PublicKeyCredentialUserEntity;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
@@ -65,7 +78,7 @@ class UserController extends Controller
                         ],
                         [
                             'allow' => true,
-                            'actions' => ['logout', 'setup-two-factor', 'change-password', 'download-recovery-codes', 'remove-two-factor', 'set-theme', 'change-name'],
+                            'actions' => ['logout', 'setup-two-factor', 'change-password', 'download-recovery-codes', 'remove-two-factor', 'set-theme', 'change-name', 'create-credential-options', 'create-credential', 'request-assertion-options', 'verify-assertion'],
                             'roles' => ['@'], // only logged-in user can do these ( admin included )
                         ]
                     ],
@@ -85,6 +98,10 @@ class UserController extends Controller
                         'verify-two-factor' => ['GET', 'POST'],
                         'set-theme' => ['POST'],
                         'change-name' => ['POST'],
+                        'create-credential-options' => ['GET'],
+                        'create-credential' => ['POST'],
+                        'request-assertion-options' => ['GET'],
+                        'verify-assertion' => ['POST']
                     ],
                 ],
             ]
@@ -570,12 +587,13 @@ class UserController extends Controller
     }
 
     /**
+     * 创建公钥凭证选项
      * @return Response
      * @throws RandomException
      */
     public function actionCreateCredentialOptions(): Response
     {
-        $id = Yii::$app->params['domain'] ?? null;
+        $id = Yii::$app->params['domain'];
         $user = Yii::$app->user->identity;
 
         $rpEntity = PublicKeyCredentialRpEntity::create(
@@ -583,14 +601,10 @@ class UserController extends Controller
             $id
         );
 
-        $hash = md5(strtolower(trim($user->email)));
-        $gravatarUrl = "https://www.gravatar.com/avatar/$hash";
-
         $userEntity = PublicKeyCredentialUserEntity::create(
             $user->username,
             $user->id,
             $user->name,
-            $gravatarUrl
         );
 
         $challenge = random_bytes(16);
@@ -609,47 +623,57 @@ class UserController extends Controller
     }
 
     /**
-     * @return void
+     * 创建公钥凭证
+     * @return Response
      */
-    public function actionCreateCredential(): void
+    public function actionCreateCredential(): Response
     {
-        $data = Yii::$app->request->post('publicKeyCredential');
-        $serializer = new Serializer([new ObjectNormalizer()], [new JsonEncoder()]);
+        $data = Yii::$app->request->getRawBody();
+        $attestationStatementSupportManager = AttestationStatementSupportManager::create();
+        $attestationStatementSupportManager->add(NoneAttestationStatementSupport::create());
+        $webauthnSerializerFactory = new WebauthnSerializerFactory($attestationStatementSupportManager);
+        $serializer = $webauthnSerializerFactory->create();
         $publicKeyCredential = $serializer->deserialize($data, PublicKeyCredential::class, 'json');
         $authenticatorAttestationResponse = $publicKeyCredential->response;
         if (!$authenticatorAttestationResponse instanceof AuthenticatorAttestationResponse) {
-            //e.g. process here with a redirection to the public key creation page.
+            return $this->asJson(['message' => 'Invalid response type']);
         }
-        $attestationStatementSupportManager = AttestationStatementSupportManager::create();
-        $attestationStatementSupportManager->add(NoneAttestationStatementSupport::create());
-        $extensionOutputCheckerHandler = ExtensionOutputCheckerHandler::create();
+
+        $ceremonyStepManagerFactory = new CeremonyStepManagerFactory();
+        $ceremonyStepManager = $ceremonyStepManagerFactory->creationCeremony();
+
+        // PHP Deprecated:
+        // Since web-auth/webauthn-lib 4.8.0:
+        // The parameter "$attestationStatementSupportManager" is deprecated since 4.8.0 will be removed in 5.0.0.
+        // Please set a CheckAttestationFormatIsKnownAndValid object into CeremonyStepManager object instead.
+        // in /vendor/symfony/deprecation-contracts/function.php on line 25
+        // NMD, 这个问题在文档更新之前我是不会去解决的
         $authenticatorAttestationResponseValidator = AuthenticatorAttestationResponseValidator::create(
             $attestationStatementSupportManager,
             null, //Deprecated Public Key Credential Source Repository. Please set null.
             null, //Deprecated Token Binding Handler. Please set null.
-            $extensionOutputCheckerHandler
+            null,
+            null,
+            $ceremonyStepManager
         );
+
         $publicKeyCredentialCreationOptions = Yii::$app->session->get('publicKeyCredentialCreationOptions');
         try {
-            $publicKeyCredentialSource = $authenticatorAttestationResponseValidator->check(
+            $publicKeyCredentialSource = $authenticatorAttestationResponseValidator->check( //response -> source
                 $authenticatorAttestationResponse,
                 $publicKeyCredentialCreationOptions,
-                Yii::$app->params['domain'] ?? null
+                Yii::$app->params['domain']
             );
-            // 创建一个PublicKeyCredentialSourceRepository对象
-            $publicKeyCredentialSourceRepository = new PublicKeyCredentialSource();
-
-            // 保存PublicKeyCredentialSource对象到数据库
-            $publicKeyCredentialSourceRepository->saveCredential($publicKeyCredentialSource);
-
-            Yii::$app->session->setFlash('success', '公钥凭证已创建');
+            $publicKeyCredentialSourceRepository = new PublicKeyCredentialSourceRepository();
+            $publicKeyCredentialSourceRepository->saveCredential($publicKeyCredentialSource, 'test'); //receive source
+            return $this->asJson(['verified' => true]);
         } catch (Throwable $e) {
-            //e.g. process here with a redirection to the public key creation page.
-            //show error message
+            return $this->asJson(['message' => $e->getMessage(), 'verified' => false]);
         }
     }
 
     /**
+     * 请求验证选项
      * @return Response
      * @throws RandomException
      */
@@ -657,12 +681,15 @@ class UserController extends Controller
     {
         $user = Yii::$app->user->identity;
 
-        $publicKeyCredentialSourceRepository = new PublicKeyCredentialSource();
+        $publicKeyCredentialSourceRepository = new PublicKeyCredentialSourceRepository();
         $registeredAuthenticators = $publicKeyCredentialSourceRepository->findAllForUserEntity($user);
 
         $allowedCredentials = array_map(
-            static function (PublicKeyCredentialSource $credential): PublicKeyCredentialDescriptor {
-                return $credential->getPublicKeyCredentialDescriptor();
+            static function (PublicKeyCredentialSourceRepository $credential): PublicKeyCredentialDescriptor {
+                $data = $credential->data;
+                $webauthnSerializerFactory = new WebauthnSerializerFactory(new AttestationStatementSupportManager());
+                $publicKeyCredentialSource = $webauthnSerializerFactory->create()->deserialize($data, PublicKeyCredentialSource::class, 'json');
+                return $publicKeyCredentialSource->getPublicKeyCredentialDescriptor();
             },
             $registeredAuthenticators
         );
@@ -676,43 +703,55 @@ class UserController extends Controller
         return $this->asJson($publicKeyCredentialRequestOptions);
     }
 
+
     /**
-     *
-     * @return void
+     * 验证断言
+     * @return Response
+     * @throws \JsonException
      */
-    public function actionVerifyAssertion(): void
+    public function actionVerifyAssertion(): Response
     {
-        $data = Yii::$app->request->post('publicKeyCredential');
-        $serializer = new Serializer([new ObjectNormalizer()], [new JsonEncoder()]);
+        $data = Yii::$app->request->getRawBody();
+
+        $attestationStatementSupportManager = AttestationStatementSupportManager::create();
+        $attestationStatementSupportManager->add(NoneAttestationStatementSupport::create());
+        $webauthnSerializerFactory = new WebauthnSerializerFactory($attestationStatementSupportManager);
+        $serializer = $webauthnSerializerFactory->create();
+
         $publicKeyCredential = $serializer->deserialize($data, PublicKeyCredential::class, 'json');
+
         $authenticatorAssertionResponse = $publicKeyCredential->response;
         if (!$authenticatorAssertionResponse instanceof AuthenticatorAssertionResponse) {
-            //e.g. process here with a redirection to the public key login/MFA page.
+            return $this->asJson(['message' => 'Invalid response type']);
         }
-        $publicKeyCredentialSourceRepository = new PublicKeyCredentialSource();
-        $publicKeyCredentialSource = $publicKeyCredentialSourceRepository->findOneByCredentialId(
-            $publicKeyCredential->rawId
+
+        $publicKeyCredentialSourceRepository = new PublicKeyCredentialSourceRepository();
+        $publicKeyCredentialSourceRepository1 = $publicKeyCredentialSourceRepository->findOneByCredentialId(
+            $publicKeyCredential->id
         );
-        if ($publicKeyCredentialSource === null) {
-            // Throw an exception if the credential is not found.
-            // It can also be rejected depending on your security policy (e.g. disabled by the user because of loss)
+        if ($publicKeyCredentialSourceRepository1 === null) {
+            $this->asJson(['message' => 'Invalid credential']);
         }
+
+        $PKCS = $webauthnSerializerFactory->create()->deserialize($publicKeyCredentialSourceRepository1->data, PublicKeyCredentialSource::class, 'json');
+
         $authenticatorAssertionResponseValidator = AuthenticatorAssertionResponseValidator::create();
         $publicKeyCredentialRequestOptions = Yii::$app->session->get('publicKeyCredentialRequestOptions');
         try {
             $publicKeyCredentialSource = $authenticatorAssertionResponseValidator->check(
-                $publicKeyCredentialSource,
+                $PKCS,
                 $authenticatorAssertionResponse,
                 $publicKeyCredentialRequestOptions,
-                Yii::$app->params['domain'] ?? null,
+                Yii::$app->params['domain'],
                 null //Deprecated Token Binding Handler. Please set null.
             );
         } catch (AuthenticatorResponseVerificationException $e) {
+            return $this->asJson(['message' => $e->getMessage(), 'verified' => false]);
         }
 
-// Optional, but highly recommended, you can save the credential source as it may be modified
-// during the verification process (counter may be higher).
-        $publicKeyCredentialSourceRepository->saveCredential($publicKeyCredentialSource);
+        // Optional, but highly recommended, you can save the credential source as it may be modified
+        // during the verification process (counter may be higher).
+        $publicKeyCredentialSourceRepository1->saveCredential($publicKeyCredentialSource,'test');
+        return $this->asJson(['verified' => true]);
     }
-
 }

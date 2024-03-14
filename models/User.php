@@ -33,7 +33,7 @@ use yii\web\IdentityInterface;
  * @property string|null $vault_salt 保险箱加密密钥盐
  *
  * @property CollectionTasks[] $collectionTasks
- * @property PublicKeyCredentialSource[] $publicKeyCredentialSources
+ * @property PublicKeyCredentialSourceRepository[] $publicKeyCredentialSourcesRepository
  * @property Share[] $shares
  */
 class User extends ActiveRecord implements IdentityInterface
@@ -230,13 +230,13 @@ class User extends ActiveRecord implements IdentityInterface
     }
 
     /**
-     * Gets query for [[PublicKeyCredentialSources]].
+     * Gets query for [[PublicKeyCredentialSourcesRepository]].
      *
      * @return ActiveQuery
      */
-    public function getPublicKeyCredentialSources(): ActiveQuery
+    public function getPublicKeyCredentialSourcesRepository(): ActiveQuery
     {
-        return $this->hasMany(PublicKeyCredentialSource::class, ['user_id' => 'id']);
+        return $this->hasMany(PublicKeyCredentialSourceRepository::class, ['user_id' => 'id']);
     }
 
     /**
