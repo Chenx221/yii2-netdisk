@@ -103,7 +103,7 @@ Windows 11 Pro (22631.3155)
 
 PhpStorm 2023.3.4
 
-PHP 8.2.16
+PHP 8.2.17
 
 MariaDB 11.3.2
 
