@@ -99,11 +99,11 @@ EXTRA: 客户端开发
 开发环境
 ------------
 
-Windows 11 Pro (22631.3155)
+Windows 11 Pro (22631.3296) \ Windows 10 Enterprise LTSC 2021 (19044.4046)
 
 PhpStorm 2023.3.4
 
-PHP 8.2.17
+PHP 8.3.4 (这个项目需要PHP>=8.2)
 
 MariaDB 11.3.2
 
