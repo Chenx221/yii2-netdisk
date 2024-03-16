@@ -42,7 +42,10 @@ use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Yii;
 use yii\base\Exception;
 use yii\base\InvalidConfigException;
+use yii\data\ActiveDataProvider;
+use yii\db\StaleObjectException;
 use yii\filters\AccessControl;
+use yii\helpers\Url;
 use yii\httpclient\Client;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
@@ -78,7 +81,7 @@ class UserController extends Controller
                         ],
                         [
                             'allow' => true,
-                            'actions' => ['logout', 'setup-two-factor', 'change-password', 'download-recovery-codes', 'remove-two-factor', 'set-theme', 'change-name', 'create-credential-options', 'create-credential', 'request-assertion-options', 'verify-assertion'],
+                            'actions' => ['logout', 'setup-two-factor', 'change-password', 'download-recovery-codes', 'remove-two-factor', 'set-theme', 'change-name', 'create-credential-options', 'create-credential', 'request-assertion-options', 'verify-assertion', 'credential-list', 'credential-delete'],
                             'roles' => ['@'], // only logged-in user can do these ( admin included )
                         ]
                     ],
@@ -101,7 +104,9 @@ class UserController extends Controller
                         'create-credential-options' => ['GET'],
                         'create-credential' => ['POST'],
                         'request-assertion-options' => ['GET'],
-                        'verify-assertion' => ['POST']
+                        'verify-assertion' => ['POST'],
+                        'credential-list' => ['GET'],
+                        'credential-delete' => ['POST'],
                     ],
                 ],
             ]
@@ -137,6 +142,20 @@ class UserController extends Controller
     protected function findModel(int $id): User
     {
         if (($model = User::findOne(['id' => $id])) !== null) {
+            return $model;
+        }
+
+        throw new NotFoundHttpException('The requested page does not exist.');
+    }
+
+    /**
+     * @param $id
+     * @return PublicKeyCredentialSourceRepository|null
+     * @throws NotFoundHttpException
+     */
+    protected function findCredentialModel($id)
+    {
+        if (($model = PublicKeyCredentialSourceRepository::findOne(['id' => $id])) !== null) {
             return $model;
         }
 
@@ -587,6 +606,45 @@ class UserController extends Controller
     }
 
     /**
+     * @return Response|string
+     */
+    public function actionCredentialList(): Response|string
+    {
+        if (Yii::$app->request->isAjax) {
+            return $this->renderAjax('_creIndex', [
+                'dataProvider' => new ActiveDataProvider([
+                    'query' => PublicKeyCredentialSourceRepository::find()->where(['user_id' => Yii::$app->user->id]),
+                ]),
+            ]);
+        } else {
+            Yii::$app->session->setFlash('error', '非Ajax请求');
+            return $this->redirect('info');
+        }
+    }
+
+    /**
+     * @param $id
+     * @return Response|string
+     * @throws NotFoundHttpException
+     * @throws Throwable
+     * @throws StaleObjectException
+     */
+    public function actionCredentialDelete($id): Response|string
+    {
+        if (Yii::$app->request->isPjax) {
+            $this->findCredentialModel($id)->delete();
+            return $this->renderAjax('_creIndex', [
+                'dataProvider' => new ActiveDataProvider([
+                    'query' => PublicKeyCredentialSourceRepository::find()->where(['user_id' => Yii::$app->user->id]),
+                ]),
+            ]);
+        } else {
+            Yii::$app->session->setFlash('error', '非Pjax请求,无法删除');
+            return $this->redirect('info');
+        }
+    }
+
+    /**
      * 创建公钥凭证选项
      * @return Response
      * @throws RandomException
@@ -654,7 +712,7 @@ class UserController extends Controller
             null, //Deprecated Token Binding Handler. Please set null.
             null,
             null,
-            $ceremonyStepManager
+            null
         );
 
         $publicKeyCredentialCreationOptions = Yii::$app->session->get('publicKeyCredentialCreationOptions');
@@ -730,20 +788,19 @@ class UserController extends Controller
             $publicKeyCredential->id
         );
         if ($publicKeyCredentialSourceRepository1 === null) {
-            $this->asJson(['message' => 'Invalid credential']);
+            return $this->asJson(['message' => 'Invalid credential']);
         }
 
         $PKCS = $webauthnSerializerFactory->create()->deserialize($publicKeyCredentialSourceRepository1->data, PublicKeyCredentialSource::class, 'json');
-
         $authenticatorAssertionResponseValidator = AuthenticatorAssertionResponseValidator::create();
         $publicKeyCredentialRequestOptions = Yii::$app->session->get('publicKeyCredentialRequestOptions');
         try {
             $publicKeyCredentialSource = $authenticatorAssertionResponseValidator->check(
-                $PKCS,
-                $authenticatorAssertionResponse,
+                $PKCS, //credential source
+                $authenticatorAssertionResponse, //user response
                 $publicKeyCredentialRequestOptions,
                 Yii::$app->params['domain'],
-                null //Deprecated Token Binding Handler. Please set null.
+                $publicKeyCredentialSourceRepository1->user_id //我也不知道为什么要设置这个
             );
         } catch (AuthenticatorResponseVerificationException $e) {
             return $this->asJson(['message' => $e->getMessage(), 'verified' => false]);
@@ -751,7 +808,7 @@ class UserController extends Controller
 
         // Optional, but highly recommended, you can save the credential source as it may be modified
         // during the verification process (counter may be higher).
-        $publicKeyCredentialSourceRepository1->saveCredential($publicKeyCredentialSource,'test');
+        $publicKeyCredentialSourceRepository1->saveCredential($publicKeyCredentialSource, 'test');
         return $this->asJson(['verified' => true]);
     }
 }
