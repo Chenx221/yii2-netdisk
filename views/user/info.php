@@ -15,6 +15,7 @@
 
 use app\assets\FontAwesomeAsset;
 use app\assets\SimpleWebAuthnBrowser;
+use app\models\PublicKeyCredentialSourceRepository;
 use app\models\User;
 use app\utils\FileSizeHelper;
 use app\utils\IPLocation;
@@ -27,9 +28,13 @@ use Endroid\QrCode\Writer\PngWriter;
 use yii\bootstrap5\ActiveForm;
 use yii\bootstrap5\Html;
 use yii\bootstrap5\Modal;
+use yii\data\ActiveDataProvider;
+use yii\grid\ActionColumn;
+use yii\grid\GridView;
 use yii\helpers\Url;
 use yii\web\JqueryAsset;
 use yii\web\View;
+use yii\widgets\Pjax;
 
 $this->title = '个人设置';
 FontAwesomeAsset::register($this);
@@ -274,9 +279,9 @@ $darkMode = Yii::$app->user->identity->dark_mode;
                                 Passwordless验证 (Webauthn) (BETA)
                             </h5>
                             <div>
-                                <?= Html::button('Add', ['id' => "webauthn_add", 'type' => 'button', 'class' => 'btn btn-primary btn-sm']) ?>
-                                <?= Html::button('Verify', ['id' => "webauthn_verify", 'type' => 'button', 'class' => 'btn btn-primary btn-sm']) ?>
-                                <?= Html::button('Detail', ['id' => "webauthn_detail", 'type' => 'button', 'class' => 'btn btn-primary btn-sm']) ?>
+                                <?= Html::button('添加', ['id' => "webauthn_add", 'type' => 'button', 'class' => 'btn btn-primary btn-sm']) ?>
+                                <?= Html::button('测试', ['id' => "webauthn_verify", 'type' => 'button', 'class' => 'btn btn-primary btn-sm']) ?>
+                                <?= Html::button('查看详情', ['id' => "webauthn_detail", 'type' => 'button', 'class' => 'btn btn-primary btn-sm']) ?>
                             </div>
                             <div class="alert alert-success" role="alert" hidden>
                                 <span id="webauthn_success"></span>
@@ -414,7 +419,22 @@ Modal::begin([
     </div>
 </div>
 <?php
+Modal::end();
 
+Modal::begin([
+    'title' => '<h4>管理已添加的Webauthn设备</h4>',
+    'id' => 'credentialModal',
+    'size' => 'modal-lg',
+]);
+
+echo Html::tag('div', '你可以在下方查看和删除已经添加的Webauthn设备', ['class' => 'modal-body']);
+$dataProvider = new ActiveDataProvider([
+    'query' => PublicKeyCredentialSourceRepository::find()->where(['user_id' => Yii::$app->user->id]),
+]);
+// 使用 GridView 小部件显示数据
+Pjax::begin();
+echo Html::tag('div', '', ['id' => 'pjax-container']);
+Pjax::end();
 Modal::end();
 $this->registerJsFile('@web/js/user-info.js', ['depends' => [JqueryAsset::class, SimpleWebAuthnBrowser::class], 'position' => View::POS_END]);
 ?>

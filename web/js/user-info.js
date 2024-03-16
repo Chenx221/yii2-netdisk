@@ -1,3 +1,4 @@
+$.pjax.defaults.scrollTo = false;
 $(document).ready(function () {
     $('#deleteConfirm').change(function () {
         if (this.checked) {
@@ -41,6 +42,20 @@ document.querySelector('.avatar-container').addEventListener('click', function (
 document.querySelector('.editable-username').addEventListener('click', function () {
     // 在这里添加你的代码来显示一个模态框或其他你想要的东西
     $('#changeAccountName').modal('show');
+});
+
+document.querySelector('#webauthn_detail').addEventListener('click', function () {
+    // $('#credentialModal').modal('show');
+    $.ajax({
+        url: 'index.php?r=user%2Fcredential-list', // 替换为你的 API 路径
+        method: 'GET',
+        success: function(data) {
+            $('#pjax-container').html(data);
+        },
+        complete: function() {
+            $('#credentialModal').modal('show');
+        }
+    });
 });
 
 // WebAuthn registration #BEGIN
