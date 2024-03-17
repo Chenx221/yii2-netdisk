@@ -6,7 +6,6 @@ use app\models\User;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use Yii;
-use yii\web\NotFoundHttpException;
 
 class FileSizeHelper
 {

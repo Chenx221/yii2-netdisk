@@ -29,8 +29,6 @@ use yii\bootstrap5\ActiveForm;
 use yii\bootstrap5\Html;
 use yii\bootstrap5\Modal;
 use yii\data\ActiveDataProvider;
-use yii\grid\ActionColumn;
-use yii\grid\GridView;
 use yii\helpers\Url;
 use yii\web\JqueryAsset;
 use yii\web\View;

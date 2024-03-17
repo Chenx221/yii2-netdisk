@@ -5,7 +5,6 @@ namespace app\models;
 use Yii;
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
-use app\models\Share;
 
 /**
  * ShareSearch represents the model behind the search form of `app\models\Share`.
@@ -15,7 +14,7 @@ class ShareSearch extends Share
     /**
      * {@inheritdoc}
      */
-    public function rules()
+    public function rules(): array
     {
         return [
             [['share_id', 'sharer_id'], 'integer'],
@@ -26,7 +25,7 @@ class ShareSearch extends Share
     /**
      * {@inheritdoc}
      */
-    public function scenarios()
+    public function scenarios(): array
     {
         // bypass scenarios() implementation in the parent class
         return Model::scenarios();
@@ -39,7 +38,7 @@ class ShareSearch extends Share
      *
      * @return ActiveDataProvider
      */
-    public function search($params)
+    public function search($params): ActiveDataProvider
     {
         $query = Share::find()->where(['sharer_id' => Yii::$app->user->id]);
 

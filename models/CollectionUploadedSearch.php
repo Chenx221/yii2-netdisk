@@ -4,7 +4,6 @@ namespace app\models;
 
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
-use app\models\CollectionUploaded;
 
 /**
  * CollectionUploadedSearch represents the model behind the search form of `app\models\CollectionUploaded`.
@@ -14,7 +13,7 @@ class CollectionUploadedSearch extends CollectionUploaded
     /**
      * {@inheritdoc}
      */
-    public function rules()
+    public function rules(): array
     {
         return [
             [['id', 'task_id'], 'integer'],
@@ -25,7 +24,7 @@ class CollectionUploadedSearch extends CollectionUploaded
     /**
      * {@inheritdoc}
      */
-    public function scenarios()
+    public function scenarios(): array
     {
         // bypass scenarios() implementation in the parent class
         return Model::scenarios();
@@ -38,7 +37,7 @@ class CollectionUploadedSearch extends CollectionUploaded
      *
      * @return ActiveDataProvider
      */
-    public function search($params)
+    public function search($params): ActiveDataProvider
     {
         $query = CollectionUploaded::find();
 

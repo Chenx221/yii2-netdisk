@@ -362,7 +362,7 @@ class HomeController extends Controller
         $uploadedFiles = UploadedFile::getInstancesByName('files');
         $successCount = 0;
         $totalCount = count($uploadedFiles);
-        $sp = Yii::$app->request->post('sp', null);
+        $sp = Yii::$app->request->post('sp');
 
         foreach ($uploadedFiles as $uploadedFile) {
             $model->uploadFile = $uploadedFile;
@@ -597,8 +597,6 @@ class HomeController extends Controller
             $zipPath = Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . Yii::$app->user->id . '/' . $targetDirectory . '/' . $model->zipFilename . '.' . $model->zipFormat;
             try {
                 UnifiedArchive::create($absolutePaths, $zipPath);
-                // 获取新的压缩文件的大小
-                $zipSize = filesize($zipPath);
                 // 检查新的压缩文件的大小是否超过用户的存储限制
                 if (!FileSizeHelper::hasEnoughSpace()) {
                     // 如果超过，删除这个新的压缩文件，并显示一个错误消息

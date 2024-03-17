@@ -219,7 +219,7 @@ class VaultController extends Controller
         $uploadedFiles = UploadedFile::getInstancesByName('files');
         $successCount = 0;
         $totalCount = count($uploadedFiles);
-        $sp = Yii::$app->request->post('sp', null);
+        $sp = Yii::$app->request->post('sp');
 
         foreach ($uploadedFiles as $uploadedFile) {
             $model->uploadFile = $uploadedFile;

@@ -2,9 +2,7 @@
 
 namespace app\controllers;
 
-use app\models\CollectionTasks;
 use app\models\CollectionUploaded;
-use app\models\CollectionUploadedSearch;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;

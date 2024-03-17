@@ -5,47 +5,32 @@ namespace app\controllers;
 use app\models\PublicKeyCredentialSourceRepository;
 use app\models\User;
 use app\utils\FileSizeHelper;
+use JsonException;
 use OTPHP\TOTP;
 use Random\RandomException;
 use ReCaptcha\ReCaptcha;
-use Symfony\Component\Serializer\Serializer;
 use Throwable;
-use Webauthn\AttestationStatement\AttestationObjectLoader;
 use Webauthn\AttestationStatement\AttestationStatementSupportManager;
 use Webauthn\AttestationStatement\NoneAttestationStatementSupport;
 use Webauthn\AuthenticatorAssertionResponse;
 use Webauthn\AuthenticatorAssertionResponseValidator;
 use Webauthn\AuthenticatorAttestationResponse;
 use Webauthn\AuthenticatorAttestationResponseValidator;
-use Webauthn\CeremonyStep\CeremonyStepManager;
-use Webauthn\CeremonyStep\CeremonyStepManagerFactory;
-use Webauthn\Denormalizer\AttestationObjectDenormalizer;
-use Webauthn\Denormalizer\AttestationStatementDenormalizer;
-use Webauthn\Denormalizer\AuthenticatorAssertionResponseDenormalizer;
-use Webauthn\Denormalizer\AuthenticatorAttestationResponseDenormalizer;
-use Webauthn\Denormalizer\AuthenticatorDataDenormalizer;
-use Webauthn\Denormalizer\AuthenticatorResponseDenormalizer;
-use Webauthn\Denormalizer\CollectedClientDataDenormalizer;
-use Webauthn\Denormalizer\PublicKeyCredentialDenormalizer;
 use Webauthn\Denormalizer\WebauthnSerializerFactory;
 use Webauthn\Exception\AuthenticatorResponseVerificationException;
 use Webauthn\PublicKeyCredential;
 use Webauthn\PublicKeyCredentialCreationOptions;
 use Webauthn\PublicKeyCredentialDescriptor;
-use Webauthn\PublicKeyCredentialLoader;
 use Webauthn\PublicKeyCredentialRequestOptions;
 use Webauthn\PublicKeyCredentialRpEntity;
 use Webauthn\PublicKeyCredentialSource;
 use Webauthn\PublicKeyCredentialUserEntity;
-use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
-use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Yii;
 use yii\base\Exception;
 use yii\base\InvalidConfigException;
 use yii\data\ActiveDataProvider;
 use yii\db\StaleObjectException;
 use yii\filters\AccessControl;
-use yii\helpers\Url;
 use yii\httpclient\Client;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
@@ -133,6 +118,29 @@ class UserController extends Controller
     }
 
     /**
+     * @return array
+     * @throws InvalidConfigException
+     * @throws \yii\httpclient\Exception
+     */
+    protected function checkCaptcha(): array
+    {
+        $verifyProvider = Yii::$app->params['verifyProvider'];
+        $captchaResponse = null;
+        $isCaptchaValid = false;
+        if ($verifyProvider === 'reCAPTCHA') {
+            $captchaResponse = Yii::$app->request->post('g-recaptcha-response');
+            $isCaptchaValid = $this->validateRecaptcha($captchaResponse);
+        } elseif ($verifyProvider === 'hCaptcha') {
+            $captchaResponse = Yii::$app->request->post('h-captcha-response');
+            $isCaptchaValid = $this->validateHcaptcha($captchaResponse);
+        } elseif ($verifyProvider === 'Turnstile') {
+            $captchaResponse = Yii::$app->request->post('cf-turnstile-response');
+            $isCaptchaValid = $this->validateTurnstile($captchaResponse);
+        }
+        return array($verifyProvider, $captchaResponse, $isCaptchaValid);
+    }
+
+    /**
      * Finds the User model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.
      * @param int $id ID
@@ -149,11 +157,12 @@ class UserController extends Controller
     }
 
     /**
+     * 查找公钥凭证模型
      * @param $id
      * @return PublicKeyCredentialSourceRepository|null
      * @throws NotFoundHttpException
      */
-    protected function findCredentialModel($id)
+    protected function findCredentialModel($id): ?PublicKeyCredentialSourceRepository
     {
         if (($model = PublicKeyCredentialSourceRepository::findOne(['id' => $id])) !== null) {
             return $model;
@@ -181,19 +190,7 @@ class UserController extends Controller
 
         if ($model->load(Yii::$app->request->post()) && $model->validate()) {
             // 根据 verifyProvider 的值选择使用哪种验证码服务
-            $verifyProvider = Yii::$app->params['verifyProvider'];
-            $captchaResponse = null;
-            $isCaptchaValid = false;
-            if ($verifyProvider === 'reCAPTCHA') {
-                $captchaResponse = Yii::$app->request->post('g-recaptcha-response');
-                $isCaptchaValid = $this->validateRecaptcha($captchaResponse);
-            } elseif ($verifyProvider === 'hCaptcha') {
-                $captchaResponse = Yii::$app->request->post('h-captcha-response');
-                $isCaptchaValid = $this->validateHcaptcha($captchaResponse);
-            } elseif ($verifyProvider === 'Turnstile') {
-                $captchaResponse = Yii::$app->request->post('cf-turnstile-response');
-                $isCaptchaValid = $this->validateTurnstile($captchaResponse);
-            }
+            list($verifyProvider, $captchaResponse, $isCaptchaValid) = $this->checkCaptcha();
 
             if (($captchaResponse !== null && $isCaptchaValid) || ($verifyProvider === 'None')) {
                 // 验证用户名和密码
@@ -308,19 +305,7 @@ class UserController extends Controller
         $hcaptchaSecret = Yii::$app->params['hCaptcha']['secret'];
         $verifyUrl = 'https://api.hcaptcha.com/siteverify';
 
-        $client = new Client();
-        $response = $client->createRequest()
-            ->setMethod('POST')
-            ->setUrl($verifyUrl)
-            ->setData(['secret' => $hcaptchaSecret, 'response' => $hcaptchaResponse])
-            ->send();
-
-        if ($response->isOk) {
-            $responseData = $response->getData();
-            return isset($responseData['success']) && $responseData['success'] === true;
-        }
-
-        return false;
+        return $this->verifyResponse($verifyUrl, $hcaptchaSecret, $hcaptchaResponse);
     }
 
     /**
@@ -335,19 +320,7 @@ class UserController extends Controller
         $turnstileSecret = Yii::$app->params['Turnstile']['secret'];
         $verifyUrl = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
 
-        $client = new Client();
-        $response = $client->createRequest()
-            ->setMethod('POST')
-            ->setUrl($verifyUrl)
-            ->setData(['secret' => $turnstileSecret, 'response' => $turnstileResponse])
-            ->send();
-
-        if ($response->isOk) {
-            $responseData = $response->getData();
-            return isset($responseData['success']) && $responseData['success'] === true;
-        }
-
-        return false;
+        return $this->verifyResponse($verifyUrl, $turnstileSecret, $turnstileResponse);
     }
 
     /**
@@ -376,19 +349,7 @@ class UserController extends Controller
         $model = new User(['scenario' => 'register']);
         if ($model->load(Yii::$app->request->post()) && $model->validate()) {
             // 根据 verifyProvider 的值选择使用哪种验证码服务
-            $verifyProvider = Yii::$app->params['verifyProvider'];
-            $captchaResponse = null;
-            $isCaptchaValid = false;
-            if ($verifyProvider === 'reCAPTCHA') {
-                $captchaResponse = Yii::$app->request->post('g-recaptcha-response');
-                $isCaptchaValid = $this->validateRecaptcha($captchaResponse);
-            } elseif ($verifyProvider === 'hCaptcha') {
-                $captchaResponse = Yii::$app->request->post('h-captcha-response');
-                $isCaptchaValid = $this->validateHcaptcha($captchaResponse);
-            } elseif ($verifyProvider === 'Turnstile') {
-                $captchaResponse = Yii::$app->request->post('cf-turnstile-response');
-                $isCaptchaValid = $this->validateTurnstile($captchaResponse);
-            }
+            list($verifyProvider, $captchaResponse, $isCaptchaValid) = $this->checkCaptcha();
 
             if (($captchaResponse !== null && $isCaptchaValid) || ($verifyProvider === 'None')) {
                 $raw_password = $model->password;
@@ -606,6 +567,7 @@ class UserController extends Controller
     }
 
     /**
+     * 获取所有的公钥凭证
      * @return Response|string
      */
     public function actionCredentialList(): Response|string
@@ -623,6 +585,7 @@ class UserController extends Controller
     }
 
     /**
+     * 删除指定的公钥凭证
      * @param $id
      * @return Response|string
      * @throws NotFoundHttpException
@@ -632,7 +595,12 @@ class UserController extends Controller
     public function actionCredentialDelete($id): Response|string
     {
         if (Yii::$app->request->isPjax) {
-            $this->findCredentialModel($id)->delete();
+            $publicKeyCredentialSourceRepository = $this->findCredentialModel($id);
+            if($publicKeyCredentialSourceRepository->user_id !== Yii::$app->user->id){
+                Yii::$app->session->setFlash('error', '非法操作');
+                return $this->redirect('info');
+            }
+            $publicKeyCredentialSourceRepository->delete();
             return $this->renderAjax('_creIndex', [
                 'dataProvider' => new ActiveDataProvider([
                     'query' => PublicKeyCredentialSourceRepository::find()->where(['user_id' => Yii::$app->user->id]),
@@ -697,22 +665,14 @@ class UserController extends Controller
             return $this->asJson(['message' => 'Invalid response type']);
         }
 
-        $ceremonyStepManagerFactory = new CeremonyStepManagerFactory();
-        $ceremonyStepManager = $ceremonyStepManagerFactory->creationCeremony();
-
         // PHP Deprecated:
         // Since web-auth/webauthn-lib 4.8.0:
         // The parameter "$attestationStatementSupportManager" is deprecated since 4.8.0 will be removed in 5.0.0.
         // Please set a CheckAttestationFormatIsKnownAndValid object into CeremonyStepManager object instead.
         // in /vendor/symfony/deprecation-contracts/function.php on line 25
-        // NMD, 这个问题在文档更新之前我是不会去解决的
+        // MD, 这个问题在文档更新之前我是不会去解决的
         $authenticatorAttestationResponseValidator = AuthenticatorAttestationResponseValidator::create(
-            $attestationStatementSupportManager,
-            null, //Deprecated Public Key Credential Source Repository. Please set null.
-            null, //Deprecated Token Binding Handler. Please set null.
-            null,
-            null,
-            null
+            $attestationStatementSupportManager
         );
 
         $publicKeyCredentialCreationOptions = Yii::$app->session->get('publicKeyCredentialCreationOptions');
@@ -764,8 +724,9 @@ class UserController extends Controller
 
     /**
      * 验证断言
+     * 用于已登录情况下验证fifo设置是否成功
      * @return Response
-     * @throws \JsonException
+     * @throws JsonException
      */
     public function actionVerifyAssertion(): Response
     {
@@ -800,7 +761,7 @@ class UserController extends Controller
                 $authenticatorAssertionResponse, //user response
                 $publicKeyCredentialRequestOptions,
                 Yii::$app->params['domain'],
-                $publicKeyCredentialSourceRepository1->user_id //我也不知道为什么要设置这个
+                $publicKeyCredentialSourceRepository1->user_id //我也不知道这个是什么，不过看了眼源码，移动设备验证时userhandle传入的是Null
             );
         } catch (AuthenticatorResponseVerificationException $e) {
             return $this->asJson(['message' => $e->getMessage(), 'verified' => false]);
@@ -810,5 +771,30 @@ class UserController extends Controller
         // during the verification process (counter may be higher).
         $publicKeyCredentialSourceRepository1->saveCredential($publicKeyCredentialSource, 'test');
         return $this->asJson(['verified' => true]);
+    }
+
+    /**
+     * @param string $verifyUrl
+     * @param mixed $hcaptchaSecret
+     * @param $hcaptchaResponse
+     * @return bool
+     * @throws InvalidConfigException
+     * @throws \yii\httpclient\Exception
+     */
+    private function verifyResponse(string $verifyUrl, mixed $hcaptchaSecret, $hcaptchaResponse): bool
+    {
+        $client = new Client();
+        $response = $client->createRequest()
+            ->setMethod('POST')
+            ->setUrl($verifyUrl)
+            ->setData(['secret' => $hcaptchaSecret, 'response' => $hcaptchaResponse])
+            ->send();
+
+        if ($response->isOk) {
+            $responseData = $response->getData();
+            return isset($responseData['success']) && $responseData['success'] === true;
+        }
+
+        return false;
     }
 }

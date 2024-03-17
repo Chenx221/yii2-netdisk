@@ -1,6 +1,7 @@
 <?php
 
 use yii\db\Migration;
+use yii\db\Query;
 
 /**
  * Class m240305_042554_init_rbac
@@ -25,7 +26,7 @@ class m240305_042554_init_rbac extends Migration
 
         $auth->addChild($user,$access_home);
         // 获取所有用户
-        $users = (new \yii\db\Query())
+        $users = (new Query())
             ->select(['id', 'role'])
             ->from('user')
             ->all();

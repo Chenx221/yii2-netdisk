@@ -2,7 +2,6 @@
 
 namespace app\models;
 
-use Yii;
 use yii\db\ActiveQuery;
 use yii\db\ActiveRecord;
 
@@ -20,11 +19,11 @@ use yii\db\ActiveRecord;
  */
 class Share extends ActiveRecord
 {
-    const SCENARIO_UPDATE = 'update';
+    const string SCENARIO_UPDATE = 'update';
     /**
      * {@inheritdoc}
      */
-    public static function tableName()
+    public static function tableName(): string
     {
         return 'share';
     }
@@ -32,7 +31,7 @@ class Share extends ActiveRecord
     /**
      * {@inheritdoc}
      */
-    public function rules()
+    public function rules(): array
     {
         return [
             [['file_relative_path', 'access_code'], 'required'],
@@ -48,7 +47,7 @@ class Share extends ActiveRecord
     /**
      * {@inheritdoc}
      */
-    public function attributeLabels()
+    public function attributeLabels(): array
     {
         return [
             'share_id' => '分享ID',
@@ -65,11 +64,11 @@ class Share extends ActiveRecord
      *
      * @return ActiveQuery
      */
-    public function getSharer()
+    public function getSharer(): ActiveQuery
     {
         return $this->hasOne(User::class, ['id' => 'sharer_id']);
     }
-    public function getSharerUsername()
+    public function getSharerUsername(): ?string
     {
         return $this->sharer->username;
     }
