@@ -45,9 +45,8 @@ document.querySelector('.editable-username').addEventListener('click', function 
 });
 
 document.querySelector('#webauthn_detail').addEventListener('click', function () {
-    // $('#credentialModal').modal('show');
     $.ajax({
-        url: 'index.php?r=user%2Fcredential-list', // 替换为你的 API 路径
+        url: 'index.php?r=user%2Fcredential-list',
         method: 'GET',
         success: function(data) {
             $('#pjax-container').html(data);
@@ -94,7 +93,7 @@ elemBegin.addEventListener('click', async () => {
         throw error;
     }
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-
+    attResp.fido_name = document.getElementById('fido_name').value;
     // POST the response to the endpoint that calls
     const verificationResp = await fetch('index.php?r=user%2Fcreate-credential', {
         method: 'POST',

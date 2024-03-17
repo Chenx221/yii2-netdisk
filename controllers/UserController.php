@@ -16,6 +16,8 @@ use Webauthn\AuthenticatorAssertionResponse;
 use Webauthn\AuthenticatorAssertionResponseValidator;
 use Webauthn\AuthenticatorAttestationResponse;
 use Webauthn\AuthenticatorAttestationResponseValidator;
+use Webauthn\CeremonyStep\CeremonyStepManager;
+use Webauthn\CeremonyStep\CeremonyStepManagerFactory;
 use Webauthn\Denormalizer\WebauthnSerializerFactory;
 use Webauthn\Exception\AuthenticatorResponseVerificationException;
 use Webauthn\PublicKeyCredential;
@@ -596,7 +598,7 @@ class UserController extends Controller
     {
         if (Yii::$app->request->isPjax) {
             $publicKeyCredentialSourceRepository = $this->findCredentialModel($id);
-            if($publicKeyCredentialSourceRepository->user_id !== Yii::$app->user->id){
+            if ($publicKeyCredentialSourceRepository->user_id !== Yii::$app->user->id) {
                 Yii::$app->session->setFlash('error', '非法操作');
                 return $this->redirect('info');
             }
@@ -611,6 +613,11 @@ class UserController extends Controller
             return $this->redirect('info');
         }
     }
+
+    /*
+     * 以下WebAuthn(FIFO)验证代码已经调好了，不要乱动
+     */
+
 
     /**
      * 创建公钥凭证选项
@@ -655,6 +662,8 @@ class UserController extends Controller
     public function actionCreateCredential(): Response
     {
         $data = Yii::$app->request->getRawBody();
+        $json_decode = json_decode($data, true);
+        $fido_name = empty($json_decode['fido_name']) ? '未命名的设备' : $json_decode['fido_name'];
         $attestationStatementSupportManager = AttestationStatementSupportManager::create();
         $attestationStatementSupportManager->add(NoneAttestationStatementSupport::create());
         $webauthnSerializerFactory = new WebauthnSerializerFactory($attestationStatementSupportManager);
@@ -665,14 +674,16 @@ class UserController extends Controller
             return $this->asJson(['message' => 'Invalid response type']);
         }
 
-        // PHP Deprecated:
-        // Since web-auth/webauthn-lib 4.8.0:
-        // The parameter "$attestationStatementSupportManager" is deprecated since 4.8.0 will be removed in 5.0.0.
-        // Please set a CheckAttestationFormatIsKnownAndValid object into CeremonyStepManager object instead.
-        // in /vendor/symfony/deprecation-contracts/function.php on line 25
-        // MD, 这个问题在文档更新之前我是不会去解决的
+        // 什么时候更新开发文档?
+        $ceremonyStepManagerFactory = new CeremonyStepManagerFactory();
+        $ceremonyStepManager = $ceremonyStepManagerFactory->creationCeremony();
         $authenticatorAttestationResponseValidator = AuthenticatorAttestationResponseValidator::create(
-            $attestationStatementSupportManager
+            null,
+            null,
+            null,
+            null,
+            null,
+            $ceremonyStepManager
         );
 
         $publicKeyCredentialCreationOptions = Yii::$app->session->get('publicKeyCredentialCreationOptions');
@@ -683,7 +694,7 @@ class UserController extends Controller
                 Yii::$app->params['domain']
             );
             $publicKeyCredentialSourceRepository = new PublicKeyCredentialSourceRepository();
-            $publicKeyCredentialSourceRepository->saveCredential($publicKeyCredentialSource, 'test'); //receive source
+            $publicKeyCredentialSourceRepository->saveCredential($publicKeyCredentialSource, $fido_name); //receive source
             return $this->asJson(['verified' => true]);
         } catch (Throwable $e) {
             return $this->asJson(['message' => $e->getMessage(), 'verified' => false]);
@@ -753,7 +764,16 @@ class UserController extends Controller
         }
 
         $PKCS = $webauthnSerializerFactory->create()->deserialize($publicKeyCredentialSourceRepository1->data, PublicKeyCredentialSource::class, 'json');
-        $authenticatorAssertionResponseValidator = AuthenticatorAssertionResponseValidator::create();
+        $ceremonyStepManagerFactory = new CeremonyStepManagerFactory();
+        $ceremonyStepManager = $ceremonyStepManagerFactory->requestCeremony();
+        $authenticatorAssertionResponseValidator = AuthenticatorAssertionResponseValidator::create(
+            null,
+            null,
+            null,
+            null,
+            null,
+            $ceremonyStepManager
+        );
         $publicKeyCredentialRequestOptions = Yii::$app->session->get('publicKeyCredentialRequestOptions');
         try {
             $publicKeyCredentialSource = $authenticatorAssertionResponseValidator->check(
@@ -769,7 +789,7 @@ class UserController extends Controller
 
         // Optional, but highly recommended, you can save the credential source as it may be modified
         // during the verification process (counter may be higher).
-        $publicKeyCredentialSourceRepository1->saveCredential($publicKeyCredentialSource, 'test');
+        $publicKeyCredentialSourceRepository1->saveCredential($publicKeyCredentialSource, '',false);
         return $this->asJson(['verified' => true]);
     }
 

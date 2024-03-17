@@ -92,16 +92,19 @@ class PublicKeyCredentialSourceRepository extends ActiveRecord
      * 保存PublicKeyCredentialSource对象到数据库
      * @param PublicKeyCredentialSource $PKCS
      * @param string $name
+     * @param bool $isNewRecord
      * @return bool
      * @throws JsonException
      */
-    public function saveCredential(PublicKeyCredentialSource $PKCS,string $name): bool
+    public function saveCredential(PublicKeyCredentialSource $PKCS, string $name, bool $isNewRecord = true): bool
     {
         $jsonSerialize = $PKCS->jsonSerialize();
         $this->public_key_credential_id = $jsonSerialize['publicKeyCredentialId'];
         $publicKeyCredentialSourceJson = json_encode($jsonSerialize, JSON_THROW_ON_ERROR);
         $this->data = $publicKeyCredentialSourceJson;
-        $this->name = $name;
+        if($isNewRecord){
+            $this->name = $name;
+        }
         $this->user_id = Yii::$app->user->id;
         return $this->save();
     }
