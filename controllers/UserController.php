@@ -16,7 +16,6 @@ use Webauthn\AuthenticatorAssertionResponse;
 use Webauthn\AuthenticatorAssertionResponseValidator;
 use Webauthn\AuthenticatorAttestationResponse;
 use Webauthn\AuthenticatorAttestationResponseValidator;
-use Webauthn\CeremonyStep\CeremonyStepManager;
 use Webauthn\CeremonyStep\CeremonyStepManagerFactory;
 use Webauthn\Denormalizer\WebauthnSerializerFactory;
 use Webauthn\Exception\AuthenticatorResponseVerificationException;
@@ -63,12 +62,12 @@ class UserController extends Controller
                         ],
                         [
                             'allow' => true,
-                            'actions' => ['login', 'register', 'verify-two-factor'],
+                            'actions' => ['login', 'register', 'verify-two-factor', 'verify-assertion', 'request-assertion-options'],
                             'roles' => ['?', '@'], // everyone can access public share
                         ],
                         [
                             'allow' => true,
-                            'actions' => ['logout', 'setup-two-factor', 'change-password', 'download-recovery-codes', 'remove-two-factor', 'set-theme', 'change-name', 'create-credential-options', 'create-credential', 'request-assertion-options', 'verify-assertion', 'credential-list', 'credential-delete'],
+                            'actions' => ['logout', 'setup-two-factor', 'change-password', 'download-recovery-codes', 'remove-two-factor', 'set-theme', 'change-name', 'create-credential-options', 'create-credential', 'credential-list', 'credential-delete'],
                             'roles' => ['@'], // only logged-in user can do these ( admin included )
                         ]
                     ],
@@ -174,14 +173,16 @@ class UserController extends Controller
     }
 
     /**
-     * Displays the login page.
-     * visit via https://devs.chenx221.cyou:8081/index.php?r=user%2Flogin
+     * 显示登录页并接收登录请求
+     * GET时显示登录页，如果带有username参数则直接到输入密码页
+     * POST时验证用户名密码，如果用户启用了二步验证则重定向到二步验证页面
      *
+     * @param string|null $username
      * @return string|Response
      * @throws InvalidConfigException
      * @throws \yii\httpclient\Exception
      */
-    public function actionLogin(): Response|string
+    public function actionLogin(string $username = null): Response|string
     {
         if (!Yii::$app->user->isGuest) {
             Yii::$app->session->setFlash('error', '账户已登录，请不要重复登录');
@@ -190,36 +191,69 @@ class UserController extends Controller
 
         $model = new User(['scenario' => 'login']);
 
-        if ($model->load(Yii::$app->request->post()) && $model->validate()) {
-            // 根据 verifyProvider 的值选择使用哪种验证码服务
-            list($verifyProvider, $captchaResponse, $isCaptchaValid) = $this->checkCaptcha();
-
-            if (($captchaResponse !== null && $isCaptchaValid) || ($verifyProvider === 'None')) {
-                // 验证用户名和密码
+        if (($model->load(Yii::$app->request->post()) && $model->validate()) | $username !== null) {
+            if ($model->password === null) {
+                if ($username !== null) {
+                    $model->username = $username;
+                }
                 $user = User::findOne(['username' => $model->username]);
-                if ($user !== null && $user->validatePassword($model->password)) {
-                    // 如果用户启用了二步验证，将用户重定向到二步验证页面
-                    if ($user->is_otp_enabled) {
-                        Yii::$app->session->set('login_verification', ['id' => $user->id]);
-                        return $this->redirect(['user/verify-two-factor']);
-                    } else {
-                        //login without 2FA
-                        $user->last_login = date('Y-m-d H:i:s');
-                        $user->last_login_ip = Yii::$app->request->userIP;
-                        if (!$user->save(false)) {
-                            Yii::$app->session->setFlash('error', '登陆成功，但出现了内部错误');
-                        }
-                        Yii::$app->user->login($user, $model->rememberMe ? 3600 * 24 * 30 : 0);
-                        return $this->goHome();
-                    }
-                } else {
-                    Yii::$app->session->setFlash('error', '用户名密码错误或账户已禁用');
+                if ($user === null) {
+                    Yii::$app->session->setFlash('error', '用户不存在');
+                    return $this->render('login', [
+                        'model' => $model,
+                    ]);
+                } elseif ($user->status === 0) {
+                    Yii::$app->session->setFlash('error', '用户已停用，请联系管理员获取支持');
+                    return $this->render('login', [
+                        'model' => $model,
+                    ]);
+                }
+                $publicKeyCredentialSourceRepository = new PublicKeyCredentialSourceRepository();
+                $fidoCredentials = $publicKeyCredentialSourceRepository->findAllForUserEntity($user);
+                if (empty($fidoCredentials) | $username !== null) { //未设置FIDO
+                    return $this->render('_login1', [
+                        'model' => $model,
+                    ]);
+                } else { //已设置FIDO
+                    return $this->render('_login2', [
+                        'model' => $model,
+                    ]);
                 }
             } else {
-                Yii::$app->session->setFlash('error', '请等待验证码加载并完成验证');
+                // 根据 verifyProvider 的值选择使用哪种验证码服务
+                list($verifyProvider, $captchaResponse, $isCaptchaValid) = $this->checkCaptcha();
+
+                if (($captchaResponse !== null && $isCaptchaValid) || ($verifyProvider === 'None')) {
+                    // 验证用户名和密码
+                    $user = User::findOne(['username' => $model->username]);
+                    if ($user !== null && $user->validatePassword($model->password)) {
+                        // 如果用户启用了二步验证，将用户重定向到二步验证页面
+                        if ($user->is_otp_enabled) {
+                            Yii::$app->session->set('login_verification', ['id' => $user->id]);
+                            return $this->redirect(['user/verify-two-factor']);
+                        } else {
+                            //login without 2FA
+                            $user->last_login = date('Y-m-d H:i:s');
+                            $user->last_login_ip = Yii::$app->request->userIP;
+                            if (!$user->save(false)) {
+                                Yii::$app->session->setFlash('error', '登陆成功，但出现了内部错误');
+                            }
+                            Yii::$app->user->login($user, $model->rememberMe ? 3600 * 24 * 30 : 0);
+                            return $this->goHome();
+                        }
+                    } else {
+                        Yii::$app->session->setFlash('error', '用户名密码错误或账户已禁用');
+                    }
+                } else {
+                    Yii::$app->session->setFlash('error', '请等待验证码加载并完成验证');
+                }
             }
+        } else {
+            return $this->render('login', [
+                'model' => $model,
+            ]);
         }
-        return $this->render('login', [
+        return $this->render('_login1', [
             'model' => $model,
         ]);
     }
@@ -703,13 +737,24 @@ class UserController extends Controller
 
     /**
      * 请求验证选项
+     * @param string|null $username
      * @return Response
      * @throws RandomException
      */
-    public function actionRequestAssertionOptions(): Response
+    public function actionRequestAssertionOptions(string $username = null): Response
     {
-        $user = Yii::$app->user->identity;
-
+        $user = null;
+        if ($username !== null) {
+            $user = User::findOne(['username' => $username]);
+            if ($user === null) {
+                return $this->asJson(['message' => 'User not found']);
+            }
+        } else {
+            $user = Yii::$app->user->identity;
+        }
+        if ($user === null) {
+            return $this->asJson(['message' => 'Guest? Sure?']);
+        }
         $publicKeyCredentialSourceRepository = new PublicKeyCredentialSourceRepository();
         $registeredAuthenticators = $publicKeyCredentialSourceRepository->findAllForUserEntity($user);
 
@@ -736,10 +781,12 @@ class UserController extends Controller
     /**
      * 验证断言
      * 用于已登录情况下验证fifo设置是否成功
+     * @param int $is_login
+     * @param int $remember
      * @return Response
      * @throws JsonException
      */
-    public function actionVerifyAssertion(): Response
+    public function actionVerifyAssertion(int $is_login = 0,int $remember = 0): Response
     {
         $data = Yii::$app->request->getRawBody();
 
@@ -787,9 +834,19 @@ class UserController extends Controller
             return $this->asJson(['message' => $e->getMessage(), 'verified' => false]);
         }
 
+
+        if ($is_login === 1) {
+            $user = User::findOne(['id' => $publicKeyCredentialSourceRepository1->user_id]);
+            $user->last_login = date('Y-m-d H:i:s');
+            $user->last_login_ip = Yii::$app->request->userIP;
+            if (!$user->save(false)) {
+                Yii::$app->session->setFlash('error', '登陆成功，但出现了内部错误');
+            }
+            Yii::$app->user->login($user, $remember===1 ? 3600 * 24 * 30 : 0);
+        }
         // Optional, but highly recommended, you can save the credential source as it may be modified
         // during the verification process (counter may be higher).
-        $publicKeyCredentialSourceRepository1->saveCredential($publicKeyCredentialSource, '',false);
+        $publicKeyCredentialSourceRepository1->saveCredential($publicKeyCredentialSource, '', false);
         return $this->asJson(['verified' => true]);
     }
 
