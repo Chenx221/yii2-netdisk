@@ -17,6 +17,9 @@ class FileSizeHelper
      */
     public static function getDirectorySize(string $directory): int
     {
+        if (!is_dir($directory)) {
+            return 0;
+        }
         $size = 0;
         $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directory));
         foreach ($files as $file) {
