@@ -276,8 +276,8 @@ $darkMode = Yii::$app->user->identity->dark_mode;
                                 <i class="fa-solid fa-key"></i>
                                 Passwordless验证 (Webauthn) (BETA)
                             </h5>
-                            <div class="input-group" id="totp_area" style="width: 50%">
-                                <input type="text" class="form-control" placeholder="在这里为新的FIDO设备命名" aria-label="在这里为新的FIDO设备命名" name="fido_name" id="fido_name">
+                            <div class="input-group" id="totp_area">
+                                <input type="text" class="form-control" placeholder="在这里为新的FIDO设备命名" aria-label="在这里为新的FIDO设备命名" name="fido_name" id="fido_name" style="min-width: 220px;max-width: 300px">
                                 <?= Html::button('添加', ['id' => "webauthn_add", 'type' => 'button', 'class' => 'btn btn-primary btn-sm']) ?>
                                 <?= Html::button('测试', ['id' => "webauthn_verify", 'type' => 'button', 'class' => 'btn btn-primary btn-sm']) ?>
                                 <?= Html::button('管理', ['id' => "webauthn_detail", 'type' => 'button', 'class' => 'btn btn-primary btn-sm']) ?>
