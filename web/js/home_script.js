@@ -671,3 +671,43 @@ $(document).on('click', '.create-collection-btn', function () {
 
 const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]')
 const popoverList = [...popoverTriggerList].map(popoverTriggerEl => new bootstrap.Popover(popoverTriggerEl))
+
+$(document).on('click', '#btnSearch', function () {
+    var keyword = $('#filesearch-keyword').val();
+    var directory = $('#filesearch-directory').val();
+    $('#search-result').html('');
+    $.ajax({
+        type: "POST",
+        url: "index.php?r=home%2Fsearch",
+        data: {keyword: keyword, directory: directory},
+        success: function (response) {
+            if (response.status === 'success') {
+                var table = '<table class="table"><tr><th style="display: table-cell;">文件/文件夹名</th><th>位置</th></tr>';
+                $.each(response.data, function(index, item) {
+                    let path = item.relativePath;
+                    let correctedPath = path.replace(/\\/g, '/');
+                    table += '<tr><td style="display: table-cell;"> <i class="' + item.type+'"></i>  '+item.name + '</td>' + '<td><a style="text-decoration: underline;" href="index.php?r=home%2Findex&directory=' + correctedPath + '">' + item.relativePath + '</a></td></tr>';
+                });
+                table += '</table>';
+                $('#search-result').html(table);
+            } else if (response.status === 'error') {
+                $('#search-result').html(response.message);
+            } else {
+                $('#search-result').html('An error occurred while processing your request.');
+            }
+        },
+        error: function () {
+            $('#search-result').html('An error occurred while processing your request.');
+        },
+        beforeSend: function() {
+            $('#loading').show();
+        },
+        complete: function() {
+            $('#loading').hide();
+        },
+    });
+});
+$('#searchModal').on('hidden.bs.modal', function () {
+    $('#search-result').html('');
+    $('#filesearch-keyword').val('');
+});

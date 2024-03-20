@@ -13,6 +13,7 @@ use app\assets\AceAsset;
 use app\assets\PlyrAsset;
 use app\assets\ViewerJsAsset;
 use app\models\CollectionTasks;
+use app\models\FileSearch;
 use app\models\NewFolderForm;
 use app\models\RenameForm;
 use app\models\Share;
@@ -78,8 +79,7 @@ $this->registerCssFile('@web/css/home_style.css');
                     <li><?= Html::button('上传文件夹', ['class' => 'dropdown-item folder-upload-btn']) ?></li>
                 </ul>
             </div>
-            <!--TODO:文件搜索功能-->
-            <button type="button" class="btn btn-primary">
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#searchModal">
                 <i class="fa-solid fa-magnifying-glass"></i>
             </button>
             <button type="button" class="btn btn-primary" data-bs-toggle="popover" data-bs-title="容量使用情况"
@@ -305,6 +305,35 @@ echo str_repeat('&nbsp;', 5);  // 添加5个空格
 echo Html::submitButton('提交', ['class' => 'btn btn-primary']);
 
 ActiveForm::end();
+Modal::end();
+
+Modal::begin([
+    'title' => '<h4>搜素</h4>',
+    'id' => 'searchModal',
+    'size' => 'modal-xl',
+]);
+echo <<<EOL
+<div class="input-group mb-3">
+    <input type="text" id="filesearch-keyword" class="form-control" name="keyword" value="" minlength="3" placeholder="在这里输入搜素关键词(长度要求不小于3位)" aria-label="keyword" aria-required="true" required>
+    <input type="hidden" id="filesearch-directory" class="form-control" name="directory" value="$directory" readonly>
+    <button class="btn btn-outline-primary" type="button" id="btnSearch">搜素</button>
+</div>
+<div id="loading" style="display: none">
+    <h5 class="card-title placeholder-glow">
+        <span class="placeholder col-8"></span>
+    </h5>
+    <p class="card-text placeholder-glow">
+        <span class="placeholder col-7"></span>
+        <span class="placeholder col-4"></span>
+        <span class="placeholder col-4"></span>
+        <span class="placeholder col-6"></span>
+        <span class="placeholder col-8"></span>
+    </p>
+</div>
+<div id="search-result">
+
+</div>
+EOL;
 Modal::end();
 
 Modal::begin([

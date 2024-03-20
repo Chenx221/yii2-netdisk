@@ -40,7 +40,7 @@ class HomeController extends Controller
                     'rules' => [
                         [
                             'allow' => true,
-                            'actions' => ['index', 'download', 'preview', 'rename', 'delete', 'upload', 'new-folder', 'download-folder', 'multi-ff-zip-dl', 'zip', 'unzip', 'paste'],
+                            'actions' => ['index', 'download', 'preview', 'rename', 'delete', 'upload', 'new-folder', 'download-folder', 'multi-ff-zip-dl', 'zip', 'unzip', 'paste', 'search'],
                             'roles' => ['user'],
                         ],
                     ],
@@ -60,6 +60,7 @@ class HomeController extends Controller
                         'zip' => ['POST'], //剩余空间检查√
                         'unzip' => ['POST'], //剩余空间检查√
                         'paste' => ['POST'], //剩余空间检查√
+                        'search' => ['POST']
                     ],
                 ],
             ]
@@ -649,7 +650,7 @@ class HomeController extends Controller
                     'directory' => pathinfo($relativePath, PATHINFO_FILENAME) . '_' . $now_time,
                     'parentDirectory' => dirname($relativePath),
                 ];
-            }else{
+            } else {
                 Yii::$app->session->setFlash('success', '解压成功');
                 return [
                     'status' => 200,
@@ -876,5 +877,44 @@ class HomeController extends Controller
             'crc32b' => strtoupper($crc32b),
             'sha256' => strtoupper($sha256),
         ];
+    }
+
+    /**
+     * @throws NotFoundHttpException
+     */
+    public function actionSearch(): Response
+    {
+        if (Yii::$app->request->isAjax) {
+            $directory = empty(Yii::$app->request->post('directory'))?'.':Yii::$app->request->post('directory');
+            $keyword = Yii::$app->request->post('keyword');
+            if ($keyword == null) {
+                return $this->asJson(['status' => 'error', 'message' => '关键词不能为空']);
+            }
+            if (strlen($keyword) < 3) {
+                return $this->asJson(['status' => 'error', 'message' => '关键词长度不得小于3']);
+            }
+            $absolutePath = Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . Yii::$app->user->id . '/' . $directory;
+            // check if the directory is valid & exists
+            if (!preg_match($this->pattern, $directory) || str_contains($directory, '..') || !is_dir($absolutePath)) {
+                return $this->asJson(['status' => 'error', 'message' => '无效路径']);
+            }
+
+            $directoryIterator = new RecursiveDirectoryIterator($absolutePath);
+            $iterator = new RecursiveIteratorIterator($directoryIterator);
+
+            $results = [];
+            foreach ($iterator as $file) {
+                if (str_contains($file->getFilename(), $keyword)) {
+                    $results[] = [
+                        'name' => $file->getFilename(),
+                        'type' => FileTypeDetector::detect($file->getPathname()),
+                        'relativePath' => $directory.str_replace($absolutePath, '', $file->getPath())
+                    ];
+                }
+            }
+
+            return $this->asJson(['status' => 'success', 'data' => $results]);
+        }
+        return $this->asJson(['status' => 'error', 'message' => '非法请求']);
     }
 }
