@@ -13,7 +13,6 @@ use app\assets\AceAsset;
 use app\assets\PlyrAsset;
 use app\assets\ViewerJsAsset;
 use app\models\CollectionTasks;
-use app\models\FileSearch;
 use app\models\NewFolderForm;
 use app\models\RenameForm;
 use app\models\Share;
