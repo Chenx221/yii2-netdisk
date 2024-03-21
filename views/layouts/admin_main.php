@@ -1,5 +1,5 @@
 <?php
-//USER LAYOUT
+
 /** @var yii\web\View $this */
 
 /** @var string $content */
@@ -24,7 +24,7 @@ $darkMode = Yii::$app->user->isGuest ? 0 : Yii::$app->user->identity->dark_mode;
 ?>
 <?php $this->beginPage() ?>
 <!DOCTYPE html>
-<html lang="<?= Yii::$app->language ?>" class="h-100" <?= $darkMode===1?'data-bs-theme="dark"':''?> >
+<html lang="<?= Yii::$app->language ?>" class="h-100" <?= $darkMode === 1 ? 'data-bs-theme="dark"' : '' ?> >
 <head>
     <title><?= Html::encode($this->title) ?></title>
     <?php $this->head() ?>
@@ -43,21 +43,18 @@ $darkMode = Yii::$app->user->isGuest ? 0 : Yii::$app->user->identity->dark_mode;
         'options' => ['class' => 'navbar-nav'],
         'items' => [
             ['label' => '首页', 'url' => ['/site/index']],
-            ['label' => '我的文件', 'url' => ['/home/index']],
-            ['label' => '文件保险箱', 'url' => ['/vault/index']],
-            ['label' => '分享管理', 'url' => ['/share/index']],
-            ['label' => '文件收集', 'url' => ['/collection/index']],
-            ['label' => '个人设置', 'url' => ['/user/info']],
-            Yii::$app->user->isGuest
-                ? ['label' => '登录', 'url' => ['/user/login']]
-                : '<li class="nav-item">'
-                . Html::beginForm(['/user/logout'])
-                . Html::submitButton(
-                    'Logout (' . Yii::$app->user->identity->username . ')',
-                    ['class' => 'nav-link btn btn-link logout']
-                )
-                . Html::endForm()
-                . '</li>'
+            ['label' => '管理面板', 'url' => ['/admin/index']],
+            ['label' => '系统管理', 'url' => ['/admin/system']],
+            ['label' => '用户管理', 'url' => ['/admin/user']],
+            ['label' => '个人设置', 'url' => ['/admin/info']],
+            '<li class="nav-item">'
+            . Html::beginForm(['/user/logout'])
+            . Html::submitButton(
+                'Logout (' . Yii::$app->user->identity->username . ')',
+                ['class' => 'nav-link btn btn-link logout']
+            )
+            . Html::endForm()
+            . '</li>'
         ]
     ]);
     NavBar::end();
@@ -90,9 +87,9 @@ $darkMode = Yii::$app->user->isGuest ? 0 : Yii::$app->user->identity->dark_mode;
 </body>
 </html>
 <?php
-if($darkMode===2){
+if ($darkMode === 2) {
     $this->registerJsFile('@web/js/darkmode_auto.js', ['position' => View::POS_BEGIN]);
-}else if ($darkMode===1){
+} else if ($darkMode === 1) {
     $this->registerJsFile('@web/js/darkmode.js', ['position' => View::POS_BEGIN]);
 }
 ?>
