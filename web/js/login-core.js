@@ -35,7 +35,7 @@ elemBegin_v.addEventListener('click', async () => {
         elemSuccess.innerHTML = '登录成功！1s后跳转到首页';
         elemSuccess.parentElement.hidden = false;
         setTimeout(() => {
-            window.location.href = 'index.php';
+            window.location.href = verificationJSON.redirectTo;
         }, 1000);
 
     } else {
