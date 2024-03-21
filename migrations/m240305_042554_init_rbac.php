@@ -20,11 +20,6 @@ class m240305_042554_init_rbac extends Migration
         $auth->add($user);
         $auth->add($admin);
 
-        $access_home = $auth->createPermission('accessHome');
-        $access_home->description = '访问文件管理';
-        $auth->add($access_home);
-
-        $auth->addChild($user,$access_home);
         // 获取所有用户
         $users = (new Query())
             ->select(['id', 'role'])
@@ -43,7 +38,7 @@ class m240305_042554_init_rbac extends Migration
     /**
      * {@inheritdoc}
      */
-    public function safeDown()
+    public function safeDown(): void
     {
         $auth = Yii::$app->authManager;
 
