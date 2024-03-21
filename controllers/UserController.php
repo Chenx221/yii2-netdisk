@@ -99,6 +99,19 @@ class UserController extends Controller
         );
     }
 
+    public function init(): void
+    {
+        parent::init();
+
+        if (Yii::$app->user->can('admin')) {
+            $this->layout = 'admin_main';
+        } elseif (Yii::$app->user->isGuest) {
+            $this->layout = 'guest_main';
+        } else {
+            $this->layout = 'main';
+        }
+    }
+
     /**
      * 删除账户(仅自身)
      * @return Response
@@ -239,7 +252,13 @@ class UserController extends Controller
                                 Yii::$app->session->setFlash('error', '登陆成功，但出现了内部错误');
                             }
                             Yii::$app->user->login($user, $model->rememberMe ? 3600 * 24 * 30 : 0);
-                            return $this->goHome();
+                            // user to home page, admin to admin/index
+                            if (Yii::$app->user->can('admin')) {
+                                return $this->redirect(['admin/index']);
+                            } else {
+                                return $this->goHome();
+                            }
+
                         }
                     } else {
                         Yii::$app->session->setFlash('error', '用户名密码错误或账户已禁用');
@@ -283,7 +302,11 @@ class UserController extends Controller
                     }
                     Yii::$app->user->login($user, $model->rememberMe ? 3600 * 24 * 30 : 0);
                     Yii::$app->session->remove('login_verification');
-                    return $this->goHome();
+                    if (Yii::$app->user->can('admin')) {
+                        return $this->redirect(['admin/index']);
+                    } else {
+                        return $this->goHome();
+                    }
                 } else {
                     Yii::$app->session->setFlash('error', '二步验证代码错误');
                 }
@@ -301,7 +324,11 @@ class UserController extends Controller
                     Yii::$app->session->setFlash('success', '登陆成功，但请注意已经使用的恢复代码已失效');
                     Yii::$app->user->login($user, $model->rememberMe ? 3600 * 24 * 30 : 0);
                     Yii::$app->session->remove('login_verification');
-                    return $this->goHome();
+                    if (Yii::$app->user->can('admin')) {
+                        return $this->redirect(['admin/index']);
+                    } else {
+                        return $this->goHome();
+                    }
                 } else {
                     Yii::$app->session->setFlash('error', '恢复代码错误');
                 }
@@ -366,6 +393,7 @@ class UserController extends Controller
     public function actionLogout(): Response
     {
         Yii::$app->user->logout();
+        Yii::$app->session->setFlash('success', '已登出');
         return $this->goHome();
     }
 
@@ -392,7 +420,7 @@ class UserController extends Controller
                 $model->password = Yii::$app->security->generatePasswordHash($raw_password);
                 $model->auth_key = Yii::$app->security->generateRandomString();
                 $model->created_at = date('Y-m-d H:i:s');
-                $model->role = 'user';
+                $model->role = 'user'; // 管理员只能通过现有管理员操作添加
                 $model->name = $model->username; //用户默认昵称为用户名，后期可以修改
                 if ($model->save(false)) { // save without validation
                     $userFolder = Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . $model->id;
@@ -786,7 +814,7 @@ class UserController extends Controller
      * @return Response
      * @throws JsonException
      */
-    public function actionVerifyAssertion(int $is_login = 0,int $remember = 0): Response
+    public function actionVerifyAssertion(int $is_login = 0, int $remember = 0): Response
     {
         $data = Yii::$app->request->getRawBody();
 
@@ -842,7 +870,12 @@ class UserController extends Controller
             if (!$user->save(false)) {
                 Yii::$app->session->setFlash('error', '登陆成功，但出现了内部错误');
             }
-            Yii::$app->user->login($user, $remember===1 ? 3600 * 24 * 30 : 0);
+            Yii::$app->user->login($user, $remember === 1 ? 3600 * 24 * 30 : 0);
+            $publicKeyCredentialSourceRepository1->saveCredential($publicKeyCredentialSource, '', false);
+            if(Yii::$app->user->can('admin')){
+                return $this->asJson(['verified' => true,'redirectTo' => 'index.php?r=admin%2Findex']);
+            }
+            return $this->asJson(['verified' => true,'redirectTo' => 'index.php']);
         }
         // Optional, but highly recommended, you can save the credential source as it may be modified
         // during the verification process (counter may be higher).

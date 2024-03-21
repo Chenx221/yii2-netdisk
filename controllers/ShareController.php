@@ -60,7 +60,18 @@ class ShareController extends Controller
             ]
         );
     }
+    public function init(): void
+    {
+        parent::init();
 
+        if (Yii::$app->user->can('admin')) {
+            $this->layout = 'admin_main';
+        }elseif (Yii::$app->user->isGuest) {
+            $this->layout = 'guest_main';
+        } else {
+            $this->layout = 'main';
+        }
+    }
     /**
      * Lists all Share models.
      *
