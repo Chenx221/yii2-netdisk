@@ -16,8 +16,8 @@ class UserSearch extends User
     public function rules(): array
     {
         return [
-            [['id', 'status'], 'integer'],
-            [['username', 'password', 'auth_key', 'email'], 'safe'],
+            [['id', 'status', 'is_encryption_enabled', 'is_otp_enabled', 'storage_limit', 'dark_mode'], 'integer'],
+            [['username', 'name', 'password', 'auth_key', 'email', 'created_at', 'last_login', 'last_login_ip', 'bio', 'role', 'encryption_key', 'otp_secret', 'recovery_codes', 'vault_secret', 'vault_salt'], 'safe'],
         ];
     }
 
@@ -59,12 +59,27 @@ class UserSearch extends User
         $query->andFilterWhere([
             'id' => $this->id,
             'status' => $this->status,
+            'created_at' => $this->created_at,
+            'last_login' => $this->last_login,
+            'is_encryption_enabled' => $this->is_encryption_enabled,
+            'is_otp_enabled' => $this->is_otp_enabled,
+            'storage_limit' => $this->storage_limit,
+            'dark_mode' => $this->dark_mode,
         ]);
 
         $query->andFilterWhere(['like', 'username', $this->username])
+            ->andFilterWhere(['like', 'name', $this->name])
             ->andFilterWhere(['like', 'password', $this->password])
             ->andFilterWhere(['like', 'auth_key', $this->auth_key])
-            ->andFilterWhere(['like', 'email', $this->email]);
+            ->andFilterWhere(['like', 'email', $this->email])
+            ->andFilterWhere(['like', 'last_login_ip', $this->last_login_ip])
+            ->andFilterWhere(['like', 'bio', $this->bio])
+            ->andFilterWhere(['like', 'role', $this->role])
+            ->andFilterWhere(['like', 'encryption_key', $this->encryption_key])
+            ->andFilterWhere(['like', 'otp_secret', $this->otp_secret])
+            ->andFilterWhere(['like', 'recovery_codes', $this->recovery_codes])
+            ->andFilterWhere(['like', 'vault_secret', $this->vault_secret])
+            ->andFilterWhere(['like', 'vault_salt', $this->vault_salt]);
 
         return $dataProvider;
     }
