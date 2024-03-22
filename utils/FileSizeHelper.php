@@ -73,7 +73,20 @@ class FileSizeHelper
         $userHomeDir = Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . $user_id . '.secret';
         return self::getDirectorySize($userHomeDir);
     }
-
+    public static function getUserAllDirSize(int $user_id = null): int
+    {
+        if ($user_id === null) {
+            $user_id = Yii::$app->user->id;
+        }
+        return self::getUserHomeDirSize($user_id) + self::getUserVaultDirSize($user_id);
+    }
+    public static function getFormatUserAllDirSize(int $user_id = null): string
+    {
+        if ($user_id === null) {
+            $user_id = Yii::$app->user->id;
+        }
+        return self::formatBytes(self::getUserAllDirSize($user_id));
+    }
     /**
      * @param $bytes
      * @param $precision

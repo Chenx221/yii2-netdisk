@@ -15,15 +15,16 @@ class IPLocation
     public function __construct()
     {
         $status = Yii::$app->params['enableIpInfo'];
-        if($status){
+        if ($status) {
             $this->is_disabled = false;
             $this->client = new IPinfo(Yii::$app->params['ipinfoToken']);
         }
     }
+
     public static function getDetails(string $ip): ?Details
     {
         $instance = new self();
-        if($instance->is_disabled){
+        if ($instance->is_disabled) {
             return null;
         }
         try {
@@ -39,6 +40,12 @@ class IPLocation
              */
             return null;
         }
+    }
+
+    public static function getFormatDetails(string $ip): string
+    {
+        $details = self::getDetails($ip);
+        return $ip.' (' . ($details->bogon ? ('Bogon IP') : ($details->city . ', ' . $details->country)) . ')';
     }
 
 }
