@@ -4,6 +4,7 @@ namespace app\controllers;
 
 use app\models\User;
 use app\models\UserSearch;
+use app\utils\AdminSword;
 use Throwable;
 use Yii;
 use yii\db\StaleObjectException;
@@ -165,8 +166,6 @@ class AdminController extends Controller
     }
 
     /**
-     * Deletes an existing User model.
-     * If deletion is successful, the browser will be redirected to the 'index' page.
      * @param int $id ID
      * @return Response
      * @throws NotFoundHttpException if the model cannot be found
@@ -175,9 +174,19 @@ class AdminController extends Controller
      */
     public function actionUserDelete(int $id): Response
     {
-        $this->findModel($id)->delete();
-
-        return $this->redirect(['user']);
+        $user = $this->findModel($id);
+        $alreadyDisabled = $user->status == 0;
+        $str = $alreadyDisabled ? '启用' : '禁用';
+        if ($user->deleteAccount($alreadyDisabled)) {
+            $logout_result = '';
+            if(!$alreadyDisabled){
+                $logout_result = AdminSword::forceUserLogout($id);
+            }
+            Yii::$app->session->setFlash('success', '账户'.$str.'成功,'.$logout_result);
+        } else {
+            Yii::$app->session->setFlash('error', '账户'.$str.'失败');
+        }
+        return $this->redirect(['user-view', 'id' => $id]);
     }
 
     /**

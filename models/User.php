@@ -277,18 +277,23 @@ class User extends ActiveRecord implements IdentityInterface
         return $url;
     }
 
-    public function deleteAccount(): false|int
-    {
-        // 设置用户状态为禁用
-        $this->status = 0;
 
-        // 保存用户模型
-        if (!$this->save()) {
+    /**
+     * 名为删号
+     * 实为禁用/启用账户
+     * @param bool $rev 反转
+     * @return false|int
+     */
+    public function deleteAccount(bool $rev = false): false|int
+    {
+        $this->status = $rev ? 1 : 0;
+
+        if (!$this->save(false)) {
             return false; // something wrong
         }
-        // 更新与用户相关的所有 CollectionTasks 和 Share 记录的状态为禁用
-        CollectionTasks::updateAll(['status' => 0], ['user_id' => $this->id]);
-        Share::updateAll(['status' => 0], ['sharer_id' => $this->id]);
+        // 更新与用户相关的所有 CollectionTasks 和 Share 记录的状态
+        CollectionTasks::updateAll(['status' => $rev ? 1 : 0], ['user_id' => $this->id]);
+        Share::updateAll(['status' => $rev ? 1 : 0], ['sharer_id' => $this->id]);
 
         return true;
     }

@@ -7,23 +7,28 @@ use yii\widgets\DetailView;
 /** @var yii\web\View $this */
 /** @var app\models\User $model */
 
-$this->title = $model->name;
-$this->params['breadcrumbs'][] = ['label' => 'Users', 'url' => ['user']];
+$this->title = '用户ID: '.$model->id;
+$this->params['breadcrumbs'][] = ['label' => '用户管理', 'url' => ['user']];
 $this->params['breadcrumbs'][] = $this->title;
+$alreadyDisabled = $model->status == 0;
+$isCurrentUser = Yii::$app->user->id == $model->id;
+$str = $alreadyDisabled ? '启用' : '禁用';
 YiiAsset::register($this);
 ?>
 <div class="user-view">
 
-    <h1><?= Html::encode($this->title) ?></h1>
+    <h1>用户详情</h1>
 
     <p>
-        <?= Html::a('Update', ['user-update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
-        <?= Html::a('Delete', ['user-delete', 'id' => $model->id], [
+        <?= Html::a('修改信息', ['user-update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
+        <?= Html::a($str.'用户', ['user-delete', 'id' => $model->id], [
             'class' => 'btn btn-danger',
             'data' => [
-                'confirm' => 'Are you sure you want to delete this item?',
+                'confirm' => '你确定要'.$str.'这个用户吗?',
                 'method' => 'post',
             ],
+            'disabled' => $isCurrentUser,
+            'title'=> $isCurrentUser ? '不能'.$str.'自己的账户' : '点击'.$str.'用户',
         ]) ?>
     </p>
 
