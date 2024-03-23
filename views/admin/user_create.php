@@ -5,7 +5,7 @@ use yii\helpers\Html;
 /** @var yii\web\View $this */
 /** @var app\models\User $model */
 
-$this->title = '创建用户';
+$this->title = '添加用户';
 $this->params['breadcrumbs'][] = ['label' => '用户管理', 'url' => ['user']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>

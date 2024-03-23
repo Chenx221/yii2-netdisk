@@ -5,6 +5,7 @@ namespace app\controllers;
 use app\models\User;
 use app\models\UserSearch;
 use Throwable;
+use Yii;
 use yii\db\StaleObjectException;
 use yii\filters\AccessControl;
 use yii\filters\VerbFilter;
@@ -107,16 +108,37 @@ class AdminController extends Controller
      */
     public function actionUserCreate(): Response|string
     {
-        $model = new User();
+        $model = new User(['scenario' => 'addUser']);
 
         if ($this->request->isPost) {
-            if ($model->load($this->request->post()) && $model->save()) {
-                return $this->redirect(['user_view', 'id' => $model->id]);
+            if ($model->load($this->request->post()) && $model->validate()) {
+                $raw_password = $model->password;
+                $model->password = Yii::$app->security->generatePasswordHash($raw_password);
+                $model->auth_key = Yii::$app->security->generateRandomString();
+                $model->role = $this->request->post('User')['role'];
+                $model->created_at = date('Y-m-d H:i:s');
+                $model->name = $model->username; //用户默认昵称为用户名，后期可以修改
+                if ($model->save(false)) { // save without validation
+                    if($model->role == 'user'){
+                        $userFolder = Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . $model->id;
+                        if (!is_dir($userFolder)) {
+                            mkdir($userFolder);
+                        }
+                        $secretFolder = Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . $model->id . '.secret';
+                        if (!is_dir($secretFolder)) {
+                            mkdir($secretFolder);
+                        }
+                    }
+                    Yii::$app->session->setFlash('success', '用户添加成功');
+                    return $this->redirect(['user-view', 'id' => $model->id]);
+                } else {
+                    $model->loadDefaultValues();
+                    $model->password = $raw_password;
+                    Yii::$app->session->setFlash('error', '用户添加失败');
+                }
             }
-        } else {
-            $model->loadDefaultValues();
         }
-
+        $model->loadDefaultValues(true);
         return $this->render('user_create', [
             'model' => $model,
         ]);

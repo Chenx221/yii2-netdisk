@@ -1,5 +1,6 @@
 <?php
 
+use app\models\PublicKeyCredentialSourceRepository;
 use app\models\User;
 use app\utils\FileSizeHelper;
 use app\utils\IPLocation;
@@ -13,6 +14,7 @@ use yii\widgets\Pjax;
 /** @var app\models\UserSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
 $IPLocation = new IPLocation();
+$PKCSR = new PublicKeyCredentialSourceRepository();
 $this->title = '用户管理';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
@@ -21,7 +23,7 @@ $this->params['breadcrumbs'][] = $this->title;
     <h1><?= Html::encode($this->title) ?></h1>
 
     <p>
-        <?= Html::a('创建用户', ['user-create'], ['class' => 'btn btn-success']) ?>
+        <?= Html::a('添加用户', ['user-create'], ['class' => 'btn btn-success']) ?>
     </p>
 
     <?php Pjax::begin(); ?>
@@ -30,7 +32,7 @@ $this->params['breadcrumbs'][] = $this->title;
             'dataProvider' => $dataProvider,
             'filterModel' => $searchModel,
             'columns' => [
-                ['class' => 'yii\grid\CheckboxColumn'],
+//                ['class' => 'yii\grid\CheckboxColumn'],
                 ['attribute' => 'id', 'label' => 'ID'],
                 ['attribute' => 'username', 'label' => '用户名'],
                 ['attribute' => 'name', 'label' => '昵称'],
@@ -53,6 +55,14 @@ $this->params['breadcrumbs'][] = $this->title;
                 ['attribute' => 'is_otp_enabled', 'label' => '多因素登录', 'value' => function ($model) {
                     return $model->is_otp_enabled == 0 ? '禁用' : '启用';
                 }, 'filter' => ['0' => '禁用', '1' => '启用']],
+                ['label' => 'Passkey', 'value' => function ($Model) use ($PKCSR) {
+                    $UserEntitys = $PKCSR->findAllForUserEntity($Model);
+                    if (empty($UserEntitys)) {
+                        return '禁用';
+                    }else{
+                        return '启用';
+                    }
+                }],
                 ['attribute' => 'storage_limit', 'label' => '空间使用情况', 'value' => function ($model) {
                     if ($model->role == 'user') {
                         return FileSizeHelper::getFormatUserAllDirSize($model->id) . ' / ' . FileSizeHelper::formatMegaBytes($model->storage_limit);
