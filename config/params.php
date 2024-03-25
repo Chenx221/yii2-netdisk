@@ -6,6 +6,7 @@ return [
     'adminEmail' => 'admin@example.com',
     'senderEmail' => 'noreply@example.com',
     'senderName' => 'Example.com mailer',
+    'bsVersion' => '5.x',
     // data directory is used to store uploaded files by the user (e.g. root dir for every user's home)
     'domain' => $_ENV['DOMAIN']??null,
     'dataDirectory' => '@app/data',
