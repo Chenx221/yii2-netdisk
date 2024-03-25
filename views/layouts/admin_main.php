@@ -21,6 +21,7 @@ $this->registerMetaTag(['name' => 'description', 'content' => $this->params['met
 $this->registerMetaTag(['name' => 'keywords', 'content' => $this->params['meta_keywords'] ?? '']);
 $this->registerLinkTag(['rel' => 'icon', 'type' => 'image/x-icon', 'href' => Yii::getAlias('@web/favicon.ico')]);
 $darkMode = Yii::$app->user->isGuest ? 0 : Yii::$app->user->identity->dark_mode;
+$this->registerCssFile('@web/css/fuckyou-navpadding.css');
 ?>
 <?php $this->beginPage() ?>
 <!DOCTYPE html>
