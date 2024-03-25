@@ -56,6 +56,10 @@ class FileSizeHelper
         return $userHomeDirSize_MB + $userVaultDirSize_MB + $file_size_MB <= $limit;
     }
 
+    /**
+     * @param int|null $user_id
+     * @return int
+     */
     public static function getUserHomeDirSize(int $user_id = null): int
     {
         if ($user_id === null) {
@@ -65,6 +69,10 @@ class FileSizeHelper
         return self::getDirectorySize($userHomeDir);
     }
 
+    /**
+     * @param int|null $user_id
+     * @return int
+     */
     public static function getUserVaultDirSize(int $user_id = null): int
     {
         if ($user_id === null) {
@@ -73,6 +81,11 @@ class FileSizeHelper
         $userHomeDir = Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . $user_id . '.secret';
         return self::getDirectorySize($userHomeDir);
     }
+
+    /**
+     * @param int|null $user_id
+     * @return int
+     */
     public static function getUserAllDirSize(int $user_id = null): int
     {
         if ($user_id === null) {
@@ -80,6 +93,11 @@ class FileSizeHelper
         }
         return self::getUserHomeDirSize($user_id) + self::getUserVaultDirSize($user_id);
     }
+
+    /**
+     * @param int|null $user_id
+     * @return string
+     */
     public static function getFormatUserAllDirSize(int $user_id = null): string
     {
         if ($user_id === null) {
@@ -107,15 +125,33 @@ class FileSizeHelper
 
     /**
      * @param $megabytes
-     * @param $precision
+     * @param int $precision
      * @return string
      */
-    public static function formatMegaBytes($megabytes, $precision = 2): string
+    public static function formatMegaBytes($megabytes, int $precision = 2): string
     {
         if ($megabytes === -1) {
             return '∞';
         }
         $bytes = $megabytes * pow(1024, 2); // Convert megabytes to bytes
         return self::formatBytes($bytes, $precision);
+    }
+
+    /**
+     * @param $user_id
+     * @return string
+     */
+    public static function getUsedPercent($user_id = null): string
+    {
+        if ($user_id === null) {
+            $user_id = Yii::$app->user->id;
+        }
+        $user = User::findOne($user_id);
+        $limit = $user->storage_limit * pow(1024, 2);
+        if ($limit == -1) {
+            return '∞';
+        }
+        $userAllDirSize = self::getUserAllDirSize($user_id);
+        return round($userAllDirSize / $limit * 100, 2) . ' %';
     }
 }
