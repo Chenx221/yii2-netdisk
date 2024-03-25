@@ -16,8 +16,6 @@ $this->title = '用户ID: ' . $model->id;
 $this->params['breadcrumbs'][] = ['label' => '用户管理', 'url' => ['user']];
 $this->params['breadcrumbs'][] = $this->title;
 $alreadyDisabled = $model->status == 0;
-$isCurrentUser = Yii::$app->user->id == $model->id ? 'disabled' : '';
-$str = $alreadyDisabled ? '启用' : '禁用';
 $IPLocation = new IPLocation();
 YiiAsset::register($this);
 FontAwesomeAsset::register($this);
@@ -26,17 +24,27 @@ FontAwesomeAsset::register($this);
 
     <h1>用户详情</h1>
 
+<!--    <p>-->
+<!--        --><?php //= Html::a($str . '用户', ['user-delete', 'id' => $model->id], [
+//            'class' => 'btn btn-danger ' . $isCurrentUser,
+//            'data' => [
+//                'confirm' => '你确定要' . $str . '这个用户吗?',
+//                'method' => 'post',
+//            ],
+//            'title' => '点击' . $str . '用户',
+//        ]) ?>
+<!--    </p>-->
     <p>
-        <!--        --><?php //= Html::a('修改信息', ['user-update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
-        <?= Html::a($str . '用户', ['user-delete', 'id' => $model->id], [
-            'class' => 'btn btn-danger ' . $isCurrentUser,
+        <?= Html::a('禁用二步验证', ['user-totpoff', 'id' => $model->id], [
+            'class' => 'btn btn-danger'.($model->is_otp_enabled == 0 ? ' disabled' : ''),
             'data' => [
-                'confirm' => '你确定要' . $str . '这个用户吗?',
+                'confirm' => '你确定要取消这个用户的多因素登录吗?',
                 'method' => 'post',
             ],
-            'title' => '点击' . $str . '用户',
+            'title' => '点击取消用户的多因素登录',
         ]) ?>
     </p>
+
 
     <?= DetailView::widget([
         'model' => $model,
@@ -58,17 +66,19 @@ FontAwesomeAsset::register($this);
                 return $model->getGravatar(email: $model->email, s: 100, img: true);
             }],
             ['attribute' => 'status', 'label' => '账户状态', 'format' => 'raw', 'value' => function ($model) {
-//                return $model->status == 0 ? '禁用' : '启用';
-                //TODO 未完成
+                if(Yii::$app->user->id == $model->id){
+                    return $model->status == 0 ? '禁用' : '启用';
+                }
                 return Editable::widget([
                     'name' => 'status',
+                    'value' => $model->status == 0 ? '禁用' : '启用',
                     'asPopover' => true,
                     'header' => '账户状态',
                     'format' => Editable::FORMAT_BUTTON,
                     'inputType' => Editable::INPUT_DROPDOWN_LIST,
-                    'data' => [1,2,3], // any list of values
+                    'data' => [0 => '禁用',
+                        1 => '启用',],
                     'options' => ['class' => 'form-control'],
-                    'editableValueOptions' => ['class' => 'text-danger']
                 ]);
             }],
             ['attribute' => 'created_at', 'label' => '创建时间', 'value' => function ($model) {
@@ -86,7 +96,19 @@ FontAwesomeAsset::register($this);
                     return $model->last_login_ip;
                 }
             }],
-            ['attribute' => 'bio', 'label' => '用户简介'],
+            ['attribute' => 'bio', 'label' => '用户简介','format'=>'raw','value'=>function ($model) {
+                return Editable::widget([
+                    'name'=>'bio',
+                    'asPopover' => true,
+                    'displayValue' => '查看',
+                    'inputType' => Editable::INPUT_TEXTAREA,
+                    'value' => $model->bio,
+                    'header' => '用户简介',
+                    'submitOnEnter' => false,
+                    'size'=>'lg',
+                    'options' => ['class'=>'form-control', 'rows'=>5]
+                ]);
+            }],
             ['attribute' => 'role', 'label' => '用户身份', 'value' => function ($model) {
                 return $model->role == 'user' ? '用户' : '管理员';
             }],

@@ -1,4 +1,4 @@
 /*解决Editable显示modal时nav乱跳问题*/
-#w3 {
-    /*padding-right: 0 !important;*/
+#header nav {
+    padding-right: 0 !important;
 }

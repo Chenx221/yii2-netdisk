@@ -102,8 +102,8 @@ class AdminController extends Controller
             Yii::$app->response->format = Response::FORMAT_JSON;
 
             $oldValue = $model->name;
-
-            if ($model->load($_POST)) {
+            // TODO: Implement the logic to update the value of the model
+             if ($model->load($_POST)) {
                 // read or convert your posted information
                 $value = $model->name;
 
