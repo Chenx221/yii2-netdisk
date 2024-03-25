@@ -13,8 +13,6 @@ use yii\widgets\Pjax;
 /** @var yii\web\View $this */
 /** @var app\models\UserSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
-$IPLocation = new IPLocation();
-$PKCSR = new PublicKeyCredentialSourceRepository();
 $this->title = '用户管理';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
@@ -42,20 +40,15 @@ $this->params['breadcrumbs'][] = $this->title;
                 }, 'filter' => ['0' => '禁用', '1' => '启用']],
                 ['attribute' => 'created_at', 'label' => '账户创建时间', 'filter' => false],
                 ['attribute' => 'last_login', 'label' => '上次登陆时间', 'filter' => false],
-                ['attribute' => 'last_login_ip', 'label' => '上次登录IP', 'value' => function ($model) use ($IPLocation) {
-                    if (Yii::$app->params['enableIpInfo']) {
-                        return $IPLocation->getFormatDetails($model->last_login_ip);
-                    } else {
-                        return $model->last_login_ip;
-                    }
-                }, 'filter' => false],// 给这个加位置显示也许会更好，但ipinfo那边就不好了
+                ['attribute' => 'last_login_ip', 'label' => '上次登录IP'],
                 ['attribute' => 'role', 'label' => '用户身份', 'value' => function ($model) {
                     return $model->role == 'user' ? '用户' : '管理员';
                 }, 'filter' => ['user' => '用户', 'admin' => '管理员']],
                 ['attribute' => 'is_otp_enabled', 'label' => '多因素登录', 'value' => function ($model) {
                     return $model->is_otp_enabled == 0 ? '禁用' : '启用';
                 }, 'filter' => ['0' => '禁用', '1' => '启用']],
-                ['label' => 'Passkey', 'value' => function ($Model) use ($PKCSR) {
+                ['label' => 'Passkey', 'value' => function ($Model) {
+                    $PKCSR = new PublicKeyCredentialSourceRepository();
                     $UserEntitys = $PKCSR->findAllForUserEntity($Model);
                     if (empty($UserEntitys)) {
                         return '禁用';

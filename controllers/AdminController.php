@@ -7,6 +7,7 @@ use app\models\UserSearch;
 use app\utils\AdminSword;
 use Throwable;
 use Yii;
+use yii\base\Exception;
 use yii\db\StaleObjectException;
 use yii\filters\AccessControl;
 use yii\filters\VerbFilter;
@@ -40,7 +41,7 @@ class AdminController extends Controller
                         'index' => ['GET'],
                         'system' => ['GET'],
                         'user' => ['GET'],
-                        'user-view' => ['GET'],
+                        'user-view' => ['GET','POST'],
                         'user-create' => ['GET', 'POST'],
                         'user-update' => ['GET', 'POST'],
                         'user-delete' => ['POST'],
@@ -92,13 +93,36 @@ class AdminController extends Controller
     /**
      * Displays a single User model.
      * @param int $id ID
-     * @return string
      * @throws NotFoundHttpException if the model cannot be found
      */
-    public function actionUserView(int $id): string
+    public function actionUserView(int $id): array|string
     {
+        $model = $this->findModel($id);
+        if (isset($_POST['hasEditable'])) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+
+            $oldValue = $model->name;
+
+            if ($model->load($_POST)) {
+                // read or convert your posted information
+                $value = $model->name;
+
+                // validate if any errors
+                if ($model->save(true,['name'])) {
+                    // return JSON encoded output in the below format on success with an empty `message`
+                    return ['output' => $value, 'message' => ''];
+                } else {
+                    // alternatively you can return a validation error (by entering an error message in `message` key)
+                    return ['output' => $oldValue, 'message' => 'Incorrect Value! Please reenter.'];
+                }
+            } // else if nothing to do always return an empty JSON encoded output
+            else {
+                return ['output' => '', 'message' => ''];
+            }
+        }
+
         return $this->render('user_view', [
-            'model' => $this->findModel($id),
+            'model' => $model,
         ]);
     }
 
@@ -106,6 +130,7 @@ class AdminController extends Controller
      * Creates a new User model.
      * If creation is successful, the browser will be redirected to the 'view' page.
      * @return string|Response
+     * @throws Exception
      */
     public function actionUserCreate(): Response|string
     {
@@ -120,7 +145,7 @@ class AdminController extends Controller
                 $model->created_at = date('Y-m-d H:i:s');
                 $model->name = $model->username; //用户默认昵称为用户名，后期可以修改
                 if ($model->save(false)) { // save without validation
-                    if($model->role == 'user'){
+                    if ($model->role == 'user') {
                         $userFolder = Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . $model->id;
                         if (!is_dir($userFolder)) {
                             mkdir($userFolder);
@@ -179,12 +204,12 @@ class AdminController extends Controller
         $str = $alreadyDisabled ? '启用' : '禁用';
         if ($user->deleteAccount($alreadyDisabled)) {
             $logout_result = '';
-            if(!$alreadyDisabled){
+            if (!$alreadyDisabled) {
                 $logout_result = AdminSword::forceUserLogout($id);
             }
-            Yii::$app->session->setFlash('success', '账户'.$str.'成功,'.$logout_result);
+            Yii::$app->session->setFlash('success', '账户' . $str . '成功,' . $logout_result);
         } else {
-            Yii::$app->session->setFlash('error', '账户'.$str.'失败');
+            Yii::$app->session->setFlash('error', '账户' . $str . '失败');
         }
         return $this->redirect(['user-view', 'id' => $id]);
     }
