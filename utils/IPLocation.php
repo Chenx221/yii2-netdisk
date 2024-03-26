@@ -12,6 +12,9 @@ class IPLocation
     private IPinfo $client;
     private bool $is_disabled = true;
 
+    /**
+     * 初始化IPLOCATION实例
+     */
     public function __construct()
     {
         $status = Yii::$app->params['enableIpInfo'];
@@ -21,6 +24,13 @@ class IPLocation
         }
     }
 
+    /**
+     * 获取IP详细信息
+     * 传入ip地址，返回ip详细信息(Details对象)
+     * 报SSL certificate problem错误进来看这里
+     * @param string $ip
+     * @return Details|null
+     */
     public static function getDetails(string $ip): ?Details
     {
         $instance = new self();
@@ -42,6 +52,12 @@ class IPLocation
         }
     }
 
+    /**
+     * 获取IP详细信息
+     * 输出格式化的IP详细信息(字符串)
+     * @param string $ip
+     * @return string
+     */
     public static function getFormatDetails(string $ip): string
     {
         $details = self::getDetails($ip);

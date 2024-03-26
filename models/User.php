@@ -188,7 +188,6 @@ class User extends ActiveRecord implements IdentityInterface
 
     /**
      * 用户登录处理
-     *
      * @return bool 返回用户名密码验证状态
      */
     public function login(): bool
@@ -211,7 +210,6 @@ class User extends ActiveRecord implements IdentityInterface
 
     /**
      * 验证密码
-     *
      * @param $password
      * @return bool
      */
@@ -298,6 +296,12 @@ class User extends ActiveRecord implements IdentityInterface
         return true;
     }
 
+    /**
+     * @param $insert
+     * @param $changedAttributes
+     * @return void
+     * @throws \Exception
+     */
     public function afterSave($insert, $changedAttributes): void
     {
         parent::afterSave($insert, $changedAttributes);

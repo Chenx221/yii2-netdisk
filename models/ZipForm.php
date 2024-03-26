@@ -10,7 +10,7 @@ class ZipForm extends Model
     public $zipFormat;
 
 
-    public function rules()
+    public function rules(): array
     {
         return [
             [['zipFilename', 'zipFormat'], 'required'],
@@ -20,7 +20,7 @@ class ZipForm extends Model
         ];
     }
 
-    public function attributeLabels()
+    public function attributeLabels(): array
     {
         return [
             'zipFilename' => '压缩文件名',

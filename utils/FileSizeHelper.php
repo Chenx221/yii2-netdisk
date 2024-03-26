@@ -11,7 +11,7 @@ class FileSizeHelper
 {
     /**
      * 计算指定目录的大小
-     *
+     * 返回大小单位为字节
      * @param string $directory 目录路径
      * @return int 目录的大小（字节）
      */
@@ -33,6 +33,7 @@ class FileSizeHelper
     /**
      * 判断用户home是否有足够的容量存放文件
      * @param int $file_size 文件大小B(可选,如果文件已经添加到网盘时，不需要这个参数)
+     * @param int|null $user_id
      * @return bool
      */
     public static function hasEnoughSpace(int $file_size = 0, int $user_id = null): bool
@@ -57,6 +58,7 @@ class FileSizeHelper
     }
 
     /**
+     * 获取用户home目录的大小
      * @param int|null $user_id
      * @return int
      */
@@ -70,6 +72,7 @@ class FileSizeHelper
     }
 
     /**
+     * 获取用户vault目录的大小
      * @param int|null $user_id
      * @return int
      */
@@ -83,6 +86,7 @@ class FileSizeHelper
     }
 
     /**
+     * 获取用户所有目录的大小
      * @param int|null $user_id
      * @return int
      */
@@ -95,6 +99,8 @@ class FileSizeHelper
     }
 
     /**
+     * 获取用户home目录的大小
+     * 返回格式化后的大小(字符串)
      * @param int|null $user_id
      * @return string
      */
@@ -105,7 +111,10 @@ class FileSizeHelper
         }
         return self::formatBytes(self::getUserAllDirSize($user_id));
     }
+
     /**
+     * 格式化文件大小(单位转换)
+     * 传入Byte
      * @param $bytes
      * @param $precision
      * @return string
@@ -124,6 +133,8 @@ class FileSizeHelper
     }
 
     /**
+     * 格式化文件大小(单位转换)
+     * 传入MB
      * @param $megabytes
      * @param int $precision
      * @return string
@@ -138,6 +149,7 @@ class FileSizeHelper
     }
 
     /**
+     * 获取用户已使用的容量百分比
      * @param $user_id
      * @return string
      */
