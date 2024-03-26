@@ -554,7 +554,7 @@ class UserController extends Controller
             $user->otp_secret = null;
             $user->is_otp_enabled = 0;
             $user->recovery_codes = null;
-            $user->save();
+            $user->save(false);
             Yii::$app->session->setFlash('success', '二步验证已关闭');
         } else {
             Yii::$app->session->setFlash('error', '二步验证未启用,无需关闭');

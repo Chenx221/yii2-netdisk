@@ -30,7 +30,7 @@ class AdminController extends Controller
                     'rules' => [
                         [
                             'allow' => true,
-                            'actions' => ['index', 'system', 'user', 'info', 'user-view', 'user-create', 'user-update', 'user-delete'],
+                            'actions' => ['index', 'system', 'user', 'info', 'user-view', 'user-create', 'user-update', 'user-delete', 'user-totpoff', 'user-pwdreset'],
                             'roles' => ['admin'], // only admin can do these
                         ]
                     ],
@@ -41,11 +41,13 @@ class AdminController extends Controller
                         'index' => ['GET'],
                         'system' => ['GET'],
                         'user' => ['GET'],
-                        'user-view' => ['GET','POST'],
+                        'user-view' => ['GET', 'POST'],
                         'user-create' => ['GET', 'POST'],
                         'user-update' => ['GET', 'POST'],
                         'user-delete' => ['POST'],
                         'info' => ['GET'],
+                        'user-totpoff' => ['POST'],
+                        'user-pwdreset' => ['POST'],
                     ],
                 ],
             ]
@@ -93,30 +95,47 @@ class AdminController extends Controller
     /**
      * Displays a single User model.
      * @param int $id ID
-     * @throws NotFoundHttpException if the model cannot be found
+     * @throws NotFoundHttpException|Throwable if the model cannot be found
      */
     public function actionUserView(int $id): array|string
     {
         $model = $this->findModel($id);
+
         if (isset($_POST['hasEditable'])) {
             Yii::$app->response->format = Response::FORMAT_JSON;
-
-            $oldValue = $model->name;
-            // TODO: Implement the logic to update the value of the model
-             if ($model->load($_POST)) {
-                // read or convert your posted information
-                $value = $model->name;
-
-                // validate if any errors
-                if ($model->save(true,['name'])) {
-                    // return JSON encoded output in the below format on success with an empty `message`
-                    return ['output' => $value, 'message' => ''];
+            if (isset($_POST['name'])) { //修改昵称
+                $oldValue = $model->name;
+                $model->name = $_POST['name'];
+                if ($model->save(true, ['name'])) {
+                    return ['output' => $model->name, 'message' => ''];
                 } else {
-                    // alternatively you can return a validation error (by entering an error message in `message` key)
                     return ['output' => $oldValue, 'message' => 'Incorrect Value! Please reenter.'];
                 }
-            } // else if nothing to do always return an empty JSON encoded output
-            else {
+            } elseif (isset($_POST['status'])) { //修改用户状态
+                if ($id == Yii::$app->user->id) {
+                    return ['output' => 'ERROR', 'message' => 'You cannot change your own status'];
+                }
+                $oldValue = $model->status;
+                $model->status = $_POST['status'];
+                $status = $this->actionUserDelete($id, $model->status);
+                if ($status == 1) {
+                    return ['output' => $model->status == 0 ? '禁用' : '启用', 'message' => ''];
+                } elseif ($status == 0) {
+                    return ['output' => $oldValue == 0 ? '禁用' : '启用', 'message' => '删除失败'];
+                } elseif ($status == 2) {
+                    return ['output' => $oldValue == 0 ? '禁用' : '启用', 'message' => '无需操作'];
+                } elseif ($status == 3) {
+                    return ['output' => $oldValue == 0 ? '禁用' : '启用', 'message' => '操作不允许'];
+                }
+            } elseif (isset($_POST['bio'])) { //修改用户简介
+                $oldValue = $model->bio;
+                $model->bio = $_POST['bio'];
+                if ($model->save(true, ['bio'])) {
+                    return ['output' => $model->bio, 'message' => ''];
+                } else {
+                    return ['output' => $oldValue, 'message' => 'Incorrect Value! Please reenter.'];
+                }
+            } else {
                 return ['output' => '', 'message' => ''];
             }
         }
@@ -191,25 +210,77 @@ class AdminController extends Controller
     }
 
     /**
+     * 0: delete failed
+     * 1: delete success
+     * 2: nothing to do
+     * 3: operation not allowed
      * @param int $id ID
-     * @return Response
      * @throws NotFoundHttpException if the model cannot be found
      * @throws Throwable
-     * @throws StaleObjectException
      */
-    public function actionUserDelete(int $id): Response
+    protected function actionUserDelete(int $id, int $operation): int
     {
         $user = $this->findModel($id);
-        $alreadyDisabled = $user->status == 0;
-        $str = $alreadyDisabled ? '启用' : '禁用';
-        if ($user->deleteAccount($alreadyDisabled)) {
+        if ($user->status == $operation) {
+            // nothing to do
+            return 2;
+        }
+        if ($operation != 1 && $operation != 0) {
+            return 3;
+        }
+        if ($user->deleteAccount($operation == 1)) {
             $logout_result = '';
-            if (!$alreadyDisabled) {
-                $logout_result = AdminSword::forceUserLogout($id);
+            if ($operation == 0) {
+                AdminSword::forceUserLogout($id);
             }
-            Yii::$app->session->setFlash('success', '账户' . $str . '成功,' . $logout_result);
+            return 1;
         } else {
-            Yii::$app->session->setFlash('error', '账户' . $str . '失败');
+            return 0;
+        }
+    }
+
+    /**
+     * @param int $id
+     * @return Response
+     */
+    public function actionUserTotpoff(int $id)
+    {
+        try {
+            $user = $this->findModel($id);
+        } catch (NotFoundHttpException $e) {
+            Yii::$app->session->setFlash('error', '用户不存在');
+            return $this->redirect(['user']);
+        }
+        if ($user->is_otp_enabled) {
+            $user->otp_secret = null;
+            $user->is_otp_enabled = 0;
+            $user->recovery_codes = null;
+            $user->save(false);
+            Yii::$app->session->setFlash('success', '二步验证已关闭');
+            return $this->redirect(['user-view', 'id' => $id]);
+        } else {
+            Yii::$app->session->setFlash('error', '二步验证未启用,无需关闭');
+            return $this->redirect(['user-view', 'id' => $id]);
+        }
+    }
+
+    /**
+     * @return Response
+     * @throws Exception
+     * @throws NotFoundHttpException
+     */
+    public function actionUserPwdreset(): Response
+    {
+        $id = Yii::$app->request->post('User')['id'];
+        $model = $this->findModel($id);
+
+        if ($model->load(Yii::$app->request->post()) && $model->validate()) {
+            $model->password = Yii::$app->security->generatePasswordHash($model->password);
+            if ($model->save(false)) {
+                Yii::$app->session->setFlash('success', '密码重置成功');
+            } else {
+                Yii::$app->session->setFlash('error', '密码重置失败');
+            }
         }
         return $this->redirect(['user-view', 'id' => $id]);
     }

@@ -2,9 +2,12 @@
 
 use app\assets\FontAwesomeAsset;
 use app\models\PublicKeyCredentialSourceRepository;
+use app\models\User;
 use app\utils\FileSizeHelper;
 use app\utils\IPLocation;
 use kartik\editable\Editable;
+use yii\bootstrap5\ActiveForm;
+use yii\bootstrap5\Modal;
 use yii\helpers\Html;
 use yii\web\YiiAsset;
 use yii\widgets\DetailView;
@@ -24,24 +27,20 @@ FontAwesomeAsset::register($this);
 
     <h1>用户详情</h1>
 
-<!--    <p>-->
-<!--        --><?php //= Html::a($str . '用户', ['user-delete', 'id' => $model->id], [
-//            'class' => 'btn btn-danger ' . $isCurrentUser,
-//            'data' => [
-//                'confirm' => '你确定要' . $str . '这个用户吗?',
-//                'method' => 'post',
-//            ],
-//            'title' => '点击' . $str . '用户',
-//        ]) ?>
-<!--    </p>-->
     <p>
         <?= Html::a('禁用二步验证', ['user-totpoff', 'id' => $model->id], [
-            'class' => 'btn btn-danger'.($model->is_otp_enabled == 0 ? ' disabled' : ''),
+            'class' => 'btn btn-danger' . ($model->is_otp_enabled == 0 ? ' disabled' : ''),
             'data' => [
                 'confirm' => '你确定要取消这个用户的多因素登录吗?',
                 'method' => 'post',
             ],
             'title' => '点击取消用户的多因素登录',
+        ]) ?>
+        <?= Html::button('重置密码', [
+            'class' => 'btn btn-danger',
+            'data-bs-toggle' => 'modal',
+            'data-bs-target' => '#resetPasswordModal',
+            'title' => '点击重置用户密码',
         ]) ?>
     </p>
 
@@ -66,7 +65,7 @@ FontAwesomeAsset::register($this);
                 return $model->getGravatar(email: $model->email, s: 100, img: true);
             }],
             ['attribute' => 'status', 'label' => '账户状态', 'format' => 'raw', 'value' => function ($model) {
-                if(Yii::$app->user->id == $model->id){
+                if (Yii::$app->user->id == $model->id) {
                     return $model->status == 0 ? '禁用' : '启用';
                 }
                 return Editable::widget([
@@ -96,17 +95,17 @@ FontAwesomeAsset::register($this);
                     return $model->last_login_ip;
                 }
             }],
-            ['attribute' => 'bio', 'label' => '用户简介','format'=>'raw','value'=>function ($model) {
+            ['attribute' => 'bio', 'label' => '用户简介', 'format' => 'raw', 'value' => function ($model) {
                 return Editable::widget([
-                    'name'=>'bio',
+                    'name' => 'bio',
                     'asPopover' => true,
                     'displayValue' => '查看',
                     'inputType' => Editable::INPUT_TEXTAREA,
                     'value' => $model->bio,
                     'header' => '用户简介',
                     'submitOnEnter' => false,
-                    'size'=>'lg',
-                    'options' => ['class'=>'form-control', 'rows'=>5]
+                    'size' => 'lg',
+                    'options' => ['class' => 'form-control', 'rows' => 5]
                 ]);
             }],
             ['attribute' => 'role', 'label' => '用户身份', 'value' => function ($model) {
@@ -155,6 +154,24 @@ FontAwesomeAsset::register($this);
                 return FileSizeHelper::getUsedPercent($model->id) . '<br>' . FileSizeHelper::getFormatUserAllDirSize($model->id) . ' / ' . FileSizeHelper::formatMegaBytes($model->storage_limit);
             }],
         ],
-    ]) ?>
-
+    ])
+    ?>
 </div>
+
+<?php
+Modal::begin([
+    'title' => '<h4>重置密码</h4>',
+    'id' => 'resetPasswordModal',
+    'size' => 'modal-lg',
+]);
+
+$form = ActiveForm::begin(['id' => 'reset-password-form', 'action' => ['admin/user-pwdreset'], 'method' => 'post']);
+
+echo $form->field($model, 'id')->hiddenInput()->label(false);
+echo $form->field($model, 'password')->passwordInput(['maxlength' => true, 'value' => ''])->label('新密码');
+
+echo Html::submitButton('提交', ['class' => 'btn btn-primary']);
+
+ActiveForm::end();
+Modal::end();
+?>
