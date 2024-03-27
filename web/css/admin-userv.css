@@ -1,0 +1,14 @@
+/*兼容夜间模式*/
+.popover-default .popover-title {
+    color: var(--bs-popover-header-color) !important;
+    background-color: var(--bs-popover-header-bg) !important;
+}
+
+.popover-footer {
+    background-color: var(--bs-popover-bg) !important;
+    border: var(--bs-popover-border-width) solid var(--bs-popover-border-color) !important;
+}
+
+.popover-x.is-bs5 .close {
+    color: buttontext !important;
+}
