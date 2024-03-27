@@ -121,7 +121,7 @@ class FileSizeHelper
      */
     public static function formatBytes($bytes, $precision = 2): string
     {
-        $units = array('B', 'KB', 'MB', 'GB', 'TB');
+        $units = array('B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB');
 
         $bytes = max($bytes, 0);
         $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
@@ -164,6 +164,46 @@ class FileSizeHelper
             return '∞';
         }
         $userAllDirSize = self::getUserAllDirSize($user_id);
+        if($limit== 0) {
+            return 'invalid %';
+        }
         return round($userAllDirSize / $limit * 100, 2) . ' %';
+    }
+
+    /**
+     * 根据输入的限制转换为MB
+     * 支持带单位的输入
+     * return -1无限,-2不能为空,-3格式错误
+     * ignore bit
+     * @param string $input_limit
+     * @return int
+     */
+    public static function getConvertedLimit(string $input_limit): int
+    {
+        $units = array('B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB');
+        $input_limit = str_replace(' ', '', strtoupper($input_limit));
+        if (strlen($input_limit) === 0) { // error
+            return -2;
+        }
+        if ($input_limit === '-1' || $input_limit === '∞') { // unlimited
+            return -1;
+        }
+
+        $unitLength = is_numeric(substr($input_limit, -2, 1)) ? 1 : 2;
+        $unit = substr($input_limit, -$unitLength);
+        if (!in_array($unit, $units)) {
+            return -3; // unknown unit
+        }
+
+        $value = substr($input_limit, 0, -$unitLength);
+        if (!is_numeric($value)) {
+            return -3; // invalid format
+        }
+
+        $unitIndex = array_search($unit, $units);
+        $valueInBytes = $value * pow(1024, $unitIndex);
+        $valueInMB = $valueInBytes / pow(1024, 2); // convert to MB
+
+        return max(0, (int)$valueInMB);
     }
 }
