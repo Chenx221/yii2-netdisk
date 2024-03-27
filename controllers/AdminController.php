@@ -5,6 +5,7 @@ namespace app\controllers;
 use app\models\User;
 use app\models\UserSearch;
 use app\utils\AdminSword;
+use app\utils\FileSizeHelper;
 use Throwable;
 use Yii;
 use yii\base\Exception;
@@ -135,6 +136,27 @@ class AdminController extends Controller
                 } else {
                     return ['output' => $oldValue, 'message' => 'Incorrect Value! Please reenter.'];
                 }
+            } elseif (isset($_POST['storage_limit'])) { //修改用户存储限制
+                $oldValue = $model->storage_limit;
+                $input_limit = $_POST['storage_limit'];
+                $limit = FileSizeHelper::getConvertedLimit($input_limit);
+                switch ($limit) {
+                    case -1:
+                        $model->storage_limit = -1;
+                        break;
+                    case -2:
+                        return ['output' => $oldValue, 'message' => '值不能为空'];
+                    case -3:
+                        return ['output' => $oldValue, 'message' => '格式错误'];
+                    default:
+                        $model->storage_limit = $limit;
+                }
+                if ($model->save(true, ['storage_limit'])) {
+                    return ['output' => FileSizeHelper::formatMegaBytes($model->storage_limit), 'message' => ''];
+                } else {
+                    return ['output' => FileSizeHelper::formatMegaBytes($oldValue), 'message' => 'Incorrect Value! Please reenter.'];
+                }
+
             } else {
                 return ['output' => '', 'message' => ''];
             }

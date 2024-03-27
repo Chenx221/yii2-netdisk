@@ -22,6 +22,7 @@ $alreadyDisabled = $model->status == 0;
 $IPLocation = new IPLocation();
 YiiAsset::register($this);
 FontAwesomeAsset::register($this);
+$this->registerCssFile('@web/css/admin-userv.css');
 ?>
 <div class="user-view">
 
@@ -53,7 +54,7 @@ FontAwesomeAsset::register($this);
             ['attribute' => 'name', 'label' => '昵称', 'format' => 'raw', 'value' => function ($model) {
                 return Editable::widget([
                     'name' => 'name',
-                    'asPopover' => false,
+                    'asPopover' => true,
                     'value' => $model->name,
                     'header' => '昵称',
                     'size' => 'md',
@@ -141,11 +142,24 @@ FontAwesomeAsset::register($this);
                 }
                 return FileSizeHelper::formatBytes(FileSizeHelper::getUserVaultDirSize($model->id));
             }],
-            ['attribute' => 'storage_limit', 'label' => '存储容量限制', 'value' => function ($model) {
+//            ['attribute' => 'storage_limit', 'label' => '存储容量限制', 'value' => function ($model) {
+//                if ($model->role == 'admin') {
+//                    return '不可用';
+//                }
+//                return FileSizeHelper::formatMegaBytes($model->storage_limit);
+//            }],
+            ['attribute' => 'storage_limit', 'label' => '存储容量限制', 'format' => 'raw', 'value' => function ($model) {
                 if ($model->role == 'admin') {
                     return '不可用';
                 }
-                return FileSizeHelper::formatMegaBytes($model->storage_limit);
+                return Editable::widget([
+                    'name' => 'storage_limit',
+                    'asPopover' => true,
+                    'value' => FileSizeHelper::formatMegaBytes($model->storage_limit),
+                    'header' => '存储容量限制(最小1MB)',
+                    'size' => 'md',
+                    'options' => ['class' => 'form-control', 'placeholder' => '在这里输入容量限制(最小值为1MB)...'],
+                ]);
             }],
             ['attribute' => 'storage_limit', 'format' => 'html', 'label' => '存储空间使用状态', 'value' => function ($model) {
                 if ($model->role == 'admin') {
