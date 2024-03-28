@@ -505,14 +505,24 @@ class UserController extends Controller
     {
         $model = Yii::$app->user->identity;
         $model->scenario = 'changePassword';
-
+        $org_password = $model->password;
+        //verify old password
         if ($model->load(Yii::$app->request->post()) && $model->validate()) {
-            $model->password = Yii::$app->security->generatePasswordHash($model->newPassword);
-            if ($model->save(false)) {
-                Yii::$app->session->setFlash('success', 'Password changed successfully.');
+            if (!Yii::$app->security->validatePassword($model->oldPassword, $org_password)) {
+                Yii::$app->session->setFlash('error', '原密码错误');
             } else {
-                Yii::$app->session->setFlash('error', 'Failed to change password.');
+                $model->password = Yii::$app->security->generatePasswordHash($model->newPassword);
+                if ($model->save(false)) {
+                    Yii::$app->session->setFlash('success', 'Password changed successfully.');
+                } else {
+                    Yii::$app->session->setFlash('error', 'Failed to change password.');
+                }
             }
+        }else{
+            Yii::$app->session->setFlash('error', 'Failed to validate password.');
+        }
+        if (Yii::$app->user->can('admin')) {
+            return $this->redirect(['admin/info', 'focus' => 'password']);
         }
         return $this->redirect(['user/info', 'focus' => 'password']);
     }
@@ -540,6 +550,9 @@ class UserController extends Controller
             } else {
                 Yii::$app->session->setFlash('error', '二步验证启用失败，请重新添加');
             }
+        }
+        if (Yii::$app->user->can('admin')) {
+            return $this->redirect(['admin/info']);
         }
         return $this->redirect(['user/info']);
     }
@@ -598,6 +611,9 @@ class UserController extends Controller
         } else {
             // 如果用户没有启用 TOTP，返回一个错误消息
             Yii::$app->session->setFlash('error', '获取失败，您还没有启用二步验证。');
+            if (Yii::$app->user->can('admin')) {
+                return $this->redirect(['admin/info', 'focus' => 'advanced']);
+            }
             return $this->redirect(['user/info', 'focus' => 'advanced']);
         }
     }
@@ -622,10 +638,13 @@ class UserController extends Controller
     public function actionChangeName(): Response
     {
         $model = Yii::$app->user->identity;
-        if ($model->load(Yii::$app->request->post()) && $model->save()) {
+        if ($model->load(Yii::$app->request->post()) && $model->save(true, ['name'])) {
             Yii::$app->session->setFlash('success', '昵称已更新');
         } else {
             Yii::$app->session->setFlash('error', '昵称更新失败');
+        }
+        if (Yii::$app->user->can('admin')) {
+            return $this->redirect(['admin/info']);
         }
         return $this->redirect(['user/info']);
     }
@@ -644,6 +663,9 @@ class UserController extends Controller
             ]);
         } else {
             Yii::$app->session->setFlash('error', '非Ajax请求');
+            if (Yii::$app->user->can('admin')) {
+                return $this->redirect(['admin/info']);
+            }
             return $this->redirect('info');
         }
     }
@@ -662,6 +684,9 @@ class UserController extends Controller
             $publicKeyCredentialSourceRepository = $this->findCredentialModel($id);
             if ($publicKeyCredentialSourceRepository->user_id !== Yii::$app->user->id) {
                 Yii::$app->session->setFlash('error', '非法操作');
+                if (Yii::$app->user->can('admin')) {
+                    return $this->redirect(['admin/info']);
+                }
                 return $this->redirect('info');
             }
             $publicKeyCredentialSourceRepository->delete();
@@ -672,6 +697,9 @@ class UserController extends Controller
             ]);
         } else {
             Yii::$app->session->setFlash('error', '非Pjax请求,无法删除');
+            if (Yii::$app->user->can('admin')) {
+                return $this->redirect(['admin/info']);
+            }
             return $this->redirect('info');
         }
     }
@@ -872,10 +900,10 @@ class UserController extends Controller
             }
             Yii::$app->user->login($user, $remember === 1 ? 3600 * 24 * 30 : 0);
             $publicKeyCredentialSourceRepository1->saveCredential($publicKeyCredentialSource, '', false);
-            if(Yii::$app->user->can('admin')){
-                return $this->asJson(['verified' => true,'redirectTo' => 'index.php?r=admin%2Findex']);
+            if (Yii::$app->user->can('admin')) {
+                return $this->asJson(['verified' => true, 'redirectTo' => 'index.php?r=admin%2Findex']);
             }
-            return $this->asJson(['verified' => true,'redirectTo' => 'index.php']);
+            return $this->asJson(['verified' => true, 'redirectTo' => 'index.php']);
         }
         // Optional, but highly recommended, you can save the credential source as it may be modified
         // during the verification process (counter may be higher).

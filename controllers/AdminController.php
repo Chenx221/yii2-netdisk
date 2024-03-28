@@ -6,6 +6,7 @@ use app\models\User;
 use app\models\UserSearch;
 use app\utils\AdminSword;
 use app\utils\FileSizeHelper;
+use OTPHP\TOTP;
 use Throwable;
 use Yii;
 use yii\base\Exception;
@@ -46,7 +47,7 @@ class AdminController extends Controller
                         'user-create' => ['GET', 'POST'],
                         'user-update' => ['GET', 'POST'],
                         'user-delete' => ['POST'],
-                        'info' => ['GET'],
+                        'info' => ['GET','POST'],
                         'user-totpoff' => ['POST'],
                         'user-pwdreset' => ['POST'],
                     ],
@@ -95,6 +96,7 @@ class AdminController extends Controller
 
     /**
      * Displays a single User model.
+     * 显示、处理用户管理中的数据变更
      * @param int $id ID
      * @throws NotFoundHttpException|Throwable if the model cannot be found
      */
@@ -324,10 +326,39 @@ class AdminController extends Controller
     }
 
     /**
-     * @return string
+     * @param string|null $focus
+     * @return Response|string
      */
-    public function actionInfo(): string
+    public function actionInfo(string $focus = null): Response|string
     {
-        return $this->render('info');
+        $model = Yii::$app->user->identity;
+        $totp_secret = null;
+        $totp_url = null;
+        if (!$model->is_otp_enabled) {
+            $totp = TOTP::generate();
+            $totp_secret = $totp->getSecret();
+            $totp->setLabel('NetDisk_' . $model->name);
+            $totp_url = $totp->getProvisioningUri();
+        }
+        if (Yii::$app->request->isPost && $model->load(Yii::$app->request->post())) {
+            if ($model->save(true,['bio'])) {
+                Yii::$app->session->setFlash('success', '个人简介已更新');
+                return $this->render('info', [
+                    'model' => $model,
+                    'focus' => 'bio',
+                    'totp_secret' => $totp_secret,
+                    'totp_url' => $totp_url,
+                    'is_otp_enabled' => $model->is_otp_enabled
+                ]);
+            }
+        }
+        return $this->render('info', [
+            'model' => $model,
+            'focus' => $focus,
+            'totp_secret' => $totp_secret,
+            'totp_url' => $totp_url,
+            'is_otp_enabled' => $model->is_otp_enabled == 1
+        ]);
     }
+    // Todo: 测试移植的用户信息页功能
 }
