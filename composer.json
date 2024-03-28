@@ -1,27 +1,22 @@
 {
-  "name": "yiisoft/yii2-app-basic",
-  "description": "Yii 2 Basic Project Template",
+  "name": "chenx221/yii2-netdisk",
+  "description": "Yii 2 Simple Netdisk Project",
   "keywords": [
     "yii2",
     "framework",
     "basic",
-    "project template"
+    "netdesk"
   ],
-  "homepage": "https://www.yiiframework.com/",
+  "homepage": "https://git.chenx221.cyou/chenx221/yii2-netdisk",
   "type": "project",
   "license": "BSD-3-Clause",
   "support": {
-    "issues": "https://github.com/yiisoft/yii2/issues?state=open",
-    "forum": "https://www.yiiframework.com/forum/",
-    "wiki": "https://www.yiiframework.com/wiki/",
-    "irc": "ircs://irc.libera.chat:6697/yii",
-    "source": "https://github.com/yiisoft/yii2"
+    "source": "https://git.chenx221.cyou/chenx221/yii2-netdisk"
   },
   "minimum-stability": "stable",
   "require": {
     "php": ">=8.3.0",
     "yiisoft/yii2": "~2.0.45",
-    "yiisoft/yii2-bootstrap5": "~2.0.2",
     "yiisoft/yii2-symfonymailer": "~2.0.3",
     "sam-it/yii2-mariadb": "^3.1",
     "bestyii/yii2-gii-rest": "*",
@@ -48,13 +43,13 @@
     "spomky-labs/otphp": "^11.2",
     "ext-gd": "*",
     "endroid/qr-code": "^5.0",
-    "bower-asset/bootstrap": "^5.3",
     "npm-asset/simplewebauthn--browser": "^9.0",
     "symfony/serializer": "^7.0",
     "symfony/property-access": "^7.0",
     "phpdocumentor/reflection-docblock": "^5.3",
     "web-auth/webauthn-lib": "^4.8",
-    "kartik-v/yii2-editable": "dev-master"
+    "kartik-v/yii2-editable": "dev-master",
+    "chenx221/yii2-bootstrap5": "dev-master"
   },
   "require-dev": {
     "yiisoft/yii2-debug": "~2.1.0",
@@ -109,8 +104,8 @@
       "url": "https://asset-packagist.org"
     },
     {
-      "type": "composer",
-      "url": "https://asset-packagist.org"
+      "type": "vcs",
+      "url": "https://git.chenx221.cyou/chenx221/yii2-bootstrap5"
     }
   ]
 }
