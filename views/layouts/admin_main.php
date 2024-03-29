@@ -45,9 +45,9 @@ $this->registerCssFile('@web/css/fuckyou-navpadding.css');
         'items' => [
             ['label' => '首页', 'url' => ['/site/index']],
             ['label' => '管理面板', 'url' => ['/admin/index']],
-            ['label' => '系统管理', 'url' => ['/admin/system']],
             ['label' => '用户管理', 'url' => ['/admin/user']],
             ['label' => '个人设置', 'url' => ['/admin/info']],
+            ['label' => '系统设置', 'url' => ['/admin/system']],
             '<li class="nav-item">'
             . Html::beginForm(['/user/logout'])
             . Html::submitButton(
