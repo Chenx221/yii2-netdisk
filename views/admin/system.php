@@ -1,8 +1,17 @@
 <?php
-/** @var yii\web\View $this */
-?>
-<h1>admin/index</h1>
+/* @var $this yii\web\View */
 
-<p>
-    这里是管理员页面.建设中
-</p>
+use app\models\SiteConfig;
+use yii\bootstrap5\Html;
+
+$this->title = '系统设置';
+$siteConfig = new SiteConfig();
+$siteConfig->loadFromEnv();
+?>
+
+<div class="admin-system">
+
+    <h1><?= Html::encode($this->title) ?></h1>
+
+</div>
+
