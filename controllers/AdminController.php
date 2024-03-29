@@ -360,5 +360,4 @@ class AdminController extends Controller
             'is_otp_enabled' => $model->is_otp_enabled == 1
         ]);
     }
-    // Todo: 测试移植的用户信息页功能
 }
