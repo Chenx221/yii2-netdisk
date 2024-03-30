@@ -2,6 +2,7 @@
 
 namespace app\controllers;
 
+use app\models\SiteConfig;
 use app\models\User;
 use app\models\UserSearch;
 use app\utils\AdminSword;
@@ -14,6 +15,7 @@ use yii\db\StaleObjectException;
 use yii\filters\AccessControl;
 use yii\filters\VerbFilter;
 use yii\web\Controller;
+use yii\web\HttpException;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
 
@@ -72,10 +74,17 @@ class AdminController extends Controller
 
     /**
      * @return string
+     * @throws HttpException
      */
     public function actionSystem(): string
     {
-        return $this->render('system');
+        $siteConfig = new SiteConfig();
+        if(!$siteConfig->loadFromEnv()){
+            throw new HttpException(500, 'Fatal error, Unable to load site configuration from .env file.');
+        }
+        return $this->render('system',[
+            'siteConfig' => $siteConfig
+        ]);
     }
 
     /**
