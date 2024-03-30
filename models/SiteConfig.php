@@ -24,15 +24,32 @@ class SiteConfig extends Model
     public string $hcaptchaSecret; // hCaptcha Secret
     public string $turnstileSiteKey; // Turnstile Site Key
     public string $turnstileSecret; // Turnstile Secret
-    public string $cookieValidationKey; // Cookie Validation Key
     public bool $enableIpinfo; // 启用 ipinfo.io 查询
     public string $ipinfoToken; // IPinfo Token
 
     public function rules(): array
     {
         return [
-            [['siteTitle', 'siteUrl', 'domain', 'verifyProvider', 'recaptchaSiteKey', 'recaptchaSecret', 'hcaptchaSiteKey', 'hcaptchaSecret', 'turnstileSiteKey', 'turnstileSecret', 'cookieValidationKey', 'ipinfoToken'], 'string'],
+            [['siteTitle', 'siteUrl', 'domain', 'verifyProvider', 'recaptchaSiteKey', 'recaptchaSecret', 'hcaptchaSiteKey', 'hcaptchaSecret', 'turnstileSiteKey', 'turnstileSecret', 'ipinfoToken'], 'string'],
             [['registrationEnabled', 'enableIpinfo'], 'boolean'],
+        ];
+    }
+
+    public function attributeLabels(): array
+    {
+        return [
+            'siteTitle' => '网站标题',
+            'registrationEnabled' => '允许注册',
+            'domain' => '站点域名',
+            'verifyProvider' => '验证码服务',
+            'recaptchaSiteKey' => 'reCAPTCHA Site Key',
+            'recaptchaSecret' => 'reCAPTCHA Secret',
+            'hcaptchaSiteKey' => 'hCaptcha Site Key',
+            'hcaptchaSecret' => 'hCaptcha Secret',
+            'turnstileSiteKey' => 'Turnstile Site Key',
+            'turnstileSecret' => 'Turnstile Secret',
+            'enableIpinfo' => '启用 ipinfo.io 查询',
+            'ipinfoToken' => 'IPinfo Token',
         ];
     }
 
@@ -82,7 +99,6 @@ class SiteConfig extends Model
             $env['HCAPTCHA_SECRET'] = $this->hcaptchaSecret;
             $env['TURNSTILE_SITE_KEY'] = $this->turnstileSiteKey;
             $env['TURNSTILE_SECRET'] = $this->turnstileSecret;
-            $env['COOKIE_VALIDATION_KEY'] = $this->cookieValidationKey;
             $env['ENABLE_IPINFO'] = $this->enableIpinfo ? 'true' : 'false';
             $env['IPINFO_TOKEN'] = $this->ipinfoToken;
             $data = array_map(function ($key, $value) {
