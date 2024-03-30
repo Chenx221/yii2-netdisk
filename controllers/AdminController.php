@@ -11,7 +11,6 @@ use OTPHP\TOTP;
 use Throwable;
 use Yii;
 use yii\base\Exception;
-use yii\db\StaleObjectException;
 use yii\filters\AccessControl;
 use yii\filters\VerbFilter;
 use yii\web\Controller;
@@ -43,13 +42,13 @@ class AdminController extends Controller
                     'class' => VerbFilter::class,
                     'actions' => [
                         'index' => ['GET'],
-                        'system' => ['GET'],
+                        'system' => ['GET','POST'],
                         'user' => ['GET'],
                         'user-view' => ['GET', 'POST'],
                         'user-create' => ['GET', 'POST'],
                         'user-update' => ['GET', 'POST'],
                         'user-delete' => ['POST'],
-                        'info' => ['GET','POST'],
+                        'info' => ['GET', 'POST'],
                         'user-totpoff' => ['POST'],
                         'user-pwdreset' => ['POST'],
                     ],
@@ -73,16 +72,26 @@ class AdminController extends Controller
     }
 
     /**
-     * @return string
+     * @return string|Response
      * @throws HttpException
      */
-    public function actionSystem(): string
+    public function actionSystem(): Response|string
     {
         $siteConfig = new SiteConfig();
-        if(!$siteConfig->loadFromEnv()){
+        if (!$siteConfig->loadFromEnv()) {
             throw new HttpException(500, 'Fatal error, Unable to load site configuration from .env file.');
         }
-        return $this->render('system',[
+        if (Yii::$app->request->isPost) {
+            if ($siteConfig->load(Yii::$app->request->post()) && $siteConfig->validate()) {
+                if ($siteConfig->saveToEnv()) {
+                    Yii::$app->session->setFlash('success', '保存成功');
+                    return $this->redirect(['system']);
+                } else {
+                    Yii::$app->session->setFlash('error', '保存失败');
+                }
+            }
+        }
+        return $this->render('system', [
             'siteConfig' => $siteConfig
         ]);
     }
@@ -350,7 +359,7 @@ class AdminController extends Controller
             $totp_url = $totp->getProvisioningUri();
         }
         if (Yii::$app->request->isPost && $model->load(Yii::$app->request->post())) {
-            if ($model->save(true,['bio'])) {
+            if ($model->save(true, ['bio'])) {
                 Yii::$app->session->setFlash('success', '个人简介已更新');
                 return $this->render('info', [
                     'model' => $model,
