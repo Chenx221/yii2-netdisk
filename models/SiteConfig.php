@@ -30,8 +30,30 @@ class SiteConfig extends Model
     public function rules(): array
     {
         return [
-            [['siteTitle', 'siteUrl', 'domain', 'verifyProvider', 'recaptchaSiteKey', 'recaptchaSecret', 'hcaptchaSiteKey', 'hcaptchaSecret', 'turnstileSiteKey', 'turnstileSecret', 'ipinfoToken'], 'string'],
+            [['siteTitle', 'domain'], 'required'],
+            [['siteTitle', 'domain', 'verifyProvider', 'recaptchaSiteKey', 'recaptchaSecret', 'hcaptchaSiteKey', 'hcaptchaSecret', 'turnstileSiteKey', 'turnstileSecret', 'ipinfoToken'], 'string'],
             [['registrationEnabled', 'enableIpinfo'], 'boolean'],
+            ['verifyProvider', 'in', 'range' => ['reCAPTCHA', 'hCaptcha', 'Turnstile', 'None']],
+            [['recaptchaSiteKey', 'recaptchaSecret'], 'required', 'when' => function ($model) {
+                return $model->verifyProvider == 'reCAPTCHA';
+            }, 'whenClient' => "function (attribute, value) {
+                return $('#siteconfig-verifyprovider').val() == 'reCAPTCHA';
+            }"],
+            [['hcaptchaSiteKey', 'hcaptchaSecret'], 'required', 'when' => function ($model) {
+                return $model->verifyProvider == 'hCaptcha';
+            }, 'whenClient' => "function (attribute, value) {
+                return $('#siteconfig-verifyprovider').val() == 'hCaptcha';
+            }"],
+            [['turnstileSiteKey', 'turnstileSecret'], 'required', 'when' => function ($model) {
+                return $model->verifyProvider == 'Turnstile';
+            }, 'whenClient' => "function (attribute, value) {
+                return $('#siteconfig-verifyprovider').val() == 'Turnstile';
+            }"],
+            ['ipinfoToken', 'required', 'when' => function ($model) {
+                return $model->enableIpinfo;
+            }, 'whenClient' => "function (attribute, value) {
+                return $('#siteconfig-enableipinfo').is(':checked');
+            }"],
         ];
     }
 
@@ -86,7 +108,7 @@ class SiteConfig extends Model
     {
         try {
             $env = parse_ini_file(Yii::getAlias('@app/.env'));
-            if($env === false) {
+            if ($env === false) {
                 return false;
             }
             $env['SITE_TITLE'] = $this->siteTitle;
@@ -104,7 +126,7 @@ class SiteConfig extends Model
             $data = array_map(function ($key, $value) {
                 return "$key=$value";
             }, array_keys($env), $env);
-            return !(file_put_contents('.env', implode("\n", $data)) == false);
+            return !(file_put_contents(Yii::getAlias('@app/.env'), implode("\n", $data)) == false);
         } catch (Exception) {
             return false;
         }
