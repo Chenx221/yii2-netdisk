@@ -42,6 +42,7 @@ $this->registerLinkTag(['rel' => 'icon', 'type' => 'image/x-icon', 'href' => Yii
         'items' => [
             ['label' => '首页', 'url' => ['/site/index']],
             ['label' => '登录', 'url' => ['/user/login']],
+            $_ENV['REGISTRATION_ENABLED'] === 'false'? '' : ['label' => '注册', 'url' => ['/user/register']],
         ]
     ]);
     NavBar::end();
