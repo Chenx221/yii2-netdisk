@@ -10,6 +10,7 @@ use yii\base\Model;
  * Class SiteConfig
  * 配置信息
  * 少数配置不在列表中，如数据库配置等
+ * TODO: 实现Google analysis、Microsoft Clarity统计
  */
 class SiteConfig extends Model
 {
@@ -74,7 +75,23 @@ class SiteConfig extends Model
             'ipinfoToken' => 'IPinfo Token',
         ];
     }
-
+    public function attributeHelpTexts(): array
+    {
+        return [
+            'siteTitle' => '你可以在这里设置网站的标题',
+            'registrationEnabled' => '你可以在这里设置是否允许新用户注册<br>关闭注册后，只有管理员可以添加用户',
+            'domain' => '你可以在这里设置网站使用的域名<br>开头不需要添加 http:// 或 https://<br>结尾不需要添加 /<br>本地测试时可以使用 localhost',
+            'verifyProvider' => '你可以在这里设置验证码提供商<br>目前支持<a href=\'https://developers.google.com/recaptcha\' target=\'_blank\'>reCAPTCHA</a>、<a href=\'https://www.hcaptcha.com/\' target=\'_blank\'>hCaptcha</a>、<a href=\'https://www.cloudflare.com/en-ca/products/turnstile/\' target=\'_blank\'>Turnstile</a>或关闭验证码',
+            'recaptchaSiteKey' => '请在这里填入reCAPTCHA Site Key',
+            'recaptchaSecret' => '请在这里填入reCAPTCHA Secret',
+            'hcaptchaSiteKey' => '请在这里填入hCaptcha Site Key',
+            'hcaptchaSecret' => '请在这里填入hCaptcha Secret',
+            'turnstileSiteKey' => '请在这里填入Turnstile Site Key',
+            'turnstileSecret' => '请在这里填入Turnstile Secret',
+            'enableIpinfo' => '是否使用<a href=\'https://ipinfo.io/\' target=\'_blank\'>ipinfo.io</a>查询站点上的ip信息',
+            'ipinfoToken' => '请在这里填入IPinfo Token',
+        ];
+    }
     /**
      * 读取配置信息
      * @return bool
