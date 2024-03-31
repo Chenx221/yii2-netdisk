@@ -410,6 +410,11 @@ class UserController extends Controller
             return $this->goHome();
         }
 
+        if ($_ENV['REGISTRATION_ENABLED'] === 'false') {
+            Yii::$app->session->setFlash('error', '站点已关闭注册');
+            return $this->goHome();
+        }
+
         $model = new User(['scenario' => 'register']);
         if ($model->load(Yii::$app->request->post()) && $model->validate()) {
             // 根据 verifyProvider 的值选择使用哪种验证码服务
@@ -518,7 +523,7 @@ class UserController extends Controller
                     Yii::$app->session->setFlash('error', 'Failed to change password.');
                 }
             }
-        }else{
+        } else {
             Yii::$app->session->setFlash('error', 'Failed to validate password.');
         }
         if (Yii::$app->user->can('admin')) {
