@@ -28,7 +28,7 @@ $this->title = '系统设置';
             foreach ($attributes as $attribute) {
                 echo '<tr id="tr-' . $attribute . '">';
                 echo '<th style="width: 200px"><p>' . $siteConfig->attributeLabels()[$attribute] . '</p></th>';
-                if ($attribute == 'registrationEnabled' || $attribute == 'enableIpinfo') {
+                if ($attribute == 'registrationEnabled' || $attribute == 'enableIpinfo' || $attribute == 'clarityEnabled' || $attribute == 'gaEnabled') {
                     echo '<td>' . $form->field($siteConfig, $attribute)->checkbox(['class' => 'form-check-input'], false)->label(false) . '</td>';
                 } elseif ($attribute == 'verifyProvider') {
                     echo '<td>' . $form->field($siteConfig, $attribute)->dropDownList(['None' => 'None', 'reCAPTCHA' => 'reCAPTCHA', 'hCaptcha' => 'hCaptcha', 'Turnstile' => 'Turnstile'], ['class' => 'form-select form-select-sm', 'style' => 'width:25em'])->label(false) . '</td>';

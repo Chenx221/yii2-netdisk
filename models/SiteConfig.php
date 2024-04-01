@@ -10,7 +10,6 @@ use yii\base\Model;
  * Class SiteConfig
  * 配置信息
  * 少数配置不在列表中，如数据库配置等
- * TODO: 实现Google analysis、Microsoft Clarity统计
  */
 class SiteConfig extends Model
 {
@@ -27,13 +26,18 @@ class SiteConfig extends Model
     public string $turnstileSecret; // Turnstile Secret
     public bool $enableIpinfo; // 启用 ipinfo.io 查询
     public string $ipinfoToken; // IPinfo Token
+    public bool $clarityEnabled; // 启用 Clarity
+    public string $clarityId; // Clarity ID
+    public bool $gaEnabled; // 启用 Google Analytics
+    public string $gaId; // Google Analytics ID
+
 
     public function rules(): array
     {
         return [
             [['siteTitle', 'domain'], 'required'],
-            [['siteTitle', 'domain', 'verifyProvider', 'recaptchaSiteKey', 'recaptchaSecret', 'hcaptchaSiteKey', 'hcaptchaSecret', 'turnstileSiteKey', 'turnstileSecret', 'ipinfoToken'], 'string'],
-            [['registrationEnabled', 'enableIpinfo'], 'boolean'],
+            [['siteTitle', 'domain', 'verifyProvider', 'recaptchaSiteKey', 'recaptchaSecret', 'hcaptchaSiteKey', 'hcaptchaSecret', 'turnstileSiteKey', 'turnstileSecret', 'ipinfoToken', 'clarityId', 'gaId'], 'string'],
+            [['registrationEnabled', 'enableIpinfo', 'clarityEnabled', 'gaEnabled'], 'boolean'],
             ['verifyProvider', 'in', 'range' => ['reCAPTCHA', 'hCaptcha', 'Turnstile', 'None']],
             [['recaptchaSiteKey', 'recaptchaSecret'], 'required', 'when' => function ($model) {
                 return $model->verifyProvider == 'reCAPTCHA';
@@ -55,6 +59,16 @@ class SiteConfig extends Model
             }, 'whenClient' => "function (attribute, value) {
                 return $('#siteconfig-enableipinfo').is(':checked');
             }"],
+            ['clarityId', 'required', 'when' => function ($model) {
+                return $model->clarityEnabled;
+            }, 'whenClient' => "function (attribute, value) {
+                return $('#siteconfig-clarityenabled').is(':checked');
+            }"],
+            ['gaId', 'required', 'when' => function ($model) {
+                return $model->gaEnabled;
+            }, 'whenClient' => "function (attribute, value) {
+                return $('#siteconfig-gaenabled').is(':checked');
+            }"],
         ];
     }
 
@@ -73,8 +87,13 @@ class SiteConfig extends Model
             'turnstileSecret' => 'Turnstile Secret',
             'enableIpinfo' => '启用 ipinfo.io 查询',
             'ipinfoToken' => 'IPinfo Token',
+            'clarityEnabled' => '启用 Clarity',
+            'clarityId' => 'Clarity ID',
+            'gaEnabled' => '启用 Google Analytics',
+            'gaId' => 'Google Analytics ID',
         ];
     }
+
     public function attributeHelpTexts(): array
     {
         return [
@@ -90,8 +109,13 @@ class SiteConfig extends Model
             'turnstileSecret' => '请在这里填入Turnstile Secret',
             'enableIpinfo' => '是否使用<a href=\'https://ipinfo.io/\' target=\'_blank\'>ipinfo.io</a>查询站点上的ip信息',
             'ipinfoToken' => '请在这里填入IPinfo Token',
+            'clarityEnabled' => '是否启用<a href=\'https://clarity.microsoft.com/\' target=\'_blank\'>Microsoft Clarity</a>',
+            'clarityId' => '请在这里填入Clarity ID',
+            'gaEnabled' => '是否启用<a href=\'https://analytics.google.com/\' target=\'_blank\'>Google Analytics</a>',
+            'gaId' => '请在这里填入Google Analytics ID',
         ];
     }
+
     /**
      * 读取配置信息
      * @return bool
@@ -111,6 +135,10 @@ class SiteConfig extends Model
             $this->turnstileSecret = $_ENV['TURNSTILE_SECRET'];
             $this->enableIpinfo = $_ENV['ENABLE_IPINFO'] === 'true';
             $this->ipinfoToken = $_ENV['IPINFO_TOKEN'];
+            $this->clarityEnabled = $_ENV['CLARITY_ENABLED'] === 'true';
+            $this->clarityId = $_ENV['CLARITY_ID'];
+            $this->gaEnabled = $_ENV['GA_ENABLED'] === 'true';
+            $this->gaId = $_ENV['GA_ID'];
             return true;
         } catch (Exception) {
             return false;
@@ -140,6 +168,10 @@ class SiteConfig extends Model
             $env['TURNSTILE_SECRET'] = $this->turnstileSecret;
             $env['ENABLE_IPINFO'] = $this->enableIpinfo ? 'true' : 'false';
             $env['IPINFO_TOKEN'] = $this->ipinfoToken;
+            $env['CLARITY_ENABLED'] = $this->clarityEnabled ? 'true' : 'false';
+            $env['CLARITY_ID'] = $this->clarityId;
+            $env['GA_ENABLED'] = $this->gaEnabled ? 'true' : 'false';
+            $env['GA_ID'] = $this->gaId;
             $data = array_map(function ($key, $value) {
                 return "$key=$value";
             }, array_keys($env), $env);
