@@ -26,7 +26,7 @@ class SiteConfig extends Model
     public string $turnstileSecret; // Turnstile Secret
     public bool $enableIpinfo; // 启用 ipinfo.io 查询
     public string $ipinfoToken; // IPinfo Token
-    public bool $clarityEnabled; // 启用 Clarity
+    public bool $clarityEnabled; // 启用 Microsoft Clarity
     public string $clarityId; // Clarity ID
     public bool $gaEnabled; // 启用 Google Analytics
     public string $gaId; // Google Analytics ID
@@ -87,9 +87,9 @@ class SiteConfig extends Model
             'turnstileSecret' => 'Turnstile Secret',
             'enableIpinfo' => '启用 ipinfo.io 查询',
             'ipinfoToken' => 'IPinfo Token',
-            'clarityEnabled' => '启用 Clarity',
+            'clarityEnabled' => '启用 Microsoft Clarity',
             'clarityId' => 'Clarity ID',
-            'gaEnabled' => '启用 Google Analytics',
+            'gaEnabled' => '启用 Google Analytics (GA4)',
             'gaId' => 'Google Analytics ID',
         ];
     }
