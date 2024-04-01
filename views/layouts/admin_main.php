@@ -29,6 +29,34 @@ $this->registerCssFile('@web/css/fuckyou-navpadding.css');
 <head>
     <title><?= Html::encode($this->title).' | '.Yii::$app->name ?></title>
     <?php $this->head() ?>
+    <?php
+    if ($_ENV['CLARITY_ENABLED'] === 'true') {
+        $clarityId = $_ENV['CLARITY_ID'];
+        echo <<<EOL
+            <script type="text/javascript">
+                (function(c,l,a,r,i,t,y){
+                    c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+                    t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+                    y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+                })(window, document, "clarity", "script", "$clarityId");
+            </script>
+        EOL;
+    }
+    if ($_ENV['GA_ENABLED'] === 'true') {
+        $gaId = $_ENV['GA_ID'];
+        echo <<<EOL
+            <!-- Google tag (gtag.js) -->
+            <script async src="https://www.googletagmanager.com/gtag/js?id=$gaId"></script>
+            <script>
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+            
+              gtag('config', '$gaId');
+            </script>
+        EOL;
+    }
+    ?>
 </head>
 <body class="d-flex flex-column h-100">
 <?php $this->beginBody() ?>
