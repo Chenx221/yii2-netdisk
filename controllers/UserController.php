@@ -2,6 +2,7 @@
 
 namespace app\controllers;
 
+use app\models\LoginLogs;
 use app\models\PublicKeyCredentialSourceRepository;
 use app\models\User;
 use app\utils\FileSizeHelper;
@@ -212,11 +213,13 @@ class UserController extends Controller
                 $user = User::findOne(['username' => $model->username]);
                 if ($user === null) {
                     Yii::$app->session->setFlash('error', '用户不存在');
+                    LoginLogs::addLog(null, Yii::$app->request->userIP, Yii::$app->request->userAgent, 0); //login failed log
                     return $this->render('login', [
                         'model' => $model,
                     ]);
                 } elseif ($user->status === 0) {
                     Yii::$app->session->setFlash('error', '用户已停用，请联系管理员获取支持');
+                    LoginLogs::addLog($user->id, Yii::$app->request->userIP, Yii::$app->request->userAgent, 0); //login failed log
                     return $this->render('login', [
                         'model' => $model,
                     ]);
@@ -251,6 +254,7 @@ class UserController extends Controller
                             if (!$user->save(false)) {
                                 Yii::$app->session->setFlash('error', '登陆成功，但出现了内部错误');
                             }
+                            LoginLogs::addLog($user->id, Yii::$app->request->userIP, Yii::$app->request->userAgent, 1); //login success log
                             Yii::$app->user->login($user, $model->rememberMe ? 3600 * 24 * 30 : 0);
                             // user to home page, admin to admin/index
                             if (Yii::$app->user->can('admin')) {
@@ -261,7 +265,13 @@ class UserController extends Controller
 
                         }
                     } else {
+                        //login failed log
                         Yii::$app->session->setFlash('error', '用户名密码错误或账户已禁用');
+                        if ($user !== null) {
+                            LoginLogs::addLog($user->id, Yii::$app->request->userIP, Yii::$app->request->userAgent, 0); //login failed log
+                        } else {
+                            LoginLogs::addLog(null, Yii::$app->request->userIP, Yii::$app->request->userAgent, 0); //login failed log
+                        }
                     }
                 } else {
                     Yii::$app->session->setFlash('error', '请等待验证码加载并完成验证');
@@ -289,7 +299,11 @@ class UserController extends Controller
 
         $model = new User();
         $user = User::findOne(Yii::$app->session->get('login_verification')['id']);
-
+        if ($user === null) {
+            Yii::$app->session->setFlash('error', '用户不存在');
+            LoginLogs::addLog(null, Yii::$app->request->userIP, Yii::$app->request->userAgent, 0); //login failed log
+            return $this->goHome();
+        }
         if ($model->load(Yii::$app->request->post())) {
             // 验证二步验证代码
             if (!is_null($model->totp_input)) {
@@ -300,6 +314,7 @@ class UserController extends Controller
                     if (!$user->save(false)) {
                         Yii::$app->session->setFlash('error', '登陆成功，但出现了内部错误');
                     }
+                    LoginLogs::addLog($user->id, Yii::$app->request->userIP, Yii::$app->request->userAgent, 1); //login success log
                     Yii::$app->user->login($user, $model->rememberMe ? 3600 * 24 * 30 : 0);
                     Yii::$app->session->remove('login_verification');
                     if (Yii::$app->user->can('admin')) {
@@ -308,6 +323,7 @@ class UserController extends Controller
                         return $this->goHome();
                     }
                 } else {
+                    LoginLogs::addLog($user->id, Yii::$app->request->userIP, Yii::$app->request->userAgent, 0); //login failed log
                     Yii::$app->session->setFlash('error', '二步验证代码错误');
                 }
             } elseif (!is_null($model->recoveryCode_input)) {
@@ -322,6 +338,7 @@ class UserController extends Controller
                         Yii::$app->session->setFlash('error', '登陆成功，但出现了内部错误');
                     }
                     Yii::$app->session->setFlash('success', '登陆成功，但请注意已经使用的恢复代码已失效');
+                    LoginLogs::addLog($user->id, Yii::$app->request->userIP, Yii::$app->request->userAgent, 1); //login success log
                     Yii::$app->user->login($user, $model->rememberMe ? 3600 * 24 * 30 : 0);
                     Yii::$app->session->remove('login_verification');
                     if (Yii::$app->user->can('admin')) {
@@ -330,6 +347,7 @@ class UserController extends Controller
                         return $this->goHome();
                     }
                 } else {
+                    LoginLogs::addLog($user->id, Yii::$app->request->userIP, Yii::$app->request->userAgent, 0); //login failed log
                     Yii::$app->session->setFlash('error', '恢复代码错误');
                 }
             } else {
@@ -892,6 +910,10 @@ class UserController extends Controller
                 $publicKeyCredentialSourceRepository1->user_id //我也不知道这个是什么，不过看了眼源码，移动设备验证时userhandle传入的是Null
             );
         } catch (AuthenticatorResponseVerificationException $e) {
+            if ($is_login === 1) {
+                $user = User::findOne(['id' => $publicKeyCredentialSourceRepository1->user_id]);
+                LoginLogs::addLog($user->id, Yii::$app->request->userIP, Yii::$app->request->userAgent, 0); //login failed log
+            }
             return $this->asJson(['message' => $e->getMessage(), 'verified' => false]);
         }
 
@@ -903,6 +925,7 @@ class UserController extends Controller
             if (!$user->save(false)) {
                 Yii::$app->session->setFlash('error', '登陆成功，但出现了内部错误');
             }
+            LoginLogs::addLog($user->id, Yii::$app->request->userIP, Yii::$app->request->userAgent, 1); //login success log
             Yii::$app->user->login($user, $remember === 1 ? 3600 * 24 * 30 : 0);
             $publicKeyCredentialSourceRepository1->saveCredential($publicKeyCredentialSource, '', false);
             if (Yii::$app->user->can('admin')) {
