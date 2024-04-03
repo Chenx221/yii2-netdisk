@@ -2,6 +2,7 @@
 
 namespace app\controllers;
 
+use app\models\LoginLogs;
 use app\models\SiteConfig;
 use app\models\User;
 use app\models\UserSearch;
@@ -33,7 +34,7 @@ class AdminController extends Controller
                     'rules' => [
                         [
                             'allow' => true,
-                            'actions' => ['index', 'system', 'user', 'info', 'user-view', 'user-create', 'user-update', 'user-delete', 'user-totpoff', 'user-pwdreset'],
+                            'actions' => ['index', 'system', 'user', 'info', 'user-view', 'user-create', 'user-update', 'user-delete', 'user-totpoff', 'user-pwdreset', 'login-log'],
                             'roles' => ['admin'], // only admin can do these
                         ]
                     ],
@@ -42,7 +43,7 @@ class AdminController extends Controller
                     'class' => VerbFilter::class,
                     'actions' => [
                         'index' => ['GET'],
-                        'system' => ['GET','POST'],
+                        'system' => ['GET', 'POST'],
                         'user' => ['GET'],
                         'user-view' => ['GET', 'POST'],
                         'user-create' => ['GET', 'POST'],
@@ -51,6 +52,7 @@ class AdminController extends Controller
                         'info' => ['GET', 'POST'],
                         'user-totpoff' => ['POST'],
                         'user-pwdreset' => ['POST'],
+                        'login-log' => ['GET'],
                     ],
                 ],
             ]
@@ -378,4 +380,19 @@ class AdminController extends Controller
             'is_otp_enabled' => $model->is_otp_enabled == 1
         ]);
     }
+
+    /**
+     * login log
+     * @return string
+     */
+    public function actionLoginLog(): string
+    {
+        $loginLogs = new LoginLogs();
+        $dataProvider = $loginLogs->search($this->request->queryParams);
+        return $this->render('login_log', [
+            'searchModel' => $loginLogs,
+            'dataProvider' => $dataProvider,
+        ]);
+    }
+
 }
