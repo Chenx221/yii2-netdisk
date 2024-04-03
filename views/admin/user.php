@@ -3,7 +3,6 @@
 use app\models\PublicKeyCredentialSourceRepository;
 use app\models\User;
 use app\utils\FileSizeHelper;
-use app\utils\IPLocation;
 use yii\grid\ActionColumn;
 use yii\grid\GridView;
 use yii\helpers\Html;
@@ -28,9 +27,7 @@ $this->params['breadcrumbs'][] = $this->title;
     <div class="table-responsive">
         <?= GridView::widget([
             'dataProvider' => $dataProvider,
-            'filterModel' => $searchModel,
             'columns' => [
-//                ['class' => 'yii\grid\CheckboxColumn'],
                 ['attribute' => 'id', 'label' => 'ID'],
                 ['attribute' => 'username', 'label' => '用户名'],
                 ['attribute' => 'name', 'label' => '昵称'],
