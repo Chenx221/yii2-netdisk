@@ -27,7 +27,7 @@ $this->registerCssFile('@web/css/fuckyou-navpadding.css');
 <!DOCTYPE html>
 <html lang="<?= Yii::$app->language ?>" class="h-100" <?= $darkMode === 1 ? 'data-bs-theme="dark"' : '' ?> >
 <head>
-    <title><?= Html::encode($this->title).' | '.Yii::$app->name ?></title>
+    <title><?= Html::encode($this->title) . ' | ' . Yii::$app->name ?></title>
     <?php $this->head() ?>
     <?php
     if ($_ENV['CLARITY_ENABLED'] === 'true') {
@@ -75,6 +75,10 @@ $this->registerCssFile('@web/css/fuckyou-navpadding.css');
             ['label' => '管理面板', 'url' => ['/admin/index']],
             ['label' => '用户管理', 'url' => ['/admin/user']],
             ['label' => '个人设置', 'url' => ['/admin/info']],
+            ['label' => '日志管理', 'items' => [
+                ['label' => '登录日志', 'url' => ['/admin/login-log']],
+            ],
+            ],
             ['label' => '系统设置', 'url' => ['/admin/system']],
             '<li class="nav-item">'
             . Html::beginForm(['/user/logout'])
