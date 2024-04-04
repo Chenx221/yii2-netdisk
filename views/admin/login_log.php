@@ -41,7 +41,7 @@ $this->title = '登录日志';
                 'format' => 'html',
                 'enableSorting' => false,
                 'value' => function ($model) {
-                    return nl2br($model->login_time . "\n(" . Yii::$app->formatter->asRelativeTime($model->login_time) . ")");
+                    return nl2br($model->login_time . "\n(" . Yii::$app->formatter->asRelativeTime(new DateTime($model->login_time, new DateTimeZone('GMT+8'))) . ")");
                 },
             ],
             [

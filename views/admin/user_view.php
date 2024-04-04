@@ -83,11 +83,11 @@ $this->registerCssFile('@web/css/admin-userv.css');
             }],
             ['attribute' => 'created_at', 'label' => '创建时间', 'value' => function ($model) {
                 // 日期时间 (xx天前)
-                return $model->created_at . ' (' . Yii::$app->formatter->asRelativeTime($model->created_at) . ')';
+                return $model->created_at . ' (' . Yii::$app->formatter->asRelativeTime(new DateTime($model->created_at, new DateTimeZone('GMT+8'))) . ')';
             }],
             ['attribute' => 'last_login', 'label' => '最后登录时间', 'value' => function ($model) {
                 // 日期时间 (xx天前)
-                return $model->last_login . ' (' . Yii::$app->formatter->asRelativeTime($model->last_login) . ')';
+                return $model->last_login . ' (' . Yii::$app->formatter->asRelativeTime(new DateTime($model->last_login, new DateTimeZone('GMT+8'))) . ')';
             }],
             ['attribute' => 'last_login_ip', 'label' => '上次登录IP', 'value' => function ($model) use ($IPLocation) {
                 if (Yii::$app->params['enableIpInfo']) {
