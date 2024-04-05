@@ -2,6 +2,7 @@
 
 namespace app\controllers;
 
+use app\models\DownloadLogs;
 use app\models\LoginLogs;
 use app\models\SiteConfig;
 use app\models\User;
@@ -34,7 +35,7 @@ class AdminController extends Controller
                     'rules' => [
                         [
                             'allow' => true,
-                            'actions' => ['index', 'system', 'user', 'info', 'user-view', 'user-create', 'user-update', 'user-delete', 'user-totpoff', 'user-pwdreset', 'login-log'],
+                            'actions' => ['index', 'system', 'user', 'info', 'user-view', 'user-create', 'user-update', 'user-delete', 'user-totpoff', 'user-pwdreset', 'login-log','access-log'],
                             'roles' => ['admin'], // only admin can do these
                         ]
                     ],
@@ -53,6 +54,7 @@ class AdminController extends Controller
                         'user-totpoff' => ['POST'],
                         'user-pwdreset' => ['POST'],
                         'login-log' => ['GET'],
+                        'access-log' => ['GET'],
                     ],
                 ],
             ]
@@ -395,4 +397,16 @@ class AdminController extends Controller
         ]);
     }
 
+    /**
+     * @return string
+     */
+    public function actionAccessLog(): string
+    {
+        $downloadLogs = new DownloadLogs();
+        $dataProvider = $downloadLogs->search($this->request->queryParams);
+        return $this->render('access_log', [
+            'searchModel' => $downloadLogs,
+            'dataProvider' => $dataProvider,
+        ]);
+    }
 }

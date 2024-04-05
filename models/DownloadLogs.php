@@ -2,6 +2,7 @@
 
 namespace app\models;
 
+use yii\data\ActiveDataProvider;
 use yii\db\ActiveQuery;
 use yii\db\ActiveRecord;
 
@@ -95,5 +96,43 @@ class DownloadLogs extends ActiveRecord
         $log->user_agent = strlen($userAgent) > 250 ? substr($userAgent, 0, 250) : $userAgent;
 
         $log->save();
+    }
+
+    public function search($params): ActiveDataProvider
+    {
+        $query = DownloadLogs::find();
+
+        // add conditions that should always apply here
+
+        $dataProvider = new ActiveDataProvider([
+            'query' => $query,
+            'sort' => [
+                'defaultOrder' => [
+                    'id' => SORT_DESC, // 默认按照 'id' 倒序排序
+                ]
+            ],
+        ]);
+
+        $this->load($params);
+
+        if (!$this->validate()) {
+            // uncomment the following line if you do not want to return any records when validation fails
+            // $query->where('0=1');
+            return $dataProvider;
+        }
+
+        // grid filtering conditions
+        $query->andFilterWhere([
+            'id' => $this->id,
+            'user_id' => $this->user_id,
+            'share_id' => $this->share_id,
+            'access_time' => $this->access_time,
+        ]);
+
+        $query->andFilterWhere(['like', 'ip_address', $this->ip_address])
+            ->andFilterWhere(['like', 'user_agent', $this->user_agent]);
+
+
+        return $dataProvider;
     }
 }
