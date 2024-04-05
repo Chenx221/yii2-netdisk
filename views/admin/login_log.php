@@ -3,14 +3,13 @@
 use yii\bootstrap5\Html;
 use yii\bootstrap5\LinkPager;
 use yii\grid\GridView;
-use yii\helpers\Url;
 use yii\widgets\Pjax;
 
 
 /** @var yii\web\View $this */
 /** @var app\models\LoginLogs $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
-$this->title = '登录日志';
+$this->title = '用户登录日志';
 ?>
 <div class="login-logs">
     <h1><?= Html::encode($this->title) ?></h1>
