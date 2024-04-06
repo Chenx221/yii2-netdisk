@@ -82,7 +82,7 @@ Google Analysis、Microsoft Clarify集成
 -------------------
 
 管理员相关功能:
-审计日志(**登录日志**、分享访问日志、收集任务访问日志)、系统状态监控、分享和收集任务管理
+审计日志(**登录日志**、**分享访问日志**、收集任务访问日志)、系统状态监控、分享和收集任务管理
 
 首页公告、用户反馈
 
@@ -106,15 +106,15 @@ init setup page
 开发环境
 ------------
 
-Windows 11 Pro (22631.3296) \ Windows 10 Enterprise LTSC 2021 (19044.4046)
+Windows 11 Pro (22631.3374)
 
-PhpStorm 2023.3.4
+PhpStorm 2023.3.6
 
 PHP 8.3.4 (这个项目需要PHP>=8.2)
 
 MariaDB 11.3.2
 
-Apache 2.4.58.1
+Apache 2.4.59
 
 Redis(Memurai) 4.1.1
 
