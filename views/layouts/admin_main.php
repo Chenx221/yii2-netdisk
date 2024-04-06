@@ -76,8 +76,9 @@ $this->registerCssFile('@web/css/fuckyou-navpadding.css');
             ['label' => '用户管理', 'url' => ['/admin/user']],
             ['label' => '个人设置', 'url' => ['/admin/info']],
             ['label' => '日志管理', 'items' => [
-                ['label' => '用户登录', 'url' => ['/admin/login-log']],
-                ['label' => '分享访问', 'url' => ['/admin/access-log']]
+                ['label' => '用户登录日志', 'url' => ['/admin/login-log']],
+                ['label' => '分享访问日志', 'url' => ['/admin/access-log']],
+                ['label' => '文件收集上传日志', 'url' => ['/admin/collection-up-log']],
             ],
             ],
             ['label' => '系统设置', 'url' => ['/admin/system']],

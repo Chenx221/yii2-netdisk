@@ -2,6 +2,7 @@
 
 namespace app\controllers;
 
+use app\models\CollectionUploadedSearch;
 use app\models\DownloadLogs;
 use app\models\LoginLogs;
 use app\models\SiteConfig;
@@ -35,7 +36,7 @@ class AdminController extends Controller
                     'rules' => [
                         [
                             'allow' => true,
-                            'actions' => ['index', 'system', 'user', 'info', 'user-view', 'user-create', 'user-update', 'user-delete', 'user-totpoff', 'user-pwdreset', 'login-log','access-log'],
+                            'actions' => ['index', 'system', 'user', 'info', 'user-view', 'user-create', 'user-update', 'user-delete', 'user-totpoff', 'user-pwdreset', 'login-log', 'access-log', 'collection-up-log'],
                             'roles' => ['admin'], // only admin can do these
                         ]
                     ],
@@ -55,6 +56,7 @@ class AdminController extends Controller
                         'user-pwdreset' => ['POST'],
                         'login-log' => ['GET'],
                         'access-log' => ['GET'],
+                        'collection-up-log' => ['GET'],
                     ],
                 ],
             ]
@@ -406,6 +408,19 @@ class AdminController extends Controller
         $dataProvider = $downloadLogs->search($this->request->queryParams);
         return $this->render('access_log', [
             'searchModel' => $downloadLogs,
+            'dataProvider' => $dataProvider,
+        ]);
+    }
+
+    /**
+     * @return string
+     */
+    public function actionCollectionUpLog(): string
+    {
+        $collectionUploadedSearch = new CollectionUploadedSearch();
+        $dataProvider = $collectionUploadedSearch->search($this->request->queryParams);
+        return $this->render('collection_up_log', [
+            'searchModel' => $collectionUploadedSearch,
             'dataProvider' => $dataProvider,
         ]);
     }
