@@ -239,10 +239,12 @@ class CollectionController extends Controller
 
         // 创建一个新的CollectionUploaded模型实例，并设置其属性值
         $model = new CollectionUploaded();
+        $model->user_id = Yii::$app->user->id;
         $model->task_id = $taskId;
         $model->uploader_ip = $uploaderIp;
         $model->uploaded_at = date('Y-m-d H:i:s'); // 设置上传时间为当前时间
         $model->subfolder_name = $subfolderName;
+        $model->user_agent = $request->userAgent;
         if ($model->validate()) {
             // 进行文件上传
             $targetDirectory = Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . $userId . '/' . $folderPath . '/' . $subfolderName;
