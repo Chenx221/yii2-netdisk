@@ -2,6 +2,7 @@
 
 namespace app\controllers;
 
+use app\models\DownloadLogs;
 use app\models\Share;
 use app\models\ShareSearch;
 use RecursiveDirectoryIterator;
@@ -60,18 +61,20 @@ class ShareController extends Controller
             ]
         );
     }
+
     public function init(): void
     {
         parent::init();
 
         if (Yii::$app->user->can('admin')) {
             $this->layout = 'admin_main';
-        }elseif (Yii::$app->user->isGuest) {
+        } elseif (Yii::$app->user->isGuest) {
             $this->layout = 'guest_main';
         } else {
             $this->layout = 'main';
         }
     }
+
     /**
      * Lists all Share models.
      *
@@ -267,7 +270,7 @@ class ShareController extends Controller
         }
 
         $model = $this->findModel($share_id, true);
-
+        DownloadLogs::addLog(Yii::$app->user->id, $model->share_id, Yii::$app->request->userIP, Yii::$app->request->userAgent); // logging for access(DL)
         $absolutePath = Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . $model->sharer_id . '/' . $model->file_relative_path;
         if (is_file($absolutePath)) {
             return Yii::$app->response->sendFile($absolutePath);
@@ -290,4 +293,7 @@ class ShareController extends Controller
             throw new NotFoundHttpException('异常，文件不存在');
         }
     }
+
+    // TODO
+    // Preview file
 }
