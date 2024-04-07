@@ -271,6 +271,8 @@ class ShareController extends Controller
 
         $model = $this->findModel($share_id, true);
         DownloadLogs::addLog(Yii::$app->user->id, $model->share_id, Yii::$app->request->userIP, Yii::$app->request->userAgent); // logging for access(DL)
+        // add download count
+        $model->setDlCountPlus1();
         $absolutePath = Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . $model->sharer_id . '/' . $model->file_relative_path;
         if (is_file($absolutePath)) {
             return Yii::$app->response->sendFile($absolutePath);

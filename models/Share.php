@@ -14,12 +14,15 @@ use yii\db\ActiveRecord;
  * @property string $access_code 分享密钥
  * @property string $creation_date 分享创建日期
  * @property int|null $status 分享是否启用
+ * @property int|null $dl_count 下载次数
  *
- * @property User $sharer
+ * @property DownloadLogs[] $downloadLogs
+ * * @property User $sharer
  */
 class Share extends ActiveRecord
 {
     const string SCENARIO_UPDATE = 'update';
+
     /**
      * {@inheritdoc}
      */
@@ -35,7 +38,7 @@ class Share extends ActiveRecord
     {
         return [
             [['file_relative_path', 'access_code'], 'required'],
-            [['sharer_id', 'status'], 'integer'],
+            [['sharer_id', 'status', 'dl_count'], 'integer'],
             [['creation_date'], 'safe'],
             [['file_relative_path'], 'string', 'max' => 255],
             [['access_code'], 'string', 'max' => 4],
@@ -56,6 +59,8 @@ class Share extends ActiveRecord
             'access_code' => '访问密码',
             'creation_date' => '分享创建日期',
             'status' => 'Status',
+            'dl_count' => '下载次数',
+
         ];
     }
 
@@ -68,8 +73,32 @@ class Share extends ActiveRecord
     {
         return $this->hasOne(User::class, ['id' => 'sharer_id']);
     }
+
+    /**
+     * Gets query for [[DownloadLogs]].
+     *
+     * @return ActiveQuery
+     */
+    public function getDownloadLogs(): ActiveQuery
+    {
+        return $this->hasMany(DownloadLogs::class, ['share_id' => 'share_id']);
+    }
+
+    /**
+     * @return string|null
+     */
     public function getSharerUsername(): ?string
     {
         return $this->sharer->username;
+    }
+
+    /**
+     * @return void
+     */
+    public function setDlCountPlus1(): void
+    {
+        $this->dl_count += 1;
+        $this->save(true, ['dl_count']);
+
     }
 }
