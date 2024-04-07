@@ -5,12 +5,15 @@ namespace app\controllers;
 use app\models\CollectionUploadedSearch;
 use app\models\DownloadLogs;
 use app\models\LoginLogs;
+use app\models\Share;
+use app\models\ShareSearch;
 use app\models\SiteConfig;
 use app\models\User;
 use app\models\UserSearch;
 use app\utils\AdminSword;
 use app\utils\FileSizeHelper;
 use OTPHP\TOTP;
+use RuntimeException;
 use Throwable;
 use Yii;
 use yii\base\Exception;
@@ -19,6 +22,7 @@ use yii\filters\VerbFilter;
 use yii\web\Controller;
 use yii\web\HttpException;
 use yii\web\NotFoundHttpException;
+use yii\web\Request;
 use yii\web\Response;
 
 class AdminController extends Controller
@@ -36,7 +40,7 @@ class AdminController extends Controller
                     'rules' => [
                         [
                             'allow' => true,
-                            'actions' => ['index', 'system', 'user', 'info', 'user-view', 'user-create', 'user-update', 'user-delete', 'user-totpoff', 'user-pwdreset', 'login-log', 'access-log', 'collection-up-log'],
+                            'actions' => ['index', 'system', 'user', 'info', 'user-view', 'user-create', 'user-update', 'user-delete', 'user-totpoff', 'user-pwdreset', 'login-log', 'access-log', 'collection-up-log', 'share-manage', 'share-manage-view', 'share-manage-delete', 'collection-manage', 'notice-manage', 'feedback-manage', 'sysinfo'],
                             'roles' => ['admin'], // only admin can do these
                         ]
                     ],
@@ -57,6 +61,13 @@ class AdminController extends Controller
                         'login-log' => ['GET'],
                         'access-log' => ['GET'],
                         'collection-up-log' => ['GET'],
+                        'share-manage' => ['GET'],
+                        'share-manage-view' => ['GET'],
+                        'share-manage-delete' => ['POST'],
+                        'collection-manage' => ['GET'],
+                        'notice-manage' => ['GET'],
+                        'feedback-manage' => ['GET'],
+                        'sysinfo' => ['GET'],
                     ],
                 ],
             ]
@@ -85,7 +96,7 @@ class AdminController extends Controller
     {
         $siteConfig = new SiteConfig();
         if (!$siteConfig->loadFromEnv()) {
-            throw new HttpException(500, 'Fatal error, Unable to load site configuration from .env file.');
+            throw new HttpException(500, 'Fatal error, Unable to load site configuration from . env file . ');
         }
         if (Yii::$app->request->isPost) {
             if ($siteConfig->load(Yii::$app->request->post()) && $siteConfig->validate()) {
@@ -136,7 +147,7 @@ class AdminController extends Controller
                 if ($model->save(true, ['name'])) {
                     return ['output' => $model->name, 'message' => ''];
                 } else {
-                    return ['output' => $oldValue, 'message' => 'Incorrect Value! Please reenter.'];
+                    return ['output' => $oldValue, 'message' => 'Incorrect Value!Please reenter . '];
                 }
             } elseif (isset($_POST['status'])) { //修改用户状态
                 if ($id == Yii::$app->user->id) {
@@ -160,7 +171,7 @@ class AdminController extends Controller
                 if ($model->save(true, ['bio'])) {
                     return ['output' => $model->bio, 'message' => ''];
                 } else {
-                    return ['output' => $oldValue, 'message' => 'Incorrect Value! Please reenter.'];
+                    return ['output' => $oldValue, 'message' => 'Incorrect Value!Please reenter . '];
                 }
             } elseif (isset($_POST['storage_limit'])) { //修改用户存储限制
                 $oldValue = $model->storage_limit;
@@ -180,7 +191,7 @@ class AdminController extends Controller
                 if ($model->save(true, ['storage_limit'])) {
                     return ['output' => FileSizeHelper::formatMegaBytes($model->storage_limit), 'message' => ''];
                 } else {
-                    return ['output' => FileSizeHelper::formatMegaBytes($oldValue), 'message' => 'Incorrect Value! Please reenter.'];
+                    return ['output' => FileSizeHelper::formatMegaBytes($oldValue), 'message' => 'Incorrect Value!Please reenter . '];
                 }
 
             } else {
@@ -213,11 +224,11 @@ class AdminController extends Controller
                 $model->name = $model->username; //用户默认昵称为用户名，后期可以修改
                 if ($model->save(false)) { // save without validation
                     if ($model->role == 'user') {
-                        $userFolder = Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . $model->id;
+                        $userFolder = Yii::getAlias(Yii::$app->params['dataDirectory']) . ' / ' . $model->id;
                         if (!is_dir($userFolder)) {
                             mkdir($userFolder);
                         }
-                        $secretFolder = Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . $model->id . '.secret';
+                        $secretFolder = Yii::getAlias(Yii::$app->params['dataDirectory']) . ' / ' . $model->id . ' . secret';
                         if (!is_dir($secretFolder)) {
                             mkdir($secretFolder);
                         }
@@ -346,7 +357,7 @@ class AdminController extends Controller
             return $model;
         }
 
-        throw new NotFoundHttpException('The requested page does not exist.');
+        throw new NotFoundHttpException('The requested page does not exist . ');
     }
 
     /**
@@ -424,4 +435,81 @@ class AdminController extends Controller
             'dataProvider' => $dataProvider,
         ]);
     }
+
+    /**
+     * @return string
+     */
+    public function actionShareManage(): string
+    {
+        $searchModel = new ShareSearch();
+        if ($this->request instanceof Request) {
+            $dataProvider = $searchModel->search($this->request->queryParams);
+            return $this->render('share_manage', [
+                'searchModel' => $searchModel,
+                'dataProvider' => $dataProvider,
+            ]);
+        } else {
+            throw new RuntimeException('Invalid request type');
+        }
+    }
+    protected function findShareModel(int $share_id): Share
+    {
+        if (($model = Share::findOne(['share_id' => $share_id])) !== null) {
+            return $model;
+        }
+
+        throw new NotFoundHttpException('The requested page does not exist.');
+    }
+
+    public function actionShareManageView(int $share_id): string
+    {
+        return $this->render('share_manage_view', [
+            'model' => $this->findShareModel($share_id),
+        ]);
+    }
+
+    public function actionShareManageDelete(int $share_id): Response
+    {
+        $model = $this->findShareModel($share_id);
+        $model->status = 0;
+        if ($model->save()) {
+            Yii::$app->session->setFlash('success', 'Share delete successfully.');
+        } else {
+            Yii::$app->session->setFlash('error', 'Failed to delete share.');
+        }
+        return $this->redirect(['share-manage']);
+    }
+
+    /**
+     * @return string
+     */
+    public function actionCollectionManage(): string
+    {
+        return $this->render('collection_manage');
+    }
+
+    /**
+     * @return string
+     */
+    public function actionNoticeManage(): string
+    {
+        return $this->render('notice_manage');
+    }
+
+    /**
+     * @return string
+     */
+    public function actionFeedbackManage(): string
+    {
+        return $this->render('feedback_manage');
+    }
+
+    /**
+     * @return string
+     */
+    public function actionSysinfo(): string
+    {
+        return $this->render('sysinfo');
+    }
+
 }
