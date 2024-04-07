@@ -41,6 +41,7 @@ $this->params['breadcrumbs'][] = $this->title;
             ],
             [
                 'attribute' => 'access_code',
+                'enableSorting' => false,
                 'headerOptions' => ['style' => 'width:7%;'],
             ],
             [
