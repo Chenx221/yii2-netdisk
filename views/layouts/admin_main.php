@@ -72,16 +72,27 @@ $this->registerCssFile('@web/css/fuckyou-navpadding.css');
         'options' => ['class' => 'navbar-nav'],
         'items' => [
             ['label' => '首页', 'url' => ['/site/index']],
-            ['label' => '管理面板', 'url' => ['/admin/index']],
-            ['label' => '用户管理', 'url' => ['/admin/user']],
-            ['label' => '个人设置', 'url' => ['/admin/info']],
-            ['label' => '日志管理', 'items' => [
+            ['label' => '面板', 'url' => ['/admin/index']], // 未完工
+            ['label' => '管理', 'items' => [
+                ['label' => '用户管理', 'url' => ['/admin/user']],
+                ['label' => '文件分享管理', 'url' => ['/admin/share-manage']], // 未完工
+                ['label' => '文件收集管理', 'url' => ['/admin/collection-manage']], // 未完工
+                ['label' => '站点公告管理', 'url' => ['/admin/notice-manage']], // 未完工
+                ['label' => '用户反馈管理', 'url' => ['/admin/feedback-manage']], // 未完工
+            ],
+            ],
+            ['label' => '日志', 'items' => [
                 ['label' => '用户登录日志', 'url' => ['/admin/login-log']],
                 ['label' => '分享访问日志', 'url' => ['/admin/access-log']],
                 ['label' => '文件收集上传日志', 'url' => ['/admin/collection-up-log']],
             ],
             ],
-            ['label' => '系统设置', 'url' => ['/admin/system']],
+            ['label' => '设置', 'items' => [
+                ['label' => '个人设置', 'url' => ['/admin/info']],
+                ['label' => '系统设置', 'url' => ['/admin/system']],
+                ['label' => '系统信息', 'url' => ['/admin/sysinfo']], // 未完工
+            ],
+            ],
             '<li class="nav-item">'
             . Html::beginForm(['/user/logout'])
             . Html::submitButton(
