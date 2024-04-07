@@ -63,7 +63,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     if ($action === 'view') {
                         // 返回查看按钮的链接
                         return $model->status != 0 ? Url::toRoute(['share-manage-view', 'share_id' => $model->share_id]): null;
-                    } elseif ($action === 'delete') {
+                    } else {
                         // 如果 status 为 0，禁用删除按钮
                         return $model->status != 0 ? Url::toRoute(['share-manage-delete', 'share_id' => $model->share_id]) : null;
                     }
