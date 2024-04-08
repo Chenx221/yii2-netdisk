@@ -2,6 +2,8 @@
 
 namespace app\controllers;
 
+use app\models\CollectionSearch;
+use app\models\CollectionTasks;
 use app\models\CollectionUploadedSearch;
 use app\models\DownloadLogs;
 use app\models\LoginLogs;
@@ -40,7 +42,10 @@ class AdminController extends Controller
                     'rules' => [
                         [
                             'allow' => true,
-                            'actions' => ['index', 'system', 'user', 'info', 'user-view', 'user-create', 'user-update', 'user-delete', 'user-totpoff', 'user-pwdreset', 'login-log', 'access-log', 'collection-up-log', 'share-manage', 'share-manage-view', 'share-manage-delete', 'collection-manage', 'notice-manage', 'feedback-manage', 'sysinfo'],
+                            'actions' => ['index', 'system', 'user', 'info', 'user-view', 'user-create', 'user-update',
+                                'user-delete', 'user-totpoff', 'user-pwdreset', 'login-log', 'access-log', 'collection-up-log',
+                                'share-manage', 'share-manage-view', 'share-manage-delete', 'collection-manage', 'collection-manage-view',
+                                'collection-manage-delete', 'notice-manage', 'feedback-manage', 'sysinfo'],
                             'roles' => ['admin'], // only admin can do these
                         ]
                     ],
@@ -65,6 +70,8 @@ class AdminController extends Controller
                         'share-manage-view' => ['GET'],
                         'share-manage-delete' => ['POST'],
                         'collection-manage' => ['GET'],
+                        'collection-manage-view' => ['GET'],
+                        'collection-manage-delete' => ['POST'],
                         'notice-manage' => ['GET'],
                         'feedback-manage' => ['GET'],
                         'sysinfo' => ['GET'],
@@ -452,6 +459,12 @@ class AdminController extends Controller
             throw new RuntimeException('Invalid request type');
         }
     }
+
+    /**
+     * @param int $share_id
+     * @return Share
+     * @throws NotFoundHttpException
+     */
     protected function findShareModel(int $share_id): Share
     {
         if (($model = Share::findOne(['share_id' => $share_id])) !== null) {
@@ -461,6 +474,11 @@ class AdminController extends Controller
         throw new NotFoundHttpException('The requested page does not exist.');
     }
 
+    /**
+     * @param int $share_id
+     * @return string
+     * @throws NotFoundHttpException
+     */
     public function actionShareManageView(int $share_id): string
     {
         return $this->render('share_manage_view', [
@@ -468,6 +486,11 @@ class AdminController extends Controller
         ]);
     }
 
+    /**
+     * @param int $share_id
+     * @return Response
+     * @throws NotFoundHttpException
+     */
     public function actionShareManageDelete(int $share_id): Response
     {
         $model = $this->findShareModel($share_id);
@@ -485,7 +508,60 @@ class AdminController extends Controller
      */
     public function actionCollectionManage(): string
     {
-        return $this->render('collection_manage');
+        $searchModel = new CollectionSearch();
+        if ($this->request instanceof Request) {
+            $dataProvider = $searchModel->search($this->request->queryParams);
+            return $this->render('collection_manage', [
+                'searchModel' => $searchModel,
+                'dataProvider' => $dataProvider,
+            ]);
+        } else {
+            throw new RuntimeException('Invalid request type');
+        }
+    }
+
+    /**
+     * Displays a single CollectionTasks model.
+     * @param int $id ID
+     * @return string
+     * @throws NotFoundHttpException if the model cannot be found
+     */
+    public function actionCollectionManageView(int $id): string
+    {
+        return $this->render('collection_manage_view', [
+            'model' => $this->findCollectionModel($id),
+        ]);
+    }
+
+    /**
+     * @param int $id
+     * @return CollectionTasks
+     * @throws NotFoundHttpException
+     */
+    protected function findCollectionModel(int $id): CollectionTasks
+    {
+        if (($model = CollectionTasks::findOne(['id' => $id])) !== null) {
+            return $model;
+        }
+
+        throw new NotFoundHttpException('The requested page does not exist.');
+    }
+
+    /**
+     * @param int $id
+     * @return Response
+     * @throws NotFoundHttpException
+     */
+    public function actionCollectionManageDelete(int $id): Response
+    {
+        $model = $this->findCollectionModel($id);
+        $model->status = 0;
+        if ($model->save()) {
+            Yii::$app->session->setFlash('success', 'Task delete successfully.');
+        } else {
+            Yii::$app->session->setFlash('error', 'Failed to delete task.');
+        }
+        return $this->redirect(['collection-manage']);
     }
 
     /**
