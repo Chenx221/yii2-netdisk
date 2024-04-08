@@ -10,6 +10,7 @@ use yii\widgets\Pjax;
 /** @var app\models\DownloadLogs $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
 $this->title = '分享访问日志';
+$this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="access-logs">
     <h1><?= Html::encode($this->title) ?></h1>

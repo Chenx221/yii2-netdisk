@@ -10,6 +10,7 @@ use yii\widgets\Pjax;
 /** @var app\models\CollectionUploadedSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
 $this->title = '文件收集上传日志';
+$this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="access-logs">
     <h1><?= Html::encode($this->title) ?></h1>

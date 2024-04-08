@@ -10,6 +10,7 @@ use yii\widgets\Pjax;
 /** @var app\models\LoginLogs $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
 $this->title = '用户登录日志';
+$this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="login-logs">
     <h1><?= Html::encode($this->title) ?></h1>
