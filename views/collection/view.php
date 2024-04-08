@@ -2,6 +2,7 @@
 
 use yii\grid\GridView;
 use yii\helpers\Html;
+use yii\helpers\Url;
 use yii\web\JqueryAsset;
 use yii\web\View;
 use yii\web\YiiAsset;
@@ -58,7 +59,10 @@ $dataProvider->query->andWhere(['task_id' => $model->id]);
                 'attribute' => 'subfolder_name',
                 'format' => 'raw',
                 'value' => function ($model) {
-                    $url = "https://devs.chenx221.cyou:8081/index.php?r=home%2Findex&directory=" . urlencode($model->task->folder_path.'/'.$model->subfolder_name);
+                    $url = Url::to([
+                        'home/index',
+                        'directory' => $model->task->folder_path . '/' . $model->subfolder_name,
+                    ], true);
                     return Html::a($model->subfolder_name, $url, ['target' => '_blank']);
                 },
             ],
