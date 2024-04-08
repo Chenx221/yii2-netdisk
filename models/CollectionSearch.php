@@ -14,10 +14,10 @@ class CollectionSearch extends CollectionTasks
     /**
      * {@inheritdoc}
      */
-    public function rules()
+    public function rules(): array
     {
         return [
-            [['id', 'user_id'], 'integer'],
+            [['id', 'user_id','status'], 'integer'],
             [['folder_path', 'created_at', 'secret'], 'safe'],
         ];
     }
@@ -25,7 +25,7 @@ class CollectionSearch extends CollectionTasks
     /**
      * {@inheritdoc}
      */
-    public function scenarios()
+    public function scenarios(): array
     {
         // bypass scenarios() implementation in the parent class
         return Model::scenarios();
@@ -38,9 +38,14 @@ class CollectionSearch extends CollectionTasks
      *
      * @return ActiveDataProvider
      */
-    public function search($params)
+    public function search($params): ActiveDataProvider
     {
-        $query = CollectionTasks::find()->where(['user_id' => Yii::$app->user->id]);
+        // if user is admin
+        if (Yii::$app->user->can('admin')) {
+            $query = CollectionTasks::find();
+        } else {
+            $query = CollectionTasks::find()->where(['user_id' => Yii::$app->user->id]);
+        }
 
         // add conditions that should always apply here
 
@@ -57,11 +62,20 @@ class CollectionSearch extends CollectionTasks
         }
 
         // grid filtering conditions
-        $query->andFilterWhere([
-            'id' => $this->id,
-//            'user_id' => $this->user_id,
-            'created_at' => $this->created_at,
-        ]);
+        if (Yii::$app->user->can('admin')) {
+            $query->andFilterWhere([
+                'id' => $this->id,
+                'user_id' => $this->user_id,
+                'created_at' => $this->created_at,
+                'status'=>$this->status,
+            ]);
+        }else{
+            $query->andFilterWhere([
+                'id' => $this->id,
+                'created_at' => $this->created_at,
+                'status'=>$this->status,
+            ]);
+        }
 
         $query->andFilterWhere(['like', 'folder_path', $this->folder_path])
             ->andFilterWhere(['like', 'secret', $this->secret]);
