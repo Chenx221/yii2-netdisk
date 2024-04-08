@@ -75,8 +75,8 @@ $this->registerCssFile('@web/css/fuckyou-navpadding.css');
             ['label' => '面板', 'url' => ['/admin/index']], // 未完工
             ['label' => '管理', 'items' => [
                 ['label' => '用户管理', 'url' => ['/admin/user']],
-                ['label' => '文件分享管理', 'url' => ['/admin/share-manage']], // 未完工
-                ['label' => '文件收集管理', 'url' => ['/admin/collection-manage']], // 未完工
+                ['label' => '文件分享管理', 'url' => ['/admin/share-manage']],
+                ['label' => '文件收集管理', 'url' => ['/admin/collection-manage']],
                 ['label' => '站点公告管理', 'url' => ['/admin/notice-manage']], // 未完工
                 ['label' => '用户反馈管理', 'url' => ['/admin/feedback-manage']], // 未完工
             ],

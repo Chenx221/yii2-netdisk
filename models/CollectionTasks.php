@@ -25,7 +25,7 @@ class CollectionTasks extends ActiveRecord
     /**
      * {@inheritdoc}
      */
-    public static function tableName()
+    public static function tableName(): string
     {
         return 'collection_tasks';
     }
