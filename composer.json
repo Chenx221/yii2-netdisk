@@ -49,7 +49,9 @@
     "phpdocumentor/reflection-docblock": "^5.3",
     "web-auth/webauthn-lib": "^4.8",
     "kartik-v/yii2-editable": "dev-master",
-    "chenx221/yii2-bootstrap5": "dev-master"
+    "chenx221/yii2-bootstrap5": "dev-master",
+    "npm-asset/echarts": "^5.5",
+    "npm-asset/echarts-liquidfill": "^3.1"
   },
   "require-dev": {
     "yiisoft/yii2-debug": "~2.1.0",
