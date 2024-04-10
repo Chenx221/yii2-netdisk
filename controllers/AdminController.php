@@ -608,7 +608,6 @@ class AdminController extends Controller
         //server load
         //server cpu usage
         //server memory usage
-        //server swap usage
         //storage data drive
         //file system
         //drive size
@@ -621,59 +620,6 @@ class AdminController extends Controller
         //share number,collection number
         //php version,memory limit,max execution time,max upload size,max post size,extension
         //database type,version,size
-
-        //get server hostname
-        $hostname = php_uname('n');
-        //get os
-        $os = php_uname('s') . ' ' . php_uname('r') . ' ' . php_uname('v') . ' ' . php_uname('m');
-        // is windows?
-        $is_windows = stripos($os, 'windows') !== false;
-        if ($is_windows) {
-            //get cpu model for windows
-            $cpu = implode("\n", array_slice(explode("\n", trim(shell_exec('wmic cpu get name'))), 1)) . ' (' . implode("\n", array_slice(explode("\n", trim(shell_exec('wmic cpu get NumberOfCores'))), 1)) . ' cores)';
-            //get memory for windows
-            $memory_str = shell_exec('wmic MEMORYCHIP get Capacity');
-            $memoryLines = explode("\n", trim($memory_str));
-            unset($memoryLines[0]);
-            $totalMemory = 0;
-            foreach ($memoryLines as $mem) {
-                $totalMemory += intval($mem);
-            }
-            $memory = FileSizeHelper::formatBytes($totalMemory);
-            //get server uptime for windows
-            $uptime = shell_exec('net statistics workstation | find "Statistics since"');
-            $uptime = explode("since", $uptime, 2)[1];
-            $bootTime = DateTime::createFromFormat('m/d/Y H:i:s A', trim($uptime));
-            $now = new DateTime();
-            $interval = $bootTime->diff($now);
-            echo $interval->format('%a days %h hours %i minutes %s seconds');
-            //get server cpu usage for windows
-            $cpu_usage = implode("\n", array_slice(explode("\n", trim(shell_exec('wmic cpu get loadpercentage'))), 1));
-            if($cpu_usage === '') {
-                $cpu_usage = '0';
-            }
-            //get server memory usage for windows
-//            $memory_usage = shell_exec('wmic OS get FreePhysicalMemory,TotalVisibleMemorySize /Value');
-            //TODO
-        } else {
-            //get cpu model
-            $cpu = shell_exec('cat /proc/cpuinfo | grep "model name" | uniq | awk -F": " \'{print $2}\'');
-            //get memory
-            $memory_kb = intval(shell_exec("grep MemTotal /proc/meminfo | awk '{print $2}'"));
-            $memory = FileSizeHelper::formatBytes($memory_kb * 1024);
-            //get server uptime
-            $uptime = str_replace("up ", "", trim(shell_exec('uptime -p')));
-            //get server cpu usage
-            $cpu_usage = shell_exec('top -bn1 | grep "Cpu(s)" | sed "s/.*, *\([0-9.]*\)%* id.*/\1/" | awk \'{print 100 - $1"%"}\'');
-        }
-        //get server time
-        $server_time = date('Y-m-d H:i:s T');
-        //get server load (only for linux)
-        $load = $is_windows ? null : sys_getloadavg();
-
-
-
-
-
+        //迁移到SystemInfoHelper Util
     }
 }
