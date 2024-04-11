@@ -20,7 +20,7 @@ use yii\db\ActiveRecord;
  */
 class CollectionTasks extends ActiveRecord
 {
-    const string SCENARIO_CREATE = 'create';
+    const SCENARIO_CREATE = 'create';
 
     /**
      * {@inheritdoc}

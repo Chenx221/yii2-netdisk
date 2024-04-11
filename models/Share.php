@@ -21,7 +21,7 @@ use yii\db\ActiveRecord;
  */
 class Share extends ActiveRecord
 {
-    const string SCENARIO_UPDATE = 'update';
+    const SCENARIO_UPDATE = 'update'; // PHP8.2 need to remove "string"
 
     /**
      * {@inheritdoc}
