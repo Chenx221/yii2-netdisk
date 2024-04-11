@@ -156,6 +156,25 @@ $(document).on('click', 'tr', function (event) {
     }
     updateButtons();
 });
+$(document).on('click', '.batch-delete-btn', function () {
+    var relativePaths = $('.select-item:checked').map(function () {
+        return $(this).data('relativePath');
+    }).get();
+    $.ajax({
+        type: "POST",
+        url: "index.php?r=vault%2Fdelete",
+        data: {relativePath: relativePaths},
+        success: function () {
+            // 处理响应
+            location.reload();
+        },
+        error: function () {
+            // 处理错误
+            console.error('AJAX request failed.');
+            location.reload();
+        }
+    });
+});
 
 function updateButtons() {
     var checkboxes = $('.select-item:checked');
