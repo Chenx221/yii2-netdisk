@@ -171,7 +171,7 @@ class HomeController extends Controller
 
         // 使用realpath函数解析路径，并检查解析后的路径是否在预期的目录中
         $realPath = realpath($absolutePath);
-        $dataDirectory = str_replace('/', '\\', Yii::getAlias(Yii::$app->params['dataDirectory']));
+        $dataDirectory = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, Yii::getAlias(Yii::$app->params['dataDirectory']));
         if (!$realPath || !str_starts_with($realPath, $dataDirectory)) {
             throw new NotFoundHttpException('File not found.');
         }
