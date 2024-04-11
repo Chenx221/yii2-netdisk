@@ -40,7 +40,7 @@ class HomeController extends Controller
                     'rules' => [
                         [
                             'allow' => true,
-                            'actions' => ['index', 'download', 'preview', 'rename', 'delete', 'upload', 'new-folder', 'download-folder', 'multi-ff-zip-dl', 'zip', 'unzip', 'paste', 'search'],
+                            'actions' => ['index', 'download', 'preview', 'rename', 'delete', 'upload', 'new-folder', 'download-folder', 'multi-ff-zip-dl', 'zip', 'unzip', 'paste', 'search','checksum'],
                             'roles' => ['user'],
                         ],
                     ],
@@ -60,7 +60,8 @@ class HomeController extends Controller
                         'zip' => ['POST'], //剩余空间检查√
                         'unzip' => ['POST'], //剩余空间检查√
                         'paste' => ['POST'], //剩余空间检查√
-                        'search' => ['POST']
+                        'search' => ['POST'],
+                        'checksum' => ['POST'],
                     ],
                 ],
             ]
