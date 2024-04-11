@@ -104,13 +104,10 @@ $(document).on('click', '.unzip-btn', function () {
         dataType: "json",  // 期望从服务器接收json格式的响应
         success: function (response) {
             // 如果服务器返回的状态码是200，说明解压成功
-            if (response.status === 200) {
-                // 刷新页面，加载到解压后的目录
-                window.location.href = 'index.php?r=home%2Findex&directory=' + encodeURIComponent(response.directory);
-            } else {
+            if (response.status !== 200) {
                 console.error('Unzip failed: ' + response.message);
-                window.location.href = 'index.php?r=home%2Findex&directory=' + encodeURIComponent(response.parentDirectory);
             }
+            window.location.href = 'index.php?r=home%2Findex&directory=' + encodeURIComponent(response.parentDirectory);
         },
         error: function () {
             // 处理错误
@@ -683,10 +680,10 @@ $(document).on('click', '#btnSearch', function () {
         success: function (response) {
             if (response.status === 'success') {
                 var table = '<table class="table"><tr><th style="display: table-cell;">文件/文件夹名</th><th>位置</th></tr>';
-                $.each(response.data, function(index, item) {
+                $.each(response.data, function (index, item) {
                     let path = item.relativePath;
                     let correctedPath = path.replace(/\\/g, '/');
-                    table += '<tr><td style="display: table-cell;"> <i class="' + item.type+'"></i>  '+item.name + '</td>' + '<td><a style="text-decoration: underline;" href="index.php?r=home%2Findex&directory=' + correctedPath + '">' + item.relativePath + '</a></td></tr>';
+                    table += '<tr><td style="display: table-cell;"> <i class="' + item.type + '"></i>  ' + item.name + '</td>' + '<td><a style="text-decoration: underline;" href="index.php?r=home%2Findex&directory=' + correctedPath + '">' + item.relativePath + '</a></td></tr>';
                 });
                 table += '</table>';
                 $('#search-result').html(table);
@@ -699,10 +696,10 @@ $(document).on('click', '#btnSearch', function () {
         error: function () {
             $('#search-result').html('An error occurred while processing your request.');
         },
-        beforeSend: function() {
+        beforeSend: function () {
             $('#loading').show();
         },
-        complete: function() {
+        complete: function () {
             $('#loading').hide();
         },
     });

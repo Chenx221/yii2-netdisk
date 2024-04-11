@@ -40,7 +40,7 @@ class HomeController extends Controller
                     'rules' => [
                         [
                             'allow' => true,
-                            'actions' => ['index', 'download', 'preview', 'rename', 'delete', 'upload', 'new-folder', 'download-folder', 'multi-ff-zip-dl', 'zip', 'unzip', 'paste', 'search','checksum'],
+                            'actions' => ['index', 'download', 'preview', 'rename', 'delete', 'upload', 'new-folder', 'download-folder', 'multi-ff-zip-dl', 'zip', 'unzip', 'paste', 'search', 'checksum'],
                             'roles' => ['user'],
                         ],
                     ],
@@ -635,36 +635,33 @@ class HomeController extends Controller
             throw new NotFoundHttpException('Failed to open the archive.');
         }
         $now_time = time();
-        $targetDirectory = Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . Yii::$app->user->id . '/' . pathinfo($relativePath, PATHINFO_FILENAME) . '_' . $now_time;
+//        $targetDirectory = Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . Yii::$app->user->id . '/' . pathinfo($relativePath, PATHINFO_FILENAME) . '_' . $now_time;
+        $targetDirectory = dirname($absolutePath) . '/' . pathinfo($relativePath, PATHINFO_FILENAME) . '_unpacked_' . $now_time;
         if (!is_dir($targetDirectory)) {
             mkdir($targetDirectory, 0777, true);
         }
 
         try {
-            $archive->extract($targetDirectory);
-            Yii::$app->response->format = Response::FORMAT_JSON;
-            if (!FileSizeHelper::hasEnoughSpace()) {
-                $this->deleteDirectory($targetDirectory);
+            if (!FileSizeHelper::hasEnoughSpace($archive->getOriginalSize())) {
                 Yii::$app->session->setFlash('error', '解压失败,空间不足');
                 return [
                     'status' => 500,
-                    'directory' => pathinfo($relativePath, PATHINFO_FILENAME) . '_' . $now_time,
                     'parentDirectory' => dirname($relativePath),
                 ];
-            } else {
-                Yii::$app->session->setFlash('success', '解压成功');
-                return [
-                    'status' => 200,
-                    'directory' => pathinfo($relativePath, PATHINFO_FILENAME) . '_' . $now_time,
-                ];
             }
+            $archive->extract($targetDirectory);
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            Yii::$app->session->setFlash('success', '解压成功');
+            return [
+                'status' => 200,
+                'parentDirectory' => dirname($relativePath),
+            ];
         } catch (ArchiveExtractionException) {
             $this->deleteDirectory($targetDirectory);
             Yii::$app->session->setFlash('error', '解压过程中出现错误');
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'status' => 500,
-                'directory' => pathinfo($relativePath, PATHINFO_FILENAME) . '_' . $now_time,
                 'parentDirectory' => dirname($relativePath),
             ];
         }
@@ -675,7 +672,8 @@ class HomeController extends Controller
      *
      * @return Response
      */
-    public function actionPaste(): Response
+    public
+    function actionPaste(): Response
     {
         // 获取请求中的操作类型、相对路径和目标目录
         $operation = Yii::$app->request->post('operation');
@@ -764,7 +762,8 @@ class HomeController extends Controller
      * @param string $destination 目标目录路径
      * @return bool 操作是否成功
      */
-    protected function copyDirectory(string $source, string $destination): bool
+    protected
+    function copyDirectory(string $source, string $destination): bool
     {
         // 创建目标目录
         if (!mkdir($destination)) {
@@ -809,7 +808,8 @@ class HomeController extends Controller
      * @param string $destination 目标目录路径
      * @return bool 操作是否成功
      */
-    protected function moveDirectory(string $source, string $destination): bool
+    protected
+    function moveDirectory(string $source, string $destination): bool
     {
         // 创建目标目录
         if (!mkdir($destination)) {
@@ -858,7 +858,8 @@ class HomeController extends Controller
      * @return array
      * @throws NotFoundHttpException
      */
-    public function actionChecksum(): array
+    public
+    function actionChecksum(): array
     {
         $relativePath = Yii::$app->request->post('relativePath');
         if (!preg_match($this->pattern, $relativePath) || str_contains($relativePath, '..')) {
@@ -883,10 +884,11 @@ class HomeController extends Controller
     /**
      * @throws NotFoundHttpException
      */
-    public function actionSearch(): Response
+    public
+    function actionSearch(): Response
     {
         if (Yii::$app->request->isAjax) {
-            $directory = empty(Yii::$app->request->post('directory'))?'.':Yii::$app->request->post('directory');
+            $directory = empty(Yii::$app->request->post('directory')) ? '.' : Yii::$app->request->post('directory');
             $keyword = Yii::$app->request->post('keyword');
             if ($keyword == null) {
                 return $this->asJson(['status' => 'error', 'message' => '关键词不能为空']);
@@ -909,7 +911,7 @@ class HomeController extends Controller
                     $results[] = [
                         'name' => $file->getFilename(),
                         'type' => FileTypeDetector::detect($file->getPathname()),
-                        'relativePath' => $directory.str_replace($absolutePath, '', $file->getPath())
+                        'relativePath' => $directory . str_replace($absolutePath, '', $file->getPath())
                     ];
                 }
             }
