@@ -104,62 +104,48 @@ init setup page
 开发环境
 ------------
 
-Windows 11 Pro (22631.3374)
+Windows 11 Pro (22631.3374) / Debian 12
 
-PhpStorm 2023.3.6
+PhpStorm 2024.1
 
-PHP 8.3.4 (这个项目需要PHP>=8.2)
+PHP 8.3.4 / 8.2.7 (这个项目需要PHP>=8.2)
 
-MariaDB 11.3.2
+MariaDB 11.3.2 / 10.11.6
 
-Apache 2.4.59
+Apache 2.4.59 / 2.4.57
 
-Redis(Memurai) 4.1.1
+Memurai 4.1.1 / Redis 7.0.15
 
-安装步骤（以下内容已过时，等待后期更新）
+安装步骤（还没写完，有空再说）
 ------------
 
-### 通过压缩档案进行安装
+### For Windows
 
-在[本项目](https://git.chenx221.cyou/chenx221/test_project)的release下载最新版本的归档文件，解压到web根目录下.
+安装Web环境
 
-执行composer install，安装必要的依赖项。
-
-在`config/web.php`文件中设置一些随机的密钥：
-
-```php
-'request' => [
-    // !!! insert a secret key in the following (if it is empty) - this is required by cookie validation
-    'cookieValidationKey' => '<secret random string goes here>',
-],
+克隆项目到web根目录下
+```bash
+git clone https://git.chenx221.cyou/chenx221/yii2-netdisk
 ```
 
-现在你可以通过以下链接访问你的站点：
-
-~~~
-http://localhost/basic/web/
-~~~
-
-配置
--------------
-
-### 数据库
-
-像这样修改config/db.php文件：
-
-```php
-return [
-    'class' => 'yii\db\Connection',
-    'dsn' => 'mysql:host=localhost;dbname=yii2basic',
-    'username' => 'root',
-    'password' => '1234',
-    'charset' => 'utf8',
-];
+安装必要依赖，执行composer install
+```
+ bcmath        calendar      com_dotnet    Core          ctype         curl
+ date          dom           exif          fileinfo      filter        gd
+ gettext       gmp           hash          iconv         imagick       imap
+ intl          json          ldap          libxml        mbstring      memcache
+ mysqli        mysqlnd       openssl       pcre          PDO           pdo_mysql
+ pdo_pgsql     pdo_sqlite    Phar          random        rar           readline
+ Reflection    session       SimpleXML     soap          sockets       sodium
+ SPL           sqlite3       standard      tokenizer     xdebug        xml
+ xmlreader     xmlwriter     xsl           Zend OPcache  zip           zlib
 ```
 
-**提示:**
-- 我们不会帮你创建好数据库，请在使用项目前自行创建。
-- 检查`config/`目录下的其他配置文件以客制化你的安装。
+复制.env.example到.env，在`.env`文件中完成必要的系统设置：
+
+### For Linux (以Debian 12为例)
+
+
 
 
 TESTING
