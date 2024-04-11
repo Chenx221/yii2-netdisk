@@ -594,7 +594,7 @@ class HomeController extends Controller
                 if (!file_exists($absolutePath)) {
                     throw new NotFoundHttpException('The requested file does not exist.');
                 }
-                $absolutePaths[] = $absolutePath;
+                $absolutePaths[basename($absolutePath)] = $absolutePath;
             }
             $zipPath = Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . Yii::$app->user->id . '/' . $targetDirectory . '/' . $model->zipFilename . '.' . $model->zipFormat;
             try {
