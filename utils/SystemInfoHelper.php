@@ -18,6 +18,8 @@ use yii\db\Exception;
  */
 class SystemInfoHelper
 {
+    public array $timeRecords; // Time records
+    public bool $EnableTimeRecords = false; // Enable time records
     public string $hostname; // Hostname
     public int $osType; // 0: Windows, 1: Linux, 2: Others
     public string $os; // OS
@@ -57,6 +59,10 @@ class SystemInfoHelper
      */
     private function detectOsType(): void
     {
+        $start = null;
+        if ($this->EnableTimeRecords) {
+            $start = microtime(true);
+        }
         $os = php_uname();
         if (stripos($os, 'windows') !== false) {
             $this->osType = 0;
@@ -64,6 +70,9 @@ class SystemInfoHelper
             $this->osType = 1;
         } else {
             $this->osType = 2;
+        }
+        if ($this->EnableTimeRecords) {
+            $this->timeRecords['detectOsType'] = microtime(true) - $start;
         }
     }
 
@@ -73,7 +82,14 @@ class SystemInfoHelper
      */
     private function detectHostname(): void
     {
+        $start = null;
+        if ($this->EnableTimeRecords) {
+            $start = microtime(true);
+        }
         $this->hostname = gethostname();
+        if ($this->EnableTimeRecords) {
+            $this->timeRecords['detectHostname'] = microtime(true) - $start;
+        }
     }
 
     /**
@@ -82,7 +98,14 @@ class SystemInfoHelper
      */
     private function detectOs(): void
     {
+        $start = null;
+        if ($this->EnableTimeRecords) {
+            $start = microtime(true);
+        }
         $this->os = php_uname('s') . ' ' . php_uname('r') . ' ' . php_uname('v') . ' ' . php_uname('m');
+        if ($this->EnableTimeRecords) {
+            $this->timeRecords['detectOs'] = microtime(true) - $start;
+        }
     }
 
     /**
@@ -91,14 +114,20 @@ class SystemInfoHelper
      */
     private function detectCpu(): void
     {
+        $start = null;
+        if ($this->EnableTimeRecords) {
+            $start = microtime(true);
+        }
         if ($this->osType === 0) {
-            $cpu_model = shell_exec('powershell (Get-WmiObject Win32_Processor).Name');
-            $cpu_cores = shell_exec('powershell (Get-WmiObject Win32_Processor).NumberOfCores');
+            $this->cpu = shell_exec('powershell "$processorInfo = Get-WmiObject Win32_Processor;$processorInfo.Name + \' (\' + $processorInfo.NumberOfCores + \' Cores)\'"');
         } else {
             $cpu_model = trim(shell_exec("cat /proc/cpuinfo | grep 'model name' | uniq | awk -F': ' '{print $2}'"));
             $cpu_cores = shell_exec('nproc');
+            $this->cpu = $cpu_model . ' (' . $cpu_cores . ' Cores)';
         }
-        $this->cpu = $cpu_model . ' (' . $cpu_cores . ' Cores)';
+        if ($this->EnableTimeRecords) {
+            $this->timeRecords['detectCpu'] = microtime(true) - $start;
+        }
     }
 
     /**
@@ -108,10 +137,17 @@ class SystemInfoHelper
      */
     private function detectRam(): void
     {
+        $start = null;
+        if ($this->EnableTimeRecords) {
+            $start = microtime(true);
+        }
         if ($this->osType === 0) {
             $this->ram = intval(shell_exec('powershell (Get-WmiObject Win32_computerSystem).TotalPhysicalMemory'));
         } else {
             $this->ram = intval(shell_exec("grep MemTotal /proc/meminfo | awk '{print $2}'"));
+        }
+        if ($this->EnableTimeRecords) {
+            $this->timeRecords['detectRam'] = microtime(true) - $start;
         }
     }
 
@@ -121,7 +157,14 @@ class SystemInfoHelper
      */
     private function detectServerTime(): void
     {
+        $start = null;
+        if ($this->EnableTimeRecords) {
+            $start = microtime(true);
+        }
         $this->serverTime = date('Y-m-d H:i:s T');
+        if ($this->EnableTimeRecords) {
+            $this->timeRecords['detectServerTime'] = microtime(true) - $start;
+        }
     }
 
     /**
@@ -130,6 +173,10 @@ class SystemInfoHelper
      */
     private function detectServerUptime(): void
     {
+        $start = null;
+        if ($this->EnableTimeRecords) {
+            $start = microtime(true);
+        }
         if ($this->osType === 0) {
             $lastBootUpTime = strtotime(shell_exec('powershell (Get-CimInstance Win32_OperatingSystem).LastBootUpTime'));
             $now = new DateTime();
@@ -138,6 +185,9 @@ class SystemInfoHelper
             $this->serverUpTime = $interval->format('%a days, %h hours, %i minutes, %s seconds');
         } else {
             $this->serverUpTime = str_replace("up ", "", trim(shell_exec('uptime -p')));
+        }
+        if ($this->EnableTimeRecords) {
+            $this->timeRecords['detectServerUptime'] = microtime(true) - $start;
         }
     }
 
@@ -148,7 +198,14 @@ class SystemInfoHelper
      */
     private function detectLoad(): void
     {
+        $start = null;
+        if ($this->EnableTimeRecords) {
+            $start = microtime(true);
+        }
         $this->load = sys_getloadavg()[0];
+        if ($this->EnableTimeRecords) {
+            $this->timeRecords['detectLoad'] = microtime(true) - $start;
+        }
     }
 
     /**
@@ -157,10 +214,17 @@ class SystemInfoHelper
      */
     private function detectCpuUsage(): void
     {
+        $start = null;
+        if ($this->EnableTimeRecords) {
+            $start = microtime(true);
+        }
         if ($this->osType === 0) {
             $this->cpuUsage = floatval(shell_exec('powershell (Get-WmiObject Win32_Processor).LoadPercentage'));
         } else {
             $this->cpuUsage = floatval(shell_exec("top -b -n1 | grep 'Cpu(s)' | awk '{print $2 + $4}'"));
+        }
+        if ($this->EnableTimeRecords) {
+            $this->timeRecords['detectCpuUsage'] = microtime(true) - $start;
         }
     }
 
@@ -170,11 +234,18 @@ class SystemInfoHelper
      */
     private function detectRamUsage(): void
     {
+        $start = null;
+        if ($this->EnableTimeRecords) {
+            $start = microtime(true);
+        }
         if ($this->osType === 0) {
             $this->ramUsage = round(floatval(shell_exec('powershell "100 - (Get-WmiObject Win32_OperatingSystem).FreePhysicalMemory / (Get-WmiObject Win32_Operati
 ngSystem).TotalVisibleMemorySize * 100"')), 2);
         } else {
             $this->ramUsage = round(floatval(shell_exec('free | grep Mem | awk \'{print $3/$2 * 100.0}\'')), 2);
+        }
+        if ($this->EnableTimeRecords) {
+            $this->timeRecords['detectRamUsage'] = microtime(true) - $start;
         }
     }
 
@@ -185,6 +256,10 @@ ngSystem).TotalVisibleMemorySize * 100"')), 2);
      */
     private function detectDataMountPoint(): void
     {
+        $start = null;
+        if ($this->EnableTimeRecords) {
+            $start = microtime(true);
+        }
         $dataPath = Yii::getAlias(Yii::$app->params['dataDirectory']);
         if ($this->osType === 0) {
             $this->dataMountPoint = shell_exec('powershell (Get-Item \"' . $dataPath . '\").PSDrive.Root'); // X:\
@@ -200,6 +275,9 @@ ngSystem).TotalVisibleMemorySize * 100"')), 2);
             $this->mp_used = intval(shell_exec('df -k "' . $this->dataMountPoint . '" | awk \'NR==2{print $3}\''));
             $this->mp_avail = intval(shell_exec('df -k "' . $this->dataMountPoint . '" | awk \'NR==2{print $4}\''));
         }
+        if ($this->EnableTimeRecords) {
+            $this->timeRecords['detectDataMountPoint'] = microtime(true) - $start;
+        }
     }
 
     /**
@@ -208,10 +286,17 @@ ngSystem).TotalVisibleMemorySize * 100"')), 2);
      */
     private function detectDns(): void
     {
+        $start = null;
+        if ($this->EnableTimeRecords) {
+            $start = microtime(true);
+        }
         if ($this->osType === 0) {
-            $this->dns = shell_exec('powershell "((Get-NetIPConfiguration | Where-Object { $_.NetAdapter.Status -eq \'Up\' }).DnsServer.ServerAddresses) -join \',\'"');
+            $this->dns = shell_exec('powershell "Get-CimInstance Win32_NetworkAdapterConfiguration | Select-Object -ExpandProperty DNSServerSearchOrder"');
         } else {
             $this->dns = shell_exec('cat /etc/resolv.conf | grep nameserver | awk \'{print $2}\' | tr \'\\n\' \',\' | sed \'s/,$//\'');
+        }
+        if ($this->EnableTimeRecords) {
+            $this->timeRecords['detectDns'] = microtime(true) - $start;
         }
     }
 
@@ -221,10 +306,17 @@ ngSystem).TotalVisibleMemorySize * 100"')), 2);
      */
     private function detectGateway(): void
     {
+        $start = null;
+        if ($this->EnableTimeRecords) {
+            $start = microtime(true);
+        }
         if ($this->osType === 0) {
-            $this->gateway = shell_exec('powershell "(Get-NetIPConfiguration | Where-Object { $_.NetAdapter.Status -eq \'Up\' }).IPv4DefaultGateway.NextHop"');
+            $this->gateway = shell_exec('powershell "Get-CimInstance Win32_NetworkAdapterConfiguration | Select-Object -ExpandProperty DefaultIPGateway"');
         } else {
             $this->gateway = shell_exec('ip route | grep default | awk \'{print $3}\'');
+        }
+        if ($this->EnableTimeRecords) {
+            $this->timeRecords['detectGateway'] = microtime(true) - $start;
         }
     }
 
@@ -235,13 +327,21 @@ ngSystem).TotalVisibleMemorySize * 100"')), 2);
      */
     private function detectNic(): void
     {
+        $start = null;
+        if ($this->EnableTimeRecords) {
+            $start = microtime(true);
+        }
         if ($this->osType === 0) {
+            $result1 = shell_exec('powershell "$NetAdapters = Get-NetAdapter | Where-Object { $_.Status -eq \'Up\' };$Names = $NetAdapters.Name -join \', \';$MacAddresses = $NetAdapters.MacAddress -join \', \';$Speed = $NetAdapters.LinkSpeed -join \', \';Write-Output $Names;Write-Output $MacAddresses;Write-Output $Speed;"');
+            $lines = explode("\n", $result1);
+            $result2 = shell_exec('powershell "$IPAddressList = (Get-CimInstance -ClassName Win32_NetworkAdapterConfiguration | Where-Object { $_.IPAddress -ne $null }).IPAddress;$IPv4Addresses = @();$IPv6Addresses = @();foreach ($IPAddress in $IPAddressList) {if ($IPAddress -match \'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\') {$IPv4Addresses += $IPAddress} elseif ($IPAddress -match \'[:0-9A-Fa-f]{4,}:[0-9A-Fa-f:]+\') {$IPv6Addresses += $IPAddress}};Write-Output $($IPv4Addresses -join \', \');Write-Output $($IPv6Addresses -join \', \');"');
+            $lines2 = explode("\n", $result2);
             $this->nic = [
-                'interfaceName' => shell_exec('powershell "(Get-NetAdapter | Where-Object { $_.Status -eq \'Up\' }).Name"'),
-                'mac' => strtolower(shell_exec('powershell "(Get-NetAdapter | Where-Object { $_.Status -eq \'Up\' }).MacAddress"')),
-                'speed' => shell_exec('powershell "(Get-NetAdapter | Where-Object { $_.Status -eq \'Up\' }).LinkSpeed"'),
-                'ipv4' => shell_exec('powershell "(Get-NetIPConfiguration | Where-Object { $_.NetAdapter.Status -eq \'Up\' }).IPv4Address.IPAddress"'),
-                'ipv6' => shell_exec('powershell "(Get-NetIPConfiguration | Where-Object { $_.NetAdapter.Status -eq \'Up\' }).IPv6Address.IPAddress"')
+                'interfaceName' => $lines[0],
+                'mac' => strtolower($lines[1]),
+                'speed' => $lines[2],
+                'ipv4' => $lines2[0],
+                'ipv6' => $lines2[1]
             ];
         } else {
             $name = trim(shell_exec('ip link | awk -F: \'$0 !~ "lo|vir|wl|^[^0-9]"{print $2;getline}\''));
@@ -253,6 +353,9 @@ ngSystem).TotalVisibleMemorySize * 100"')), 2);
                 'ipv6' => shell_exec("ip addr show $name | awk '/inet6 / {print $2}' | cut -d'/' -f1")
             ];
         }
+        if ($this->EnableTimeRecords) {
+            $this->timeRecords['detectNic'] = microtime(true) - $start;
+        }
     }
 
     /**
@@ -262,9 +365,16 @@ ngSystem).TotalVisibleMemorySize * 100"')), 2);
      */
     private function detectUsers(): void
     {
+        $start = null;
+        if ($this->EnableTimeRecords) {
+            $start = microtime(true);
+        }
         $this->users = User::find()->count();
         $activeTime = date('Y-m-d H:i:s', strtotime('-24 hours'));
         $this->activeUsers = User::find()->where(['>', 'last_login', $activeTime])->count();
+        if ($this->EnableTimeRecords) {
+            $this->timeRecords['detectUsers'] = microtime(true) - $start;
+        }
     }
 
     /**
@@ -273,7 +383,14 @@ ngSystem).TotalVisibleMemorySize * 100"')), 2);
      */
     private function detectShares(): void
     {
+        $start = null;
+        if ($this->EnableTimeRecords) {
+            $start = microtime(true);
+        }
         $this->shares = Share::find()->count();
+        if ($this->EnableTimeRecords) {
+            $this->timeRecords['detectShares'] = microtime(true) - $start;
+        }
     }
 
     /**
@@ -282,7 +399,14 @@ ngSystem).TotalVisibleMemorySize * 100"')), 2);
      */
     private function detectCollections(): void
     {
+        $start = null;
+        if ($this->EnableTimeRecords) {
+            $start = microtime(true);
+        }
         $this->collections = CollectionTasks::find()->count();
+        if ($this->EnableTimeRecords) {
+            $this->timeRecords['detectCollections'] = microtime(true) - $start;
+        }
     }
 
     /**
@@ -291,12 +415,19 @@ ngSystem).TotalVisibleMemorySize * 100"')), 2);
      */
     private function detectEnv(): void
     {
+        $start = null;
+        if ($this->EnableTimeRecords) {
+            $start = microtime(true);
+        }
         $this->phpVersion = phpversion();
         $this->memoryLimit = ini_get('memory_limit');
         $this->maxExecutionTime = ini_get('max_execution_time');
         $this->uploadMaxFilesize = ini_get('upload_max_filesize');
         $this->postMaxSize = ini_get('post_max_size');
         $this->extensions = implode(', ', get_loaded_extensions());
+        if ($this->EnableTimeRecords) {
+            $this->timeRecords['detectEnv'] = microtime(true) - $start;
+        }
     }
 
     /**
@@ -305,6 +436,10 @@ ngSystem).TotalVisibleMemorySize * 100"')), 2);
      */
     private function detectDb(): void
     {
+        $start = null;
+        if ($this->EnableTimeRecords) {
+            $start = microtime(true);
+        }
         $this->dbType = Yii::$app->db->driverName;
 //        debug
 //        $this->dbVersion = '1';
@@ -321,6 +456,9 @@ ngSystem).TotalVisibleMemorySize * 100"')), 2);
         } catch (Exception) {
             $this->dbSize = 'Fetch Error';
         }
+        if ($this->EnableTimeRecords) {
+            $this->timeRecords['detectDb'] = microtime(true) - $start;
+        }
     }
 
     /**
@@ -330,6 +468,9 @@ ngSystem).TotalVisibleMemorySize * 100"')), 2);
     public static function getSysInfoInit(): SystemInfoHelper
     {
         $sysInfo = new SystemInfoHelper();
+        // Time records (Debug)
+        $sysInfo->EnableTimeRecords = true;
+
         $sysInfo->detectOsType();
         $sysInfo->detectHostname();
         $sysInfo->detectOs();
@@ -337,8 +478,10 @@ ngSystem).TotalVisibleMemorySize * 100"')), 2);
         $sysInfo->detectRam();
         $sysInfo->detectServerTime();
         $sysInfo->detectServerUptime();
+
         if ($sysInfo->osType === 1) {
             $sysInfo->detectLoad();
+
         } else {
             $sysInfo->load = -1;
         }
