@@ -14,6 +14,14 @@ $this->title = '系统信息';
 <div class="system-info">
 
     <h1><?= Html::encode($this->title) ?></h1>
+    <?php if ($systemInfo->EnableTimeRecords): ?>
+        <div>
+            <p>Time Records Helper</p>
+            <?php
+            print_r($systemInfo->timeRecords);
+            ?>
+        </div>
+    <?php endif; ?>
 
     <div>
         <div>
@@ -133,7 +141,7 @@ $this->title = '系统信息';
                 <div>
                     <div>
                         <h3><?= $systemInfo->nic['interfaceName'] ?></h3>
-                        Status:
+                        MAC:
                         <span><?= $systemInfo->nic['mac'] ?></span>
                         <br>
                         Speed:
