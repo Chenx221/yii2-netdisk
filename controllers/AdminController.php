@@ -14,7 +14,7 @@ use app\models\User;
 use app\models\UserSearch;
 use app\utils\AdminSword;
 use app\utils\FileSizeHelper;
-use DateTime;
+use app\utils\SystemInfoHelper;
 use OTPHP\TOTP;
 use RuntimeException;
 use Throwable;
@@ -586,40 +586,18 @@ class AdminController extends Controller
      */
     public function actionSysinfo(): string
     {
-        return $this->render('sysinfo');
+        $fullInfo = SystemInfoHelper::getSysInfoInit();
+        return $this->render('sysinfo', [
+            'systemInfo' => $fullInfo,
+        ]);
     }
 
     /**
      * Get server status
-     * 只兼容Windows和Linux
-     * other不考虑
      * @return void
      */
     public function actionGetServerStatus(): void
     {
-        //需要收集的信息
-        //hostname
-        //os
-        //cpu
-        //memory
-        //server time
-        //server uptime
-        //is windows?
-        //server load
-        //server cpu usage
-        //server memory usage
-        //storage data drive
-        //file system
-        //drive size
-        //drive used & free
-        //dns server
-        //gateway
-        //network interface(status,speed,ipv4v6 address)
-        //All users number
-        //active users number(24h)
-        //share number,collection number
-        //php version,memory limit,max execution time,max upload size,max post size,extension
-        //database type,version,size
-        //迁移到SystemInfoHelper Util
+
     }
 }

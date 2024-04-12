@@ -1,7 +1,10 @@
 <?php
 /* @var $this yii\web\View */
 
+/* @var $systemInfo SystemInfoHelper */
+
 use app\assets\FontAwesomeAsset;
+use app\utils\SystemInfoHelper;
 use yii\bootstrap5\Html;
 
 FontAwesomeAsset::register($this);
@@ -16,41 +19,43 @@ $this->title = '系统信息';
         <div>
             <h2>
                 <i class="fa-solid fa-server"></i>
-                <!--hostname-->
+                <?= $systemInfo->hostname ?>
             </h2>
             <p>
                 OS:
-                <strong><!--Server Operate System--></strong>
+                <strong><?= $systemInfo->os ?></strong>
             </p>
             <p>
                 CPU:
-                <strong><!--CPU--></strong>
+                <strong><?= $systemInfo->cpu ?></strong>
             </p>
             <p>
                 RAM:
-                <strong><!--RAM--></strong>
+                <strong><?= $systemInfo->ram ?></strong>
             </p>
             <p>
                 Server Time:
-                <strong><!--Server Time--></strong>
+                <strong><?= $systemInfo->serverTime ?></strong>
             </p>
             <p>
                 Server Up Time:
-                <strong><!--Server Up Time--></strong>
+                <strong><?= $systemInfo->serverUpTime ?></strong>
             </p>
         </div>
         <hr>
         <div>
-            <div>
-                <h2>
-                    <i class="fa-solid fa-bars-progress"></i>
-                    Load
-                </h2>
-                <!-- Load Graph -->
-                <p>
-                    <!-- Load value -->
-                </p>
-            </div>
+            <?php if ($systemInfo->osType === 2): ?>
+                <div>
+                    <h2>
+                        <i class="fa-solid fa-bars-progress"></i>
+                        Load
+                    </h2>
+                    <!-- Load Graph -->
+                    <p>
+                        Load Average: <?= $systemInfo->load ?> (Last 1 min)
+                    </p>
+                </div>
+            <?php endif; ?>
             <div>
                 <h2>
                     <i class="fa-solid fa-microchip"></i>
@@ -58,15 +63,15 @@ $this->title = '系统信息';
                 </h2>
                 <!-- CPU Graph -->
                 <p>
-                    <!-- CPU value -->
+                    CPU Usage: <?= $systemInfo->cpuUsage ?>%
                 </p>
             </div>
             <div>
                 <h2>
                     <i class="fa-solid fa-memory"></i>
-                    RAM
+                    Memory
                 </h2>
-                <!-- RAM Graph -->
+                <!-- Memory Graph -->
                 <p>
                     <!-- RAM value -->
                 </p>
@@ -90,19 +95,19 @@ $this->title = '系统信息';
                 <div>
                     <h3>Data</h3>
                     Mount:
-                    <span><!-- Mount point | Drive letter--></span>
+                    <span><?= $systemInfo->dataMountPoint ?></span>
                     <br>
                     File System:
-                    <span><!-- File System--></span>
+                    <span><?= $systemInfo->mp_fs ?></span>
                     <br>
                     Size:
-                    <span><!-- Size--></span>
+                    <span><?= $systemInfo->mp_size ?></span>
                     <br>
                     Free:
-                    <span><!-- Free--></span>
+                    <span><?= $systemInfo->mp_avail ?></span>
                     <br>
                     Used:
-                    <span><!-- Used--></span>
+                    <span><?= $systemInfo->mp_used ?></span>
                 </div>
             </div>
         </div>
@@ -114,32 +119,31 @@ $this->title = '系统信息';
             </h2>
             <p>
                 Hostname:
-                <!-- Hostname -->
+                <?= $systemInfo->hostname ?>
             </p>
             <p>
                 DNS:
-                <!-- DNS -->
+                <?= $systemInfo->dns ?>
             </p>
             <p>
                 Gateway:
-                <!-- Gateway -->
+                <?= $systemInfo->gateway ?>
             </p>
             <div>
-                <!-- 数量基于实际情况 -->
                 <div>
                     <div>
-                        <h3><!--Interface Name--></h3>
+                        <h3><?= $systemInfo->nic['interfaceName'] ?></h3>
                         Status:
-                        <span><!--Status--></span>
+                        <span><?= $systemInfo->nic['mac'] ?></span>
                         <br>
                         Speed:
-                        <span><!--Speed--></span>
+                        <span><?= $systemInfo->nic['speed'] ?></span>
                         <br>
                         IPv4:
-                        <span><!--IPv4--></span>
+                        <span><?= $systemInfo->nic['ipv4'] ?></span>
                         <br>
                         IPv6:
-                        <span><!--IPv6--></span>
+                        <span><?= $systemInfo->nic['ipv6'] ?></span>
                     </div>
                 </div>
             </div>
@@ -152,10 +156,10 @@ $this->title = '系统信息';
             </h2>
             <div>
                 All:
-                <span><!-- All Users--></span>
+                <span><?= $systemInfo->users ?></span>
                 <br>
                 Active (within 24h):
-                <span><!-- Active Users--></span>
+                <span><?= $systemInfo->activeUsers ?></span>
             </div>
         </div>
         <hr>
@@ -167,7 +171,7 @@ $this->title = '系统信息';
                 </h2>
                 <div>
                     Link:
-                    <span><!-- The Number of Share Link--></span>
+                    <span><?= $systemInfo->shares ?></span>
                 </div>
             </div>
             <div>
@@ -177,7 +181,7 @@ $this->title = '系统信息';
                 </h2>
                 <div>
                     Collection:
-                    <span><!-- The Number of Collection Link--></span>
+                    <span><?= $systemInfo->collections ?></span>
                 </div>
             </div>
         </div>
@@ -190,22 +194,22 @@ $this->title = '系统信息';
                 </h2>
                 <div>
                     Version:
-                    <span><!-- PHP Version--></span>
+                    <span><?= $systemInfo->phpVersion ?></span>
                     <br>
                     Memory Limit:
-                    <span><!-- Memory Limit--></span>
+                    <span><?= $systemInfo->memoryLimit ?></span>
                     <br>
                     Max Execution Time:
-                    <span><!-- Max Execution Time--></span>
+                    <span><?= $systemInfo->maxExecutionTime ?></span>
                     <br>
                     Upload Max Filesize:
-                    <span><!-- Upload Max Filesize--></span>
+                    <span><?= $systemInfo->uploadMaxFilesize ?></span>
                     <br>
                     Post Max Size:
-                    <span><!-- Post Max Size--></span>
+                    <span><?= $systemInfo->postMaxSize ?></span>
                     <br>
                     Extension:
-                    <span><!-- Extension--></span>
+                    <span><?= $systemInfo->extensions ?></span>
                 </div>
             </div>
             <div>
@@ -215,13 +219,13 @@ $this->title = '系统信息';
                 </h2>
                 <div>
                     Type:
-                    <span><!-- Database Type--></span>
+                    <span><?= $systemInfo->dbType ?></span>
                     <br>
                     Version:
-                    <span><!-- Database Version--></span>
+                    <span><?= $systemInfo->dbVersion ?></span>
                     <br>
                     Size:
-                    <span><!-- Database Size--></span>
+                    <span><?= $systemInfo->dbSize ?></span>
                 </div>
             </div>
         </div>
