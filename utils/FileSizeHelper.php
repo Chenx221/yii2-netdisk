@@ -123,13 +123,37 @@ class FileSizeHelper
     {
         $units = array('B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB');
 
-        $bytes = max($bytes, 0);
-        $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
+        return self::formatProcess($bytes, $units, $precision);
+    }
+
+    /**
+     * @param $bits
+     * @param $precision
+     * @param $sp
+     * @return string
+     */
+    public static function formatBits($bits, $precision = 2, $sp = false): string
+    {
+        $units = array('b', 'Kb', 'Mb', 'Gb', 'Tb', 'Pb', 'Eb', 'Zb', 'Yb');
+
+        return self::formatProcess($bits, $units, $precision,$sp?1000:1024);
+    }
+
+    /**
+     * @param $bits
+     * @param array $units
+     * @param mixed $precision
+     * @return string
+     */
+    private static function formatProcess($bits, array $units, mixed $precision, int $n = 1024): string
+    {
+        $bits = max($bits, 0);
+        $pow = floor(($bits ? log($bits) : 0) / log($n));
         $pow = min($pow, count($units) - 1);
 
-        $bytes /= pow(1024, $pow);
+        $bits /= pow($n, $pow);
 
-        return round($bytes, $precision) . ' ' . $units[$pow];
+        return round($bits, $precision) . ' ' . $units[$pow];
     }
 
     /**
@@ -164,7 +188,7 @@ class FileSizeHelper
             return '∞';
         }
         $userAllDirSize = self::getUserAllDirSize($user_id);
-        if($limit== 0) {
+        if ($limit == 0) {
             return 'invalid %';
         }
         return round($userAllDirSize / $limit * 100, 2) . ' %';
@@ -206,4 +230,5 @@ class FileSizeHelper
 
         return max(0, (int)$valueInMB);
     }
+
 }
