@@ -6,6 +6,7 @@ use app\models\CollectionTasks;
 use app\models\Share;
 use app\models\User;
 use COM;
+use DateInterval;
 use DateTime;
 use Yii;
 use yii\db\Exception;
@@ -26,17 +27,19 @@ class SystemInfoHelper
     public int $osType; // 0: Windows, 1: Linux, 2: Others
     public string $os; // OS
     public string $cpu; // CPU
-    public int $ram; // RAM Byte
+    public string $ram; // RAM Byte
     public string $serverTime; // Server Time
     public string $serverUpTime; // Server Up Time
     public float $load; // Load
     public float $cpuUsage; // CPU Usage
     public float $ramUsage; // RAM Usage
+    public float $swapUsage; // Swap Usage
     public string $dataMountPoint; // Data Mount Point
     public string $mp_fs; // Filesystem
-    public int $mp_size; // Size
-    public int $mp_used; // Used
-    public int $mp_avail; // Available
+    public string $mp_size; // Size
+    public string $mp_used; // Used
+    public string $mp_avail; // Available
+    public float $mp_usage; // Usage %
     public string $dns; // DNS
     public string $gateway; // Gateway
     public array $nic; // Network Interface [interfaceName, mac, speed, ipv4, ipv6]
@@ -52,7 +55,7 @@ class SystemInfoHelper
     public string $extensions; // Extensions
     public string $dbType; // Database Type
     public string $dbVersion; // Database Version
-    public int $dbSize; // Database Size
+    public string $dbSize; // Database Size
 
     /**
      * 检查操作系统类型
@@ -154,10 +157,10 @@ class SystemInfoHelper
         if ($this->osType === 0) {
             $computers = $this->wmi->ExecQuery('SELECT * FROM Win32_ComputerSystem');
             foreach ($computers as $computer) {
-                $this->ram = $computer->TotalPhysicalMemory;
+                $this->ram = FileSizeHelper::formatBytes($computer->TotalPhysicalMemory);
             }
         } else {
-            $this->ram = intval(shell_exec("grep MemTotal /proc/meminfo | awk '{print $2}'"));
+            $this->ram = FileSizeHelper::formatBytes(intval(shell_exec("grep MemTotal /proc/meminfo | awk '{print $2}'")));
         }
         if ($this->EnableTimeRecords) {
             $this->timeRecords['detectRam'] = microtime(true) - $start;
@@ -195,9 +198,13 @@ class SystemInfoHelper
             $lastBootUpTime = null;
             $freeMemory = null;
             $totalMemory = null;
+            $freeVMemory = null;
+            $totalVMemory = null;
             foreach ($os as $info) {
                 $freeMemory = $info->FreePhysicalMemory;
                 $totalMemory = $info->TotalVisibleMemorySize;
+                $freeVMemory = $info->FreeVirtualMemory;
+                $totalVMemory = $info->TotalVirtualMemorySize;
                 $cimDateTime = $info->LastBootUpTime;
                 $year = substr($cimDateTime, 0, 4);
                 $month = substr($cimDateTime, 4, 2);
@@ -212,9 +219,10 @@ class SystemInfoHelper
             $interval = $lastBootUpTime->diff(new DateTime());
             $this->serverUpTime = $interval->format('%a days, %h hours, %i minutes, %s seconds');
             $this->ramUsage = round((1 - (floatval($freeMemory) / floatval($totalMemory))) * 100, 2);
-
+            $this->swapUsage = round((1 - (floatval($freeVMemory) / floatval($totalVMemory))) * 100, 2);
         } else {
-            $this->serverUpTime = str_replace("up ", "", trim(shell_exec('uptime -p')));
+            $uptimeTimestamp = strtotime(trim(shell_exec('uptime -s')));
+            $this->serverUpTime = (new DateTime())->diff(new DateTime(date('Y-m-d H:i:s', $uptimeTimestamp)))->format('%a days, %h hours, %i minutes, %s seconds');
         }
         if ($this->EnableTimeRecords) {
             $this->timeRecords['detectServerUptime'] = microtime(true) - $start;
@@ -270,6 +278,7 @@ class SystemInfoHelper
         }
         if ($this->osType !== 0) {
             $this->ramUsage = round(floatval(shell_exec('free | grep Mem | awk \'{print $3/$2 * 100.0}\'')), 2);
+            $this->swapUsage = round(floatval(shell_exec('free | grep Swap | awk \'{if ($2 == 0) print 0; else print $3/$2 * 100.0}\'')), 2);
         }
         if ($this->EnableTimeRecords) {
             $this->timeRecords['detectRamUsage'] = microtime(true) - $start;
@@ -292,23 +301,32 @@ class SystemInfoHelper
             $this->dataMountPoint = shell_exec('powershell (Get-Item \"' . $dataPath . '\").PSDrive.Root'); // X:\
             $dmp = substr($this->dataMountPoint, 0, 2); // X:
             $volume = $this->wmi->ExecQuery('SELECT * FROM Win32_Volume WHERE DriveLetter="' . $dmp . '"');
+            $mp_size = null;
+            $mp_avail = null;
             foreach ($volume as $vol) {
                 $this->mp_fs = $vol->FileSystem;
             }
             $logicalDisk = $this->wmi->ExecQuery('SELECT * FROM Win32_LogicalDisk WHERE DeviceID="' . $dmp . '"');
             foreach ($logicalDisk as $disk) {
-                $this->mp_size = intval($disk->Size);
+                $mp_size = intval($disk->Size);
             }
             foreach ($logicalDisk as $disk) {
-                $this->mp_avail = intval($disk->FreeSpace);
+                $mp_avail = intval($disk->FreeSpace);
             }
-            $this->mp_used = $this->mp_size - $this->mp_avail;
+            $mp_used = $mp_size - $mp_avail;
+            $this->mp_size = FileSizeHelper::formatBytes($mp_size);
+            $this->mp_avail = FileSizeHelper::formatBytes($mp_avail);
+            $this->mp_used = FileSizeHelper::formatBytes($mp_size - $mp_avail);
+            $this->mp_usage = round(($mp_used / $mp_size) * 100, 2);
         } else {
             $this->dataMountPoint = shell_exec("df -P \"" . $dataPath . "\" | awk 'NR==2{print $6}'");
             $this->mp_fs = shell_exec("df -T \"" . $this->dataMountPoint . "\" | awk 'NR==2{print $2}'");
-            $this->mp_size = intval(shell_exec('df -k "' . $this->dataMountPoint . '" | awk \'NR==2{print $2}\''));
-            $this->mp_used = intval(shell_exec('df -k "' . $this->dataMountPoint . '" | awk \'NR==2{print $3}\''));
-            $this->mp_avail = intval(shell_exec('df -k "' . $this->dataMountPoint . '" | awk \'NR==2{print $4}\''));
+            $this->mp_size = FileSizeHelper::formatBytes(intval(shell_exec('df -k "' . $this->dataMountPoint . '" | awk \'NR==2{print $2}\'')));
+            $mp_used = intval(shell_exec('df -k "' . $this->dataMountPoint . '" | awk \'NR==2{print $3}\''));
+            $mp_avail = intval(shell_exec('df -k "' . $this->dataMountPoint . '" | awk \'NR==2{print $4}\''));
+            $this->mp_avail = FileSizeHelper::formatBytes($mp_avail);
+            $this->mp_used = FileSizeHelper::formatBytes($mp_used);
+            $this->mp_usage = round(($mp_used / ($mp_used + $mp_avail)) * 100, 2);
         }
         if ($this->EnableTimeRecords) {
             $this->timeRecords['detectDataMountPoint'] = microtime(true) - $start;
@@ -376,8 +394,8 @@ class SystemInfoHelper
 
             foreach ($networkAdapters as $adapter) {
                 $interfaceNames[] = $adapter->NetConnectionID;
-                $macAddresses[] = $adapter->MACAddress;
-                $speeds[] = $adapter->Speed;
+                $macAddresses[] = strtolower($adapter->MACAddress);
+                $speeds[] = FileSizeHelper::formatBits($adapter->Speed, 2, true) . '/s';
             }
 
             $networkConfigs = $this->wmi->ExecQuery('SELECT * FROM Win32_NetworkAdapterConfiguration WHERE IPEnabled = TRUE');
@@ -516,7 +534,7 @@ class SystemInfoHelper
         }
         $dbName = $_ENV['DB_NAME'];
         try {
-            $this->dbSize = Yii::$app->db->createCommand("select SUM(data_length + index_length) from information_schema.TABLES where table_schema = '$dbName' group by table_schema;")->queryScalar();
+            $this->dbSize = FileSizeHelper::formatBytes(intval(Yii::$app->db->createCommand("select SUM(data_length + index_length) from information_schema.TABLES where table_schema = '$dbName' group by table_schema;")->queryScalar()));
         } catch (Exception) {
             $this->dbSize = 'Fetch Error';
         }
@@ -533,7 +551,7 @@ class SystemInfoHelper
     {
         $sysInfo = new SystemInfoHelper();
         // Time records (Debug)
-        $sysInfo->EnableTimeRecords = true;
+//        $sysInfo->EnableTimeRecords = true;
 
         $sysInfo->detectOsType();
         if ($sysInfo->osType === 1) {
