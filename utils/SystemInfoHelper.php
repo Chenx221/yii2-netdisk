@@ -5,6 +5,7 @@ namespace app\utils;
 use app\models\CollectionTasks;
 use app\models\Share;
 use app\models\User;
+use COM;
 use DateTime;
 use Yii;
 use yii\db\Exception;
@@ -18,6 +19,7 @@ use yii\db\Exception;
  */
 class SystemInfoHelper
 {
+    private $wmi; // WMI Object
     public array $timeRecords; // Time records
     public bool $EnableTimeRecords = false; // Enable time records
     public string $hostname; // Hostname
@@ -110,6 +112,7 @@ class SystemInfoHelper
 
     /**
      * 获取CPU信息
+     * 目前没有什么合适的方法更快地获取CPU信息(win)
      * @return void
      */
     private function detectCpu(): void
@@ -119,7 +122,14 @@ class SystemInfoHelper
             $start = microtime(true);
         }
         if ($this->osType === 0) {
-            $this->cpu = shell_exec('powershell "$processorInfo = Get-WmiObject Win32_Processor;$processorInfo.Name + \' (\' + $processorInfo.NumberOfCores + \' Cores)\'"');
+            $processors = $this->wmi->ExecQuery('SELECT * FROM Win32_Processor');
+            $result = '';
+            foreach ($processors as $processor) {
+                $result .= $processor->Name . " (" . $processor->NumberOfCores . " Cores) ";
+                $this->cpuUsage = floatval($processor->LoadPercentage);
+                break;
+            }
+            $this->cpu = $result;
         } else {
             $cpu_model = trim(shell_exec("cat /proc/cpuinfo | grep 'model name' | uniq | awk -F': ' '{print $2}'"));
             $cpu_cores = shell_exec('nproc');
@@ -142,7 +152,10 @@ class SystemInfoHelper
             $start = microtime(true);
         }
         if ($this->osType === 0) {
-            $this->ram = intval(shell_exec('powershell (Get-WmiObject Win32_computerSystem).TotalPhysicalMemory'));
+            $computers = $this->wmi->ExecQuery('SELECT * FROM Win32_ComputerSystem');
+            foreach ($computers as $computer) {
+                $this->ram = $computer->TotalPhysicalMemory;
+            }
         } else {
             $this->ram = intval(shell_exec("grep MemTotal /proc/meminfo | awk '{print $2}'"));
         }
@@ -178,11 +191,28 @@ class SystemInfoHelper
             $start = microtime(true);
         }
         if ($this->osType === 0) {
-            $lastBootUpTime = strtotime(shell_exec('powershell (Get-CimInstance Win32_OperatingSystem).LastBootUpTime'));
-            $now = new DateTime();
-            $bootTime = new DateTime("@$lastBootUpTime");
-            $interval = $bootTime->diff($now);
+            $os = $this->wmi->ExecQuery('SELECT * FROM Win32_OperatingSystem');
+            $lastBootUpTime = null;
+            $freeMemory = null;
+            $totalMemory = null;
+            foreach ($os as $info) {
+                $freeMemory = $info->FreePhysicalMemory;
+                $totalMemory = $info->TotalVisibleMemorySize;
+                $cimDateTime = $info->LastBootUpTime;
+                $year = substr($cimDateTime, 0, 4);
+                $month = substr($cimDateTime, 4, 2);
+                $day = substr($cimDateTime, 6, 2);
+                $hours = substr($cimDateTime, 8, 2);
+                $minutes = substr($cimDateTime, 10, 2);
+                $seconds = substr($cimDateTime, 12, 2);
+                $dateTime = new DateTime("$year-$month-$day $hours:$minutes:$seconds");
+                $lastBootUpTime = $dateTime;
+                break;
+            }
+            $interval = $lastBootUpTime->diff(new DateTime());
             $this->serverUpTime = $interval->format('%a days, %h hours, %i minutes, %s seconds');
+            $this->ramUsage = round((1 - (floatval($freeMemory) / floatval($totalMemory))) * 100, 2);
+
         } else {
             $this->serverUpTime = str_replace("up ", "", trim(shell_exec('uptime -p')));
         }
@@ -210,6 +240,7 @@ class SystemInfoHelper
 
     /**
      * 获取CPU使用率
+     * Windows部分已经移动
      * @return void
      */
     private function detectCpuUsage(): void
@@ -218,9 +249,7 @@ class SystemInfoHelper
         if ($this->EnableTimeRecords) {
             $start = microtime(true);
         }
-        if ($this->osType === 0) {
-            $this->cpuUsage = floatval(shell_exec('powershell (Get-WmiObject Win32_Processor).LoadPercentage'));
-        } else {
+        if ($this->osType !== 0) {
             $this->cpuUsage = floatval(shell_exec("top -b -n1 | grep 'Cpu(s)' | awk '{print $2 + $4}'"));
         }
         if ($this->EnableTimeRecords) {
@@ -230,6 +259,7 @@ class SystemInfoHelper
 
     /**
      * 获取RAM使用率
+     * Windows部分已经移动
      * @return void
      */
     private function detectRamUsage(): void
@@ -238,10 +268,7 @@ class SystemInfoHelper
         if ($this->EnableTimeRecords) {
             $start = microtime(true);
         }
-        if ($this->osType === 0) {
-            $this->ramUsage = round(floatval(shell_exec('powershell "100 - (Get-WmiObject Win32_OperatingSystem).FreePhysicalMemory / (Get-WmiObject Win32_Operati
-ngSystem).TotalVisibleMemorySize * 100"')), 2);
-        } else {
+        if ($this->osType !== 0) {
             $this->ramUsage = round(floatval(shell_exec('free | grep Mem | awk \'{print $3/$2 * 100.0}\'')), 2);
         }
         if ($this->EnableTimeRecords) {
@@ -264,9 +291,17 @@ ngSystem).TotalVisibleMemorySize * 100"')), 2);
         if ($this->osType === 0) {
             $this->dataMountPoint = shell_exec('powershell (Get-Item \"' . $dataPath . '\").PSDrive.Root'); // X:\
             $dmp = substr($this->dataMountPoint, 0, 2); // X:
-            $this->mp_fs = shell_exec('powershell "(Get-WmiObject Win32_Volume | Where-Object {$_.DriveLetter -eq \'' . $dmp . '\'}).FileSystem"');
-            $this->mp_size = intval(shell_exec('powershell "(Get-WmiObject Win32_LogicalDisk | Where-Object {$_.DeviceID -eq \'' . $dmp . '\'}).Size"'));
-            $this->mp_avail = intval(shell_exec('powershell "(Get-WmiObject Win32_LogicalDisk | Where-Object {$_.DeviceID -eq \'' . $dmp . '\'}).FreeSpace"'));
+            $volume = $this->wmi->ExecQuery('SELECT * FROM Win32_Volume WHERE DriveLetter="' . $dmp . '"');
+            foreach ($volume as $vol) {
+                $this->mp_fs = $vol->FileSystem;
+            }
+            $logicalDisk = $this->wmi->ExecQuery('SELECT * FROM Win32_LogicalDisk WHERE DeviceID="' . $dmp . '"');
+            foreach ($logicalDisk as $disk) {
+                $this->mp_size = intval($disk->Size);
+            }
+            foreach ($logicalDisk as $disk) {
+                $this->mp_avail = intval($disk->FreeSpace);
+            }
             $this->mp_used = $this->mp_size - $this->mp_avail;
         } else {
             $this->dataMountPoint = shell_exec("df -P \"" . $dataPath . "\" | awk 'NR==2{print $6}'");
@@ -282,6 +317,7 @@ ngSystem).TotalVisibleMemorySize * 100"')), 2);
 
     /**
      * 获取DNS信息
+     * Windows部分已经移动
      * @return void
      */
     private function detectDns(): void
@@ -290,9 +326,7 @@ ngSystem).TotalVisibleMemorySize * 100"')), 2);
         if ($this->EnableTimeRecords) {
             $start = microtime(true);
         }
-        if ($this->osType === 0) {
-            $this->dns = shell_exec('powershell "Get-CimInstance Win32_NetworkAdapterConfiguration | Select-Object -ExpandProperty DNSServerSearchOrder"');
-        } else {
+        if ($this->osType !== 0) {
             $this->dns = shell_exec('cat /etc/resolv.conf | grep nameserver | awk \'{print $2}\' | tr \'\\n\' \',\' | sed \'s/,$//\'');
         }
         if ($this->EnableTimeRecords) {
@@ -302,6 +336,7 @@ ngSystem).TotalVisibleMemorySize * 100"')), 2);
 
     /**
      * 获取网关信息
+     * Windows部分已经移动
      * @return void
      */
     private function detectGateway(): void
@@ -310,9 +345,7 @@ ngSystem).TotalVisibleMemorySize * 100"')), 2);
         if ($this->EnableTimeRecords) {
             $start = microtime(true);
         }
-        if ($this->osType === 0) {
-            $this->gateway = shell_exec('powershell "Get-CimInstance Win32_NetworkAdapterConfiguration | Select-Object -ExpandProperty DefaultIPGateway"');
-        } else {
+        if ($this->osType !== 0) {
             $this->gateway = shell_exec('ip route | grep default | awk \'{print $3}\'');
         }
         if ($this->EnableTimeRecords) {
@@ -332,17 +365,52 @@ ngSystem).TotalVisibleMemorySize * 100"')), 2);
             $start = microtime(true);
         }
         if ($this->osType === 0) {
-            $result1 = shell_exec('powershell "$NetAdapters = Get-NetAdapter | Where-Object { $_.Status -eq \'Up\' };$Names = $NetAdapters.Name -join \', \';$MacAddresses = $NetAdapters.MacAddress -join \', \';$Speed = $NetAdapters.LinkSpeed -join \', \';Write-Output $Names;Write-Output $MacAddresses;Write-Output $Speed;"');
-            $lines = explode("\n", $result1);
-            $result2 = shell_exec('powershell "$IPAddressList = (Get-CimInstance -ClassName Win32_NetworkAdapterConfiguration | Where-Object { $_.IPAddress -ne $null }).IPAddress;$IPv4Addresses = @();$IPv6Addresses = @();foreach ($IPAddress in $IPAddressList) {if ($IPAddress -match \'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\') {$IPv4Addresses += $IPAddress} elseif ($IPAddress -match \'[:0-9A-Fa-f]{4,}:[0-9A-Fa-f:]+\') {$IPv6Addresses += $IPAddress}};Write-Output $($IPv4Addresses -join \', \');Write-Output $($IPv6Addresses -join \', \');"');
-            $lines2 = explode("\n", $result2);
+            $networkAdapters = $this->wmi->ExecQuery('SELECT * FROM Win32_NetworkAdapter WHERE NetConnectionStatus = 2');
+            $interfaceNames = [];
+            $macAddresses = [];
+            $speeds = [];
+            $ipv4Addresses = [];
+            $ipv6Addresses = [];
+            $gatewayArray = [];
+            $dnsArray = [];
+
+            foreach ($networkAdapters as $adapter) {
+                $interfaceNames[] = $adapter->NetConnectionID;
+                $macAddresses[] = $adapter->MACAddress;
+                $speeds[] = $adapter->Speed;
+            }
+
+            $networkConfigs = $this->wmi->ExecQuery('SELECT * FROM Win32_NetworkAdapterConfiguration WHERE IPEnabled = TRUE');
+            foreach ($networkConfigs as $config) {
+                if (!is_null($config->DNSServerSearchOrder)) {
+                    foreach ($config->DNSServerSearchOrder as $dns) {
+                        $dnsArray[] = $dns;
+                    }
+                }
+                if (!is_null($config->DefaultIPGateway)) {
+                    foreach ($config->DefaultIPGateway as $gateway) {
+                        $gatewayArray[] = $gateway;
+                    }
+                }
+                if (!is_null($config->IPAddress)) {
+                    foreach ($config->IPAddress as $ip) {
+                        if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+                            $ipv4Addresses[] = $ip;
+                        } elseif (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+                            $ipv6Addresses[] = $ip;
+                        }
+                    }
+                }
+            }
             $this->nic = [
-                'interfaceName' => $lines[0],
-                'mac' => strtolower($lines[1]),
-                'speed' => $lines[2],
-                'ipv4' => $lines2[0],
-                'ipv6' => $lines2[1]
+                'interfaceName' => implode(', ', $interfaceNames),
+                'mac' => implode(', ', $macAddresses),
+                'speed' => implode(', ', $speeds),
+                'ipv4' => implode(', ', $ipv4Addresses),
+                'ipv6' => implode(', ', $ipv6Addresses)
             ];
+            $this->gateway = implode(',', $gatewayArray);
+            $this->dns = implode(',', $dnsArray);
         } else {
             $name = trim(shell_exec('ip link | awk -F: \'$0 !~ "lo|vir|wl|^[^0-9]"{print $2;getline}\''));
             $this->nic = [
@@ -441,10 +509,6 @@ ngSystem).TotalVisibleMemorySize * 100"')), 2);
             $start = microtime(true);
         }
         $this->dbType = Yii::$app->db->driverName;
-//        debug
-//        $this->dbVersion = '1';
-//        $this->dbSize = 1;
-//        return;
         try {
             $this->dbVersion = Yii::$app->db->createCommand('SELECT VERSION()')->queryScalar();
         } catch (Exception) {
@@ -472,6 +536,14 @@ ngSystem).TotalVisibleMemorySize * 100"')), 2);
         $sysInfo->EnableTimeRecords = true;
 
         $sysInfo->detectOsType();
+        if ($sysInfo->osType === 1) {
+            $sysInfo->detectLoad();
+
+        } else {
+            $sysInfo->wmi = new COM('winmgmts://');
+            $sysInfo->load = -1;
+        }
+
         $sysInfo->detectHostname();
         $sysInfo->detectOs();
         $sysInfo->detectCpu();
@@ -479,12 +551,7 @@ ngSystem).TotalVisibleMemorySize * 100"')), 2);
         $sysInfo->detectServerTime();
         $sysInfo->detectServerUptime();
 
-        if ($sysInfo->osType === 1) {
-            $sysInfo->detectLoad();
 
-        } else {
-            $sysInfo->load = -1;
-        }
         $sysInfo->detectCpuUsage();
         $sysInfo->detectRamUsage();
         $sysInfo->detectDataMountPoint();
