@@ -321,7 +321,7 @@ class SystemInfoHelper
         } else {
             $this->dataMountPoint = trim(shell_exec("df -P \"" . $dataPath . "\" | awk 'NR==2{print $6}'"));
             $this->mp_fs = shell_exec("df -T \"" . $this->dataMountPoint . "\" | awk 'NR==2{print $2}'");
-            $this->mp_size = FileSizeHelper::formatBytes(intval(shell_exec('df -BM "' . $this->dataMountPoint . '" | awk \'NR==2{print $2}\'')));
+            $this->mp_size = FileSizeHelper::formatMegaBytes(intval(shell_exec('df -BM "' . $this->dataMountPoint . '" | awk \'NR==2{print $2}\'')));
             $mp_used = intval(shell_exec('df -BM "' . $this->dataMountPoint . '" | awk \'NR==2{print $3}\''));
             $mp_avail = intval(shell_exec('df -BM "' . $this->dataMountPoint . '" | awk \'NR==2{print $4}\''));
             $this->mp_avail = FileSizeHelper::formatMegaBytes($mp_avail);
