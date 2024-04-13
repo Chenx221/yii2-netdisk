@@ -81,10 +81,10 @@ $this->title = '系统信息';
                 </h2>
                 <!-- Memory Graph -->
                 <p>
-                    <!-- RAM value -->
+                    Memory Usage: <?= $systemInfo->ramUsage ?>%
                 </p>
                 <p>
-                    <!-- SWAP value -->
+                    Swap Usage: <?= $systemInfo->swapUsage ?>%
                 </p>
             </div>
         </div>
@@ -115,7 +115,7 @@ $this->title = '系统信息';
                     <span><?= $systemInfo->mp_avail ?></span>
                     <br>
                     Used:
-                    <span><?= $systemInfo->mp_used ?></span>
+                    <span><?= $systemInfo->mp_used ?> (<?= $systemInfo->mp_usage ?>%)</span>
                 </div>
             </div>
         </div>
@@ -208,7 +208,7 @@ $this->title = '系统信息';
                     <span><?= $systemInfo->memoryLimit ?></span>
                     <br>
                     Max Execution Time:
-                    <span><?= $systemInfo->maxExecutionTime ?></span>
+                    <span><?= $systemInfo->maxExecutionTime ?>s</span>
                     <br>
                     Upload Max Filesize:
                     <span><?= $systemInfo->uploadMaxFilesize ?></span>
