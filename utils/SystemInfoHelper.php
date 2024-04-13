@@ -321,11 +321,11 @@ class SystemInfoHelper
         } else {
             $this->dataMountPoint = trim(shell_exec("df -P \"" . $dataPath . "\" | awk 'NR==2{print $6}'"));
             $this->mp_fs = shell_exec("df -T \"" . $this->dataMountPoint . "\" | awk 'NR==2{print $2}'");
-            $this->mp_size = FileSizeHelper::formatBytes(intval(shell_exec('df -k "' . $this->dataMountPoint . '" | awk \'NR==2{print $2}\'')));
-            $mp_used = intval(shell_exec('df -k "' . $this->dataMountPoint . '" | awk \'NR==2{print $3}\''));
-            $mp_avail = intval(shell_exec('df -k "' . $this->dataMountPoint . '" | awk \'NR==2{print $4}\''));
-            $this->mp_avail = FileSizeHelper::formatBytes($mp_avail);
-            $this->mp_used = FileSizeHelper::formatBytes($mp_used);
+            $this->mp_size = FileSizeHelper::formatBytes(intval(shell_exec('df -BM "' . $this->dataMountPoint . '" | awk \'NR==2{print $2}\'')));
+            $mp_used = intval(shell_exec('df -BM "' . $this->dataMountPoint . '" | awk \'NR==2{print $3}\''));
+            $mp_avail = intval(shell_exec('df -BM "' . $this->dataMountPoint . '" | awk \'NR==2{print $4}\''));
+            $this->mp_avail = FileSizeHelper::formatMegaBytes($mp_avail);
+            $this->mp_used = FileSizeHelper::formatMegaBytes($mp_used);
             $this->mp_usage = round(($mp_used / ($mp_used + $mp_avail)) * 100, 2);
         }
         if ($this->EnableTimeRecords) {
