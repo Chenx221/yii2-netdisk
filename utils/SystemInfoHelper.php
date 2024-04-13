@@ -304,7 +304,7 @@ class SystemInfoHelper
             }
             $this->mp_used = $this->mp_size - $this->mp_avail;
         } else {
-            $this->dataMountPoint = shell_exec("df -P \"" . $dataPath . "\" | awk 'NR==2{print $6}'");
+            $this->dataMountPoint = trim(shell_exec("df -P \"" . $dataPath . "\" | awk 'NR==2{print $6}'"));
             $this->mp_fs = shell_exec("df -T \"" . $this->dataMountPoint . "\" | awk 'NR==2{print $2}'");
             $this->mp_size = intval(shell_exec('df -k "' . $this->dataMountPoint . '" | awk \'NR==2{print $2}\''));
             $this->mp_used = intval(shell_exec('df -k "' . $this->dataMountPoint . '" | awk \'NR==2{print $3}\''));
