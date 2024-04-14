@@ -596,8 +596,8 @@ class AdminController extends Controller
      * Get server status
      * @return void
      */
-    public function actionGetServerStatus(): void
+    public function actionGetSysinfo(): void
     {
-
+        //TODO: Implement this method
     }
 }

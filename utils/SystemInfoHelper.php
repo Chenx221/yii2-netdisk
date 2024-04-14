@@ -568,8 +568,6 @@ class SystemInfoHelper
         $sysInfo->detectRam();
         $sysInfo->detectServerTime();
         $sysInfo->detectServerUptime();
-
-
         $sysInfo->detectCpuUsage();
         $sysInfo->detectRamUsage();
         $sysInfo->detectDataMountPoint();
@@ -593,16 +591,7 @@ class SystemInfoHelper
     public static function getSysInfoFre(): SystemInfoHelper
     {
         $sysInfo = new SystemInfoHelper();
-        $sysInfo->detectServerTime();
-        $sysInfo->detectServerUptime();
-        if ($sysInfo->osType === 1) {
-            $sysInfo->detectLoad();
-        } else {
-            $sysInfo->load = -1;
-        }
-        $sysInfo->detectCpuUsage();
-        $sysInfo->detectRamUsage();
-        $sysInfo->detectDataMountPoint();
+        // TODO: Implement getSysInfoFre() method.
         return $sysInfo;
     }
 
