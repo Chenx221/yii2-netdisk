@@ -12,6 +12,7 @@ use yii\web\View;
 
 FontAwesomeAsset::register($this);
 EChartsAsset::register($this);
+$this->registerCssFile('@web/css/sysinfo-style.css');
 $this->title = '系统信息';
 ?>
 
@@ -55,9 +56,9 @@ $this->title = '系统信息';
             </p>
         </div>
         <hr>
-        <div>
+        <div class="row">
             <?php if ($systemInfo->osType === 2): ?>
-                <div>
+                <div class="col-xxl-6">
                     <h2>
                         <i class="fa-solid fa-bars-progress"></i>
                         Load
@@ -70,7 +71,7 @@ $this->title = '系统信息';
                     </p>
                 </div>
             <?php endif; ?>
-            <div>
+            <div class="col-xxl-6">
                 <h2>
                     <i class="fa-solid fa-microchip"></i>
                     CPU
@@ -82,7 +83,7 @@ $this->title = '系统信息';
                     CPU Usage: <span id="rdata_cpuUsage"><?= $systemInfo->cpuUsage ?></span>%
                 </p>
             </div>
-            <div>
+            <div class="col-xxl-6">
                 <h2>
                     <i class="fa-solid fa-memory"></i>
                     Memory
@@ -106,12 +107,14 @@ $this->title = '系统信息';
                     Disk
                 </h2>
             </div>
-            <div>
-                <div>
+            <div class="row">
+                <div class="row col-md-6 group-content">
                     <!-- disk chart -->
-                    <div id="disk-chart" style="width: 600px;height:400px;">
+                    <div class="col-xl-6">
+                        <div id="disk-chart" style="width: 300px;height:250px;">
+                        </div>
                     </div>
-                    <div>
+                    <div class="col-xl-6" style="padding-top: 50px">
                         <h3>Data</h3>
                         Mount:
                         <span id="rdata_dataMountPoint"><?= $systemInfo->dataMountPoint ?></span>
@@ -149,70 +152,71 @@ $this->title = '系统信息';
                     Gateway:
                     <span id="rdata_gateway"><?= $systemInfo->gateway ?></span>
                 </p>
-                <div>
-                    <div>
-                        <div>
-                            <h3 id="rdata_interfaceName"><?= $systemInfo->nic['interfaceName'] ?></h3>
-                            MAC:
-                            <span id="rdata_mac"><?= $systemInfo->nic['mac'] ?></span>
-                            <br>
-                            Speed:
-                            <span id="rdata_speed"><?= $systemInfo->nic['speed'] ?></span>
-                            <br>
-                            IPv4:
-                            <span id="rdata_ipv4"><?= $systemInfo->nic['ipv4'] ?></span>
-                            <br>
-                            IPv6:
-                            <span id="rdata_ipv6"><?= $systemInfo->nic['ipv6'] ?></span>
-                        </div>
+                <br>
+                <div class="row">
+                    <div class="group-content col-md-4">
+                        <h3 id="rdata_interfaceName"><?= $systemInfo->nic['interfaceName'] ?></h3>
+                        MAC:
+                        <span id="rdata_mac"><?= $systemInfo->nic['mac'] ?></span>
+                        <br>
+                        Speed:
+                        <span id="rdata_speed"><?= $systemInfo->nic['speed'] ?></span>
+                        <br>
+                        IPv4:
+                        <span id="rdata_ipv4"><?= $systemInfo->nic['ipv4'] ?></span>
+                        <br>
+                        IPv6:
+                        <span id="rdata_ipv6"><?= $systemInfo->nic['ipv6'] ?></span>
                     </div>
                 </div>
             </div>
             <hr>
-            <div>
-                <h2>
-                    <i class="fa-solid fa-users"></i>
-                    Active Users
-                </h2>
-                <div>
-                    All:
-                    <span id="rdata_users"><?= $systemInfo->users ?></span>
-                    <br>
-                    Active (within 24h):
-                    <span id="rdata_activeUsers"><?= $systemInfo->activeUsers ?></span>
+            <div class="row">
+                <div class="col-md-4">
+                    <h2>
+                        <i class="fa-solid fa-users"></i>
+                        Active Users
+                    </h2>
+                    <div class="group-content">
+                        All:
+                        <span id="rdata_users"><?= $systemInfo->users ?></span>
+                        <br>
+                        Active (within 24h):
+                        <span id="rdata_activeUsers"><?= $systemInfo->activeUsers ?></span>
+                    </div>
                 </div>
             </div>
             <hr>
-            <div>
-                <div>
+            <div class="row">
+                <div class="col-md-4">
                     <h2>
                         <i class="fa-solid fa-share-nodes"></i>
                         Share
                     </h2>
-                    <div>
+                    <div class="group-content">
                         Link:
                         <span id="rdata_shares"><?= $systemInfo->shares ?></span>
                     </div>
                 </div>
-                <div>
+                <div class="col-md-4">
                     <h2>
                         <i class="fa-solid fa-paper-plane"></i>
                         Collection
                     </h2>
-                    <div>
-                        Collection:
+                    <div class="group-content">
+                        Link:
                         <span id="rdata_collections"><?= $systemInfo->collections ?></span>
                     </div>
                 </div>
             </div>
             <hr>
-            <div>
-                <div>
+            <div class="row">
+                <div class="col-md-6">
                     <h2>
                         <i class="fa-brands fa-php"></i>
                         PHP
                     </h2>
-                    <div>
+                    <div class="group-content">
                         Version:
                         <span id="rdata_phpVersion"><?= $systemInfo->phpVersion ?></span>
                         <br>
@@ -232,12 +236,12 @@ $this->title = '系统信息';
                         <span id="rdata_extensions"><?= $systemInfo->extensions ?></span>
                     </div>
                 </div>
-                <div>
+                <div class="col-md-6">
                     <h2>
                         <i class="fa-solid fa-database"></i>
                         Database
                     </h2>
-                    <div>
+                    <div class="group-content">
                         Type:
                         <span id="rdata_dbType"><?= $systemInfo->dbType ?></span>
                         <br>
@@ -268,7 +272,7 @@ var option = {
     xAxis: {
         type: 'category',
         boundaryGap: false,
-        data: ["$dataTime","16:51:49"]
+        data: ["$dataTime"]
     },
     yAxis: {
         type: 'value',
@@ -278,12 +282,14 @@ var option = {
     series: [
         {
             'name': 'CPU',
-            data: [$systemInfo->cpuUsage,50],
+            data: [$systemInfo->cpuUsage],
             label: {
                 show: true,
                 position: 'top',
-                formatter: '{c}%',
-                emphasis: {
+                formatter: '{c}%'
+            },
+            emphasis: {
+                label: {
                     scale: 1.5
                 }
             },
@@ -302,7 +308,7 @@ if(needLoadGraph !== null){
         xAxis: {
             type: 'category',
             boundaryGap: false,
-            data: ["$dataTime","16:51:49"]
+            data: ["$dataTime"]
         },
         yAxis: {
             type: 'value',
@@ -312,12 +318,14 @@ if(needLoadGraph !== null){
         series: [
             {
                 'name': 'Load',
-                data: [$systemInfo->load,50],
+                data: [$systemInfo->load],
                 label: {
                     show: true,
                     position: 'top',
-                    formatter: '{c}%',
-                    emphasis: {
+                    formatter: '{c}%'
+                },
+                emphasis: {
+                    label: {
                         scale: 1.5
                     }
                 },
@@ -336,7 +344,7 @@ var option2 = {
     xAxis: {
         type: 'category',
         boundaryGap: false,
-        data: ["$dataTime","16:51:49"]
+        data: ["$dataTime"]
     },
     yAxis: {
         type: 'value',
@@ -346,7 +354,7 @@ var option2 = {
     series: [
         {
             name: 'RAM',
-            data: [$systemInfo->ramUsage,50],
+            data: [$systemInfo->ramUsage],
             type: 'line',
             areaStyle: {},
             smooth: true,
@@ -357,14 +365,16 @@ var option2 = {
                 show: true,
                 position: 'top',
                 formatter: '{c}%',
-                emphasis: {
+            },
+            emphasis: {
+                label: {
                     scale: 1.5
                 }
             }
         },
         {
             name: 'SWAP',
-            data: [$systemInfo->swapUsage,90],
+            data: [$systemInfo->swapUsage],
             type: 'line',
             areaStyle: {},
             smooth: true,
@@ -374,11 +384,13 @@ var option2 = {
             label: {
                 show: true,
                 position: 'bottom',
-                formatter: '{c}%',
-                emphasis: {
+                formatter: '{c}%'
+            },
+            emphasis: {
+                label: {
                     scale: 1.5
                 }
-            }
+            },
         }
     ]
 };
