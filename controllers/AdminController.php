@@ -46,7 +46,7 @@ class AdminController extends Controller
                             'actions' => ['index', 'system', 'user', 'info', 'user-view', 'user-create', 'user-update',
                                 'user-delete', 'user-totpoff', 'user-pwdreset', 'login-log', 'access-log', 'collection-up-log',
                                 'share-manage', 'share-manage-view', 'share-manage-delete', 'collection-manage', 'collection-manage-view',
-                                'collection-manage-delete', 'notice-manage', 'feedback-manage', 'sysinfo'],
+                                'collection-manage-delete', 'notice-manage', 'feedback-manage', 'sysinfo','get-sysinfo'],
                             'roles' => ['admin'], // only admin can do these
                         ]
                     ],
@@ -76,6 +76,7 @@ class AdminController extends Controller
                         'notice-manage' => ['GET'],
                         'feedback-manage' => ['GET'],
                         'sysinfo' => ['GET'],
+                        'get-sysinfo' => ['GET'],
                     ],
                 ],
             ]
@@ -593,11 +594,19 @@ class AdminController extends Controller
     }
 
     /**
-     * Get server status
-     * @return void
+     * Get server status (mini)
      */
-    public function actionGetSysinfo(): void
+    public function actionGetSysinfo(): \yii\console\Response|Response
     {
-        //TODO: Implement this method
+        if (Yii::$app->request->isAjax) {
+            $MiniInfo = SystemInfoHelper::getSysInfoFre();
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            Yii::$app->response->data = $MiniInfo;
+
+        } else {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            Yii::$app->response->data = ['error' => 'Invalid request'];
+        }
+        return Yii::$app->response;
     }
 }
