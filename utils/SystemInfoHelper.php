@@ -159,7 +159,7 @@ class SystemInfoHelper
                 $this->ram = FileSizeHelper::formatBytes($computer->TotalPhysicalMemory);
             }
         } else {
-            $this->ram = FileSizeHelper::formatBytes(intval(shell_exec("grep MemTotal /proc/meminfo | awk '{print $2}'")));
+            $this->ram = FileSizeHelper::formatBytes(intval(shell_exec("grep MemTotal /proc/meminfo | awk '{print $2}'"))*1024);
         }
         if ($this->EnableTimeRecords) {
             $this->timeRecords['detectRam'] = microtime(true) - $start;
@@ -239,7 +239,7 @@ class SystemInfoHelper
         if ($this->EnableTimeRecords) {
             $start = microtime(true);
         }
-        $this->load = sys_getloadavg()[0];
+        $this->load = round(sys_getloadavg()[0],2);
         if ($this->EnableTimeRecords) {
             $this->timeRecords['detectLoad'] = microtime(true) - $start;
         }
