@@ -6,7 +6,6 @@ use app\models\CollectionTasks;
 use app\models\Share;
 use app\models\User;
 use COM;
-use DateInterval;
 use DateTime;
 use Yii;
 use yii\db\Exception;
@@ -585,13 +584,27 @@ class SystemInfoHelper
 
     /**
      * 获取系统信息(刷新)
-     * 为了减少资源消耗，只刷新部分数据
+     * 为了减少资源消耗，只获取部分数据
      * @return SystemInfoHelper
      */
     public static function getSysInfoFre(): SystemInfoHelper
     {
         $sysInfo = new SystemInfoHelper();
-        // TODO: Implement getSysInfoFre() method.
+        $sysInfo->detectOsType();
+        if ($sysInfo->osType === 1) {
+            $sysInfo->detectLoad();
+
+        } else {
+            $sysInfo->wmi = new COM('winmgmts://');
+            $sysInfo->load = -1;
+        }
+
+        $sysInfo->detectCpu();
+        $sysInfo->detectServerTime();
+        $sysInfo->detectServerUptime();
+        $sysInfo->detectCpuUsage();
+        $sysInfo->detectRamUsage();
+        $sysInfo->detectDataMountPoint();
         return $sysInfo;
     }
 
