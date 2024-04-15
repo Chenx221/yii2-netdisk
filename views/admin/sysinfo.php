@@ -1,4 +1,4 @@
-<?php
+ <?php
 /* @var $this yii\web\View */
 
 /* @var $systemInfo SystemInfoHelper */
@@ -57,7 +57,7 @@ $this->title = '系统信息';
         </div>
         <hr>
         <div class="row">
-            <?php if ($systemInfo->osType === 2): ?>
+            <?php if ($systemInfo->osType === 1): ?>
                 <div class="col-xxl-6">
                     <h2>
                         <i class="fa-solid fa-bars-progress"></i>
@@ -312,8 +312,8 @@ if(needLoadGraph !== null){
         },
         yAxis: {
             type: 'value',
-            min: 0,
-            max: 100
+            min: 0
+            // max: 100
         },
         series: [
             {
@@ -322,7 +322,7 @@ if(needLoadGraph !== null){
                 label: {
                     show: true,
                     position: 'top',
-                    formatter: '{c}%'
+                    formatter: '{c}'
                 },
                 emphasis: {
                     label: {
