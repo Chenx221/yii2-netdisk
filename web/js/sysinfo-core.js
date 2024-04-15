@@ -1,5 +1,5 @@
 //dynamic fetch of system information & display
-//every 5 seconds ajax request to fetch system information
+//every * seconds ajax request to fetch system information
 //backport: admin/get-sysinfo
 //return json object with system information
 
@@ -8,7 +8,7 @@ var sysinfo = {
         setInterval(sysinfo.fetch, 2000);
         // WARNING
         // For Windows users, the interval should be equal or greater than 1500ms, because the system information gathering process is slow. (Please dynamically adjust the interval based on system performance.)
-        // For Linux users, the interval can be set to below 1000ms.
+        // For Linux users, the interval can be set to 500ms (Recommend: 1000ms)
     },
     fetch: function () {
         $.ajax({
