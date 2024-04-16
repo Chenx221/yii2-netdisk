@@ -10,9 +10,6 @@
     border-radius:10px;
     padding: 16px;
 }
-.system-info .group-content span{
-    color: #6b6b6b;
-}
 
 #load-graph,#cpu-graph,#memory-graph{
     padding-top: 35px;

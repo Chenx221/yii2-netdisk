@@ -259,9 +259,20 @@ $this->title = '系统信息';
     $dataTime = substr($systemInfo->serverTime, 11, 8);
     $mp_free = round(100 - $systemInfo->mp_usage, 2);
     $script = <<< JS
-var myChart = echarts.init(document.getElementById('cpu-graph'));
-var myChart2 = echarts.init(document.getElementById('memory-graph'));
-var myChart3 = echarts.init(document.getElementById('disk-chart'));
+var myChart;
+var myChart2;
+var myChart3;
+// detect dark mode
+if ((window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)|| document.documentElement.getAttribute('data-bs-theme')==='dark') {
+    myChart = echarts.init(document.getElementById('cpu-graph'),'dark');
+    myChart2 = echarts.init(document.getElementById('memory-graph'),'dark');
+    myChart3 = echarts.init(document.getElementById('disk-chart'),'dark');
+}else {
+    myChart = echarts.init(document.getElementById('cpu-graph'));
+    myChart2 = echarts.init(document.getElementById('memory-graph'));
+    myChart3 = echarts.init(document.getElementById('disk-chart'));
+}
+
 // check load-graph is exist
 var needLoadGraph = document.getElementById('load-graph');
 // var 
