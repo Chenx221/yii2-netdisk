@@ -76,6 +76,7 @@ $darkMode = Yii::$app->user->isGuest ? 0 : Yii::$app->user->identity->dark_mode;
             ['label' => '分享管理', 'url' => ['/share/index']],
             ['label' => '文件收集', 'url' => ['/collection/index']],
             ['label' => '个人设置', 'url' => ['/user/info']],
+            ['label' => '工单支持', 'url' => ['/tickets/index']],
             Yii::$app->user->isGuest
                 ? ['label' => '登录', 'url' => ['/user/login']]
                 : '<li class="nav-item">'

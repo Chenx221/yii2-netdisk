@@ -78,7 +78,7 @@ $this->registerCssFile('@web/css/fuckyou-navpadding.css');
                 ['label' => '文件分享管理', 'url' => ['/admin/share-manage']],
                 ['label' => '文件收集管理', 'url' => ['/admin/collection-manage']],
                 ['label' => '站点公告管理', 'url' => ['/admin/notice-manage']], // 未完工
-                ['label' => '用户反馈管理', 'url' => ['/admin/feedback-manage']], // 未完工
+                ['label' => '工单支持管理', 'url' => ['/admin/ticket-manage']], // 未完工
             ],
             ],
             ['label' => '日志', 'items' => [
@@ -90,7 +90,7 @@ $this->registerCssFile('@web/css/fuckyou-navpadding.css');
             ['label' => '设置', 'items' => [
                 ['label' => '个人设置', 'url' => ['/admin/info']],
                 ['label' => '系统设置', 'url' => ['/admin/system']],
-                ['label' => '系统信息', 'url' => ['/admin/sysinfo']], // 未完工
+                ['label' => '系统信息', 'url' => ['/admin/sysinfo']],
             ],
             ],
             '<li class="nav-item">'
