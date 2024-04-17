@@ -1,0 +1,35 @@
+.ticket-reply {
+    margin-bottom: 24px;
+    border: 1px solid #e6e8ec;
+    background: #fff;
+    border-radius: 4px;
+}
+.ticket-reply-top {
+    border-bottom: 1px solid #e6e8ec;
+    background: #f6f7f8;
+    padding: 10px 15px;
+}
+.ticket-reply .user i {
+    color: #b9bdc5;
+    margin-right: 6px;
+}
+.ticket-reply .info {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    line-height: 18px;
+    color: #7c8088;
+}
+.ticket-reply .ticket-message {
+    padding: 25px 15px;
+}
+.ticket-reply.admin {
+    border-color: #d5e7fb;
+}
+.ticket-reply.admin .ticket-reply-top {
+    background-color: #e3effc;
+    border-color: #d5e7fb;
+}
+.ticket-reply.admin .user i {
+    color: #1062fe;
+}
