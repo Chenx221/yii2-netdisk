@@ -15,6 +15,7 @@ use yii\db\ActiveRecord;
  * @property string $message 消息内容
  * @property string $created_at 发送时间
  * @property string $ip ip地址
+ * @property int $is_admin 是否是管理员回复
  *
  * @property Tickets $ticket
  * @property User $user
@@ -35,8 +36,8 @@ class TicketReplies extends ActiveRecord
     public function rules(): array
     {
         return [
-            [['ticket_id', 'user_id', 'message', 'ip'], 'required'],
-            [['ticket_id', 'user_id'], 'integer'],
+            [['ticket_id', 'user_id', 'message', 'ip', 'is_admin'], 'required'],
+            [['ticket_id', 'user_id', 'is_admin'], 'integer'],
             [['message'], 'string'],
             [['created_at'], 'safe'],
             [['ip'], 'string', 'max' => 150],
@@ -57,6 +58,7 @@ class TicketReplies extends ActiveRecord
             'message' => '消息内容',
             'created_at' => '发送时间',
             'ip' => 'ip地址',
+            'is_admin' => '是否是管理员回复'
         ];
     }
 
@@ -78,5 +80,19 @@ class TicketReplies extends ActiveRecord
     public function getUser(): ActiveQuery
     {
         return $this->hasOne(User::class, ['id' => 'user_id']);
+    }
+
+    public function toArray(array $fields = [], array $expand = [], $recursive = true): array
+    {
+
+        return [
+            'id' => $this->id,
+            'ticket_id' => $this->ticket_id,
+            'name' => ($this->is_admin === 1) ? $this->user->username : '您',
+            'message' => $this->message,
+            'created_at' => $this->created_at,
+            'ip' => $this->ip,
+            'is_admin' => $this->is_admin,
+        ];
     }
 }

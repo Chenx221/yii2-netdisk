@@ -2,6 +2,7 @@
 
 namespace app\controllers;
 
+use app\models\TicketReplies;
 use app\models\Tickets;
 use app\models\TicketsSearch;
 use Yii;
@@ -10,7 +11,6 @@ use yii\filters\AccessControl;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
-use yii\web\Request;
 use yii\web\Response;
 
 /**
@@ -74,9 +74,29 @@ class TicketsController extends Controller
      */
     public function actionView(int $id): string
     {
+        //fetch all replies for this ticket
+        $ticketReplies = $this->findTicketReplies($id);
+        //json
+        $json = json_encode($ticketReplies);
         return $this->render('view', [
             'model' => $this->findModel($id),
+            'ticketReplies' => $json,
         ]);
+    }
+
+    protected function findTicketReplies(int $ticketId): array
+    {
+        $ticketReplies = TicketReplies::find()
+            ->where(['ticket_id' => $ticketId])
+            ->orderBy(['created_at' => SORT_ASC])
+            ->all();
+
+        $result = [];
+        foreach ($ticketReplies as $reply) {
+            $result[] = $reply->toArray();
+        }
+
+        return $result;
     }
 
     /**
@@ -97,7 +117,8 @@ class TicketsController extends Controller
                 $model->created_at = date('Y-m-d H:i:s');
                 $model->updated_at = date('Y-m-d H:i:s');
 
-                if($model->save()){
+                if ($model->save()) {
+                    Yii::$app->session->setFlash('success', '工单创建成功');
                     return $this->redirect(['view', 'id' => $model->id]);
                 }
             }
