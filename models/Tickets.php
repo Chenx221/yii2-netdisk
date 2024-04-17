@@ -42,7 +42,7 @@ class Tickets extends ActiveRecord
     public function rules(): array
     {
         return [
-            [['user_id', 'title', 'description', 'status','ip'], 'required'],
+            [['user_id', 'title', 'status','ip'], 'required'],
             [['user_id', 'status'], 'integer'],
             [['description'], 'string'],
             [['created_at', 'updated_at'], 'safe'],
