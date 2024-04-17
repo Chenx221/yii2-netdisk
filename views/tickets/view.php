@@ -84,16 +84,13 @@ $this->registerCssFile('@web/css/tickets.css');
             <div class="col-md-9">
                 <!-- User message input and ticket content -->
                 <div class="form-control">
-                    <label for="message">回复: </label>
                     <div id="editor" class="form-control">
 
                     </div>
-                    <br>
-                    <?= Html::button('发送', ['class' => 'btn btn-primary', 'id' => 'send']) ?>
-                    <?= Html::button('重置', ['class' => 'btn btn-link', 'id' => 'reset']) ?>
+                    <?= Html::button('回复', ['class' => 'btn btn-primary', 'id' => 'send']) ?>
                 </div>
-                <div id="ticket-content" class="form-control">
-
+                <div id="ticket-content">
+                    <br>
                 </div>
             </div>
         </div>
