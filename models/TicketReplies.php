@@ -84,11 +84,13 @@ class TicketReplies extends ActiveRecord
 
     public function toArray(array $fields = [], array $expand = [], $recursive = true): array
     {
+        $currentUserId = Yii::$app->user->id; // 获取当前用户ID
+        $name = ($this->user->id === $currentUserId) ? '您' : $this->user->username; // 判断是否是当前用户
 
         return [
             'id' => $this->id,
             'ticket_id' => $this->ticket_id,
-            'name' => ($this->is_admin === 1) ? $this->user->username : '您',
+            'name' => $name,
             'message' => $this->message,
             'created_at' => $this->created_at,
             'ip' => $this->ip,

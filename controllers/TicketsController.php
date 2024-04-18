@@ -75,6 +75,11 @@ class TicketsController extends Controller
      */
     public function actionView(int $id): string
     {
+        //check if this ticket belongs to current user
+        $ticket = Tickets::findOne(['id' => $id, 'user_id' => Yii::$app->user->id]);
+        if ($ticket === null) {
+            throw new NotFoundHttpException('The requested page does not exist.');
+        }
         //fetch all replies for this ticket
         $ticketReplies = $this->findTicketReplies($id);
         //json
@@ -135,32 +140,11 @@ class TicketsController extends Controller
     }
 
     /**
-     * Updates an existing Tickets model.
-     * If update is successful, the browser will be redirected to the 'view' page.
-     * @param int $id 工单id
-     * @return string|Response
-     * @throws NotFoundHttpException if the model cannot be found
-     */
-    public function actionUpdate(int $id): Response|string
-    {
-        $model = $this->findModel($id);
-
-        if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
-            return $this->redirect(['view', 'id' => $model->id]);
-        }
-
-        return $this->render('update', [
-            'model' => $model,
-        ]);
-    }
-
-    /**
      * NoNoNo, you can't delete a ticket. Just close it.
      * @param int $id 工单id
+     * @param string $from
      * @return Response
      * @throws NotFoundHttpException if the model cannot be found
-     * @throws \Throwable
-     * @throws StaleObjectException
      */
     public function actionDelete(int $id,string $from = 'unset'): Response
     {
@@ -192,6 +176,7 @@ class TicketsController extends Controller
      * Ticket reply action
      * For user
      * @return Response
+     * @throws NotFoundHttpException
      */
     public function actionReply(): Response
     {
