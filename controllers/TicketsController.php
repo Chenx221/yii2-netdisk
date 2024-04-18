@@ -31,7 +31,7 @@ class TicketsController extends Controller
                     'rules' => [
                         [
                             'allow' => true,
-                            'actions' => ['index', 'view', 'create', 'update', 'delete'],
+                            'actions' => ['index', 'view', 'create', 'update', 'delete', 'reply'],
                             'roles' => ['user'], // only user can do these
                         ]
                     ],
@@ -44,6 +44,7 @@ class TicketsController extends Controller
                         'create' => ['GET', 'POST'],
                         'update' => ['GET', 'POST'],
                         'delete' => ['POST'],
+                        'reply' => ['POST'],
                     ],
                 ],
             ]
@@ -84,6 +85,10 @@ class TicketsController extends Controller
         ]);
     }
 
+    /**
+     * @param int $ticketId
+     * @return array
+     */
     protected function findTicketReplies(int $ticketId): array
     {
         $ticketReplies = TicketReplies::find()
@@ -150,19 +155,21 @@ class TicketsController extends Controller
     }
 
     /**
-     * Deletes an existing Tickets model.
-     * If deletion is successful, the browser will be redirected to the 'index' page.
+     * NoNoNo, you can't delete a ticket. Just close it.
      * @param int $id 工单id
      * @return Response
      * @throws NotFoundHttpException if the model cannot be found
      * @throws \Throwable
      * @throws StaleObjectException
      */
-    public function actionDelete(int $id): Response
+    public function actionDelete(int $id,string $from = 'unset'): Response
     {
-        $this->findModel($id)->delete();
-
-        return $this->redirect(['index']);
+        $this->findModel($id)->updateAttributes(['status' => Tickets::STATUS_CLOSED]);
+        Yii::$app->session->setFlash('info', '工单已关闭，如果有任何问题，你可以重新建立新工单或在旧工单上回复以重新打开工单。');
+        if ($from !== 'unset'){
+            return $this->redirect(['index']);
+        }
+        return $this->redirect(['view', 'id' => $id]);
     }
 
     /**
@@ -179,5 +186,47 @@ class TicketsController extends Controller
         }
 
         throw new NotFoundHttpException('The requested page does not exist.');
+    }
+
+    /**
+     * Ticket reply action
+     * For user
+     * @return Response
+     */
+    public function actionReply(): Response
+    {
+        $request = Yii::$app->request;
+        if ($request->isPost) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+
+            $ticketId = $request->post('ticketId');
+
+            // check this ticket exists and belongs to current user
+            $ticket = Tickets::findOne(['id' => $ticketId, 'user_id' => Yii::$app->user->id]);
+            if ($ticket === null) {
+                return $this->asJson(['status' => 'error', 'message' => 'Invalid ticket']);
+            }
+
+            // 创建一个新的TicketReplies对象
+            $reply = new TicketReplies();
+            $reply->ticket_id = $ticketId;
+            $reply->user_id = Yii::$app->user->id; // 设置为当前用户的ID
+            $reply->message = $request->post('content');
+            $reply->ip = $request->userIP;
+            $reply->is_admin = 0; // 设置为用户回复
+            $reply->created_at = date('Y-m-d H:i:s');
+
+            if ($reply->save()) {
+                // 如果保存成功，返回一个成功的响应
+                $this->findModel($ticketId)->updateAttributes(['status' => Tickets::STATUS_USER_REPLY]);
+                return $this->asJson(['status' => 'success']);
+            } else {
+                // 如果保存失败，返回一个包含错误信息的响应
+                return $this->asJson(['status' => 'error', 'errors' => $reply->errors]);
+            }
+        }
+
+        // 如果不是POST请求，返回一个错误响应
+        return $this->asJson(['status' => 'error', 'message' => 'Invalid request']);
     }
 }
