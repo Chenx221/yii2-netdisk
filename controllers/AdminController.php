@@ -10,6 +10,9 @@ use app\models\LoginLogs;
 use app\models\Share;
 use app\models\ShareSearch;
 use app\models\SiteConfig;
+use app\models\TicketReplies;
+use app\models\Tickets;
+use app\models\TicketsSearch;
 use app\models\User;
 use app\models\UserSearch;
 use app\utils\AdminSword;
@@ -46,7 +49,7 @@ class AdminController extends Controller
                             'actions' => ['index', 'system', 'user', 'info', 'user-view', 'user-create', 'user-update',
                                 'user-delete', 'user-totpoff', 'user-pwdreset', 'login-log', 'access-log', 'collection-up-log',
                                 'share-manage', 'share-manage-view', 'share-manage-delete', 'collection-manage', 'collection-manage-view',
-                                'collection-manage-delete', 'notice-manage', 'feedback-manage', 'sysinfo','get-sysinfo'],
+                                'collection-manage-delete', 'notice-manage', 'sysinfo', 'get-sysinfo', 'ticket-manage', 'ticket-view', 'ticket-delete', 'ticket-reply'],
                             'roles' => ['admin'], // only admin can do these
                         ]
                     ],
@@ -74,9 +77,12 @@ class AdminController extends Controller
                         'collection-manage-view' => ['GET'],
                         'collection-manage-delete' => ['POST'],
                         'notice-manage' => ['GET'],
-                        'feedback-manage' => ['GET'],
                         'sysinfo' => ['GET'],
                         'get-sysinfo' => ['GET'],
+                        'ticket-manage' => ['GET'],
+                        'ticket-view' => ['GET'],
+                        'ticket-delete' => ['POST'],
+                        'ticket-reply' => ['POST'],
                     ],
                 ],
             ]
@@ -577,14 +583,6 @@ class AdminController extends Controller
     /**
      * @return string
      */
-    public function actionFeedbackManage(): string
-    {
-        return $this->render('feedback_manage');
-    }
-
-    /**
-     * @return string
-     */
     public function actionSysinfo(): string
     {
         $fullInfo = SystemInfoHelper::getSysInfoInit();
@@ -608,5 +606,130 @@ class AdminController extends Controller
             Yii::$app->response->data = ['error' => 'Invalid request'];
         }
         return Yii::$app->response;
+    }
+
+    /**
+     * @return string
+     */
+    public function actionTicketManage(): string
+    {
+        $searchModel = new TicketsSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams);
+
+        return $this->render('ticket_index', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+            'pendingTickets' => TicketsSearch::getPendingTicketsCount()
+        ]);
+    }
+
+    /**
+     * @param int $id
+     * @return string
+     * @throws NotFoundHttpException
+     */
+    public function actionTicketView(int $id): string
+    {
+        //fetch all replies for this ticket
+        $ticketReplies = $this->findTicketReplies($id);
+        //json
+        $json = json_encode($ticketReplies);
+        return $this->render('ticket_view', [
+            'model' => $this->findTicketModel($id),
+            'ticketReplies' => $json,
+        ]);
+    }
+
+    /**
+     * @param int $id
+     * @return Tickets
+     * @throws NotFoundHttpException
+     */
+    protected function findTicketModel(int $id): Tickets
+    {
+        if (($model = Tickets::findOne(['id' => $id])) !== null) {
+            return $model;
+        }
+
+        throw new NotFoundHttpException('The requested page does not exist.');
+    }
+
+    /**
+     * @param int $ticketId
+     * @return array
+     */
+    protected function findTicketReplies(int $ticketId): array
+    {
+        $ticketReplies = TicketReplies::find()
+            ->where(['ticket_id' => $ticketId])
+            ->orderBy(['created_at' => SORT_ASC])
+            ->all();
+
+        $result = [];
+        foreach ($ticketReplies as $reply) {
+            $result[] = $reply->toArray();
+        }
+
+        return $result;
+    }
+
+    /**
+     * NoNoNo, you can't delete a ticket. Just close it.
+     * @param int $id 工单id
+     * @param string $from
+     * @return Response
+     * @throws NotFoundHttpException if the model cannot be found
+     */
+    public function actionTicketDelete(int $id, string $from = 'unset'): Response
+    {
+        $this->findTicketModel($id)->updateAttributes(['status' => Tickets::STATUS_CLOSED]);
+        Yii::$app->session->setFlash('info', '工单已关闭');
+        if ($from !== 'unset') {
+            return $this->redirect(['ticket-manage']);
+        }
+        return $this->redirect(['ticket-view', 'id' => $id]);
+    }
+
+    /**
+     * Ticket reply action
+     * For user
+     * @return Response
+     * @throws NotFoundHttpException
+     */
+    public function actionTicketReply(): Response
+    {
+        $request = Yii::$app->request;
+        if ($request->isPost) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+
+            $ticketId = $request->post('ticketId');
+
+            // check this ticket exists
+            $ticket = Tickets::findOne(['id' => $ticketId]);
+            if ($ticket === null) {
+                return $this->asJson(['status' => 'error', 'message' => 'Invalid ticket']);
+            }
+
+            // 创建一个新的TicketReplies对象
+            $reply = new TicketReplies();
+            $reply->ticket_id = $ticketId;
+            $reply->user_id = Yii::$app->user->id; // 设置为当前用户的ID
+            $reply->message = $request->post('content');
+            $reply->ip = $request->userIP;
+            $reply->is_admin = 1; // 设置为用户回复
+            $reply->created_at = date('Y-m-d H:i:s');
+
+            if ($reply->save()) {
+                // 如果保存成功，返回一个成功的响应
+                $this->findTicketModel($ticketId)->updateAttributes(['status' => Tickets::STATUS_ADMIN_REPLY]);
+                return $this->asJson(['status' => 'success']);
+            } else {
+                // 如果保存失败，返回一个包含错误信息的响应
+                return $this->asJson(['status' => 'error', 'errors' => $reply->errors]);
+            }
+        }
+
+        // 如果不是POST请求，返回一个错误响应
+        return $this->asJson(['status' => 'error', 'message' => 'Invalid request']);
     }
 }
