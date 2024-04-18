@@ -37,18 +37,13 @@ $this->registerCssFile('@web/css/tickets.css');
                             'label' => '状态',
                             'format' => 'raw', // 使用 raw 格式，这样 Yii2 不会对 value 的返回值进行 HTML 编码
                             'value' => function (Tickets $model) {
-                                switch ($model->status) {
-                                    case Tickets::STATUS_OPEN:
-                                        return '<span class="badge rounded-pill bg-primary">工单已开启</span>';
-                                    case Tickets::STATUS_ADMIN_REPLY:
-                                        return '<span class="badge rounded-pill bg-info">管理员已回复</span>';
-                                    case Tickets::STATUS_USER_REPLY:
-                                        return '<span class="badge rounded-pill bg-secondary">用户已回复</span>';
-                                    case Tickets::STATUS_CLOSED:
-                                        return '<span class="badge rounded-pill bg-success">工单已关闭</span>';
-                                    default:
-                                        return '<span class="badge rounded-pill bg-danger">未知状态</span>';
-                                }
+                                return match ($model->status) {
+                                    Tickets::STATUS_OPEN => '<span class="badge rounded-pill bg-primary">工单已开启</span>',
+                                    Tickets::STATUS_ADMIN_REPLY => '<span class="badge rounded-pill bg-info">管理员已回复</span>',
+                                    Tickets::STATUS_USER_REPLY => '<span class="badge rounded-pill bg-secondary">用户已回复</span>',
+                                    Tickets::STATUS_CLOSED => '<span class="badge rounded-pill bg-success">工单已关闭</span>',
+                                    default => '<span class="badge rounded-pill bg-danger">未知状态</span>',
+                                };
                             }
                         ],
                         [

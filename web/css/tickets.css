@@ -3,17 +3,17 @@
 }
 .ticket-reply {
     margin-bottom: 24px;
-    border: 1px solid #e6e8ec;
-    background: #fff;
+    border: 1px solid var(--bs-border-color);
+    background: var(--bs-body-bg);
     border-radius: 4px;
 }
 .ticket-reply-top {
-    border-bottom: 1px solid #e6e8ec;
-    background: #f6f7f8;
+    border-bottom: 1px solid var(--bs-border-color);
+    background: var(--bs-secondary-bg);
     padding: 10px 15px;
 }
 .ticket-reply .user i {
-    color: #b9bdc5;
+    color: var(--bs-secondary-color);
     margin-right: 6px;
 }
 .ticket-reply .info {
@@ -21,18 +21,18 @@
     justify-content: space-between;
     font-size: 12px;
     line-height: 18px;
-    color: #7c8088;
+    color: var(--bs-tertiary-color);
 }
 .ticket-reply .ticket-message {
     padding: 25px 15px;
 }
 .ticket-reply.admin {
-    border-color: #d5e7fb;
+    border-color: var(--bs-primary-border-subtle);
 }
 .ticket-reply.admin .ticket-reply-top {
-    background-color: #e3effc;
-    border-color: #d5e7fb;
+    background-color: var(--bs-primary-bg-subtle);
+    border-color: var(--bs-primary-border-subtle);
 }
 .ticket-reply.admin .user i {
-    color: #1062fe;
+    color: var(--bs-primary);
 }
