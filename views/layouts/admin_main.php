@@ -78,7 +78,7 @@ $this->registerCssFile('@web/css/fuckyou-navpadding.css');
                 ['label' => '文件分享管理', 'url' => ['/admin/share-manage']],
                 ['label' => '文件收集管理', 'url' => ['/admin/collection-manage']],
                 ['label' => '站点公告管理', 'url' => ['/admin/notice-manage']], // 未完工
-                ['label' => '工单支持管理', 'url' => ['/admin/ticket-manage']], // 未完工
+                ['label' => '工单支持管理', 'url' => ['/admin/ticket-manage']],
             ],
             ],
             ['label' => '日志', 'items' => [
@@ -96,7 +96,7 @@ $this->registerCssFile('@web/css/fuckyou-navpadding.css');
             '<li class="nav-item">'
             . Html::beginForm(['/user/logout'])
             . Html::submitButton(
-                'Logout (' . Yii::$app->user->identity->username . ')',
+                '登出账户 (' . Yii::$app->user->identity->username . ')',
                 ['class' => 'nav-link btn btn-link logout']
             )
             . Html::endForm()
