@@ -64,7 +64,7 @@ class TicketsSearch extends Tickets
         }
 
         // grid filtering conditions
-        // if can user
+        // if can admin
         if(Yii::$app->user->can('admin')) {
             $query->andFilterWhere([
                 'id' => $this->id,
@@ -75,7 +75,7 @@ class TicketsSearch extends Tickets
             ]);
         } else{
             $query->andFilterWhere([
-                'user_id' => $this->user_id,
+                'id' => $this->id,
                 'status' => $this->status,
                 'created_at' => $this->created_at,
                 'updated_at' => $this->updated_at,
@@ -86,5 +86,15 @@ class TicketsSearch extends Tickets
             ->andFilterWhere(['like', 'ip', $this->ip]);
 
         return $dataProvider;
+    }
+
+    /**
+     * give me the count of pending tickets
+     * @return bool|int|string|null
+     */
+    public static function getPendingTicketsCount(): bool|int|string|null
+    {
+        //Tickets::STATUS_OPEN or Tickets::STATUS_USER_REPLY
+        return Tickets::find()->where(['status' => [Tickets::STATUS_OPEN, Tickets::STATUS_USER_REPLY]])->count();
     }
 }
