@@ -72,10 +72,10 @@ $this->registerCssFile('@web/css/tickets.css');
                     ],
                 ]) ?>
                 <p>
-                    <?= Html::a('关闭工单', ['delete', 'id' => $model->id], [
+                    <?= ($model->status===Tickets::STATUS_CLOSED)?'':Html::a('关闭工单', ['delete', 'id' => $model->id], [
                         'class' => 'btn btn-danger',
                         'data' => [
-                            'confirm' => 'Are you sure you want to delete this item?',
+                            'confirm' => '您确定要关闭这个工单吗？问题已经解决了吗？',
                             'method' => 'post',
                         ],
                     ]) ?>
@@ -103,7 +103,36 @@ $core_js = <<<JS
     const quill = new Quill('#editor', {
         theme: theme
     });
-
+    $('#send').on('click', function() {
+        var content = quill.getContents();
+        // check content not empty
+        if (quill.getLength()===1) {
+            alert('内容不能为空');
+            return false;
+        }
+        var ticketId = $model->id; // 你需要在这里设置正确的工单ID
+    
+        $.ajax({
+            url: 'index.php?r=tickets%2Freply',
+            type: 'POST',
+            data: {
+                ticketId: ticketId,
+                content: JSON.stringify(content)
+            },
+            success: function(response) {
+                // 处理服务器的响应
+                console.log(response);
+                // 如果服务器返回的状态是成功，刷新页面
+                if (response.status === 'success') {
+                    location.reload();
+                }
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                // 处理错误
+                console.error(textStatus, errorThrown);
+            }
+        });
+    });
     function quillGetHTML(inputDelta,skipParse=false) {
         var delta = skipParse?inputDelta:JSON.parse(inputDelta);
         var tempQuill=new Quill(document.createElement("div"));

@@ -83,7 +83,7 @@ FontAwesomeAsset::register($this);
                     },
                     'delete' => function ($url, $model, $key) {
                         if ($model->status !== Tickets::STATUS_CLOSED) {
-                            return Html::a('<i class="fa-solid fa-xmark"></i>', $url, [
+                            return Html::a('<i class="fa-solid fa-xmark"></i>', ['delete', 'id' => $model->id, 'from' => 'index'], [
                                 'title' => '关闭工单',
                                 'data-pjax' => '0',
                                 'data-confirm' => '你确定要关闭这个工单吗？',
