@@ -8,7 +8,7 @@ use yii\helpers\Url;
 $this->title = '首页';
 TSParticlesAsset::register($this);
 ?>
-    <div id="tsparticles" style="position: absolute;width: 100%;height: 100%;z-index: -1"></div>
+    <div id="tsparticles" style="position: absolute;z-index: -1"></div>
     <div class="site-index">
         <div class="jumbotron text-center bg-transparent mt-5 mb-5">
             <?php if (Yii::$app->user->isGuest): ?>
