@@ -46,7 +46,7 @@ class AdminController extends Controller
                     'rules' => [
                         [
                             'allow' => true,
-                            'actions' => ['index', 'system', 'user', 'info', 'user-view', 'user-create', 'user-update',
+                            'actions' => ['system', 'user', 'info', 'user-view', 'user-create', 'user-update',
                                 'user-delete', 'user-totpoff', 'user-pwdreset', 'login-log', 'access-log', 'collection-up-log',
                                 'share-manage', 'share-manage-view', 'share-manage-delete', 'collection-manage', 'collection-manage-view',
                                 'collection-manage-delete', 'notice-manage', 'sysinfo', 'get-sysinfo', 'ticket-manage', 'ticket-view', 'ticket-delete', 'ticket-reply'],
@@ -57,7 +57,6 @@ class AdminController extends Controller
                 'verbs' => [
                     'class' => VerbFilter::class,
                     'actions' => [
-                        'index' => ['GET'],
                         'system' => ['GET', 'POST'],
                         'user' => ['GET'],
                         'user-view' => ['GET', 'POST'],
@@ -93,14 +92,6 @@ class AdminController extends Controller
     {
         parent::init();
         $this->layout = 'admin_main';
-    }
-
-    /**
-     * @return string
-     */
-    public function actionIndex(): string
-    {
-        return $this->render('index');
     }
 
     /**

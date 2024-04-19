@@ -70,7 +70,7 @@ $darkMode = Yii::$app->user->isGuest ? 0 : Yii::$app->user->identity->dark_mode;
     echo Nav::widget([
         'options' => ['class' => 'navbar-nav'],
         'items' => [
-            ['label' => '首页', 'url' => ['/site/index']],
+            ['label' => '仪表盘', 'url' => ['/site/index']],
             ['label' => '我的文件', 'url' => ['/home/index']],
             ['label' => '文件保险箱', 'url' => ['/vault/index']],
             ['label' => '分享管理', 'url' => ['/share/index']],

@@ -72,7 +72,6 @@ $this->registerCssFile('@web/css/fuckyou-navpadding.css');
         'options' => ['class' => 'navbar-nav'],
         'items' => [
             ['label' => '首页', 'url' => ['/site/index']],
-            ['label' => '面板', 'url' => ['/admin/index']], // 未完工
             ['label' => '管理', 'items' => [
                 ['label' => '用户管理', 'url' => ['/admin/user']],
                 ['label' => '文件分享管理', 'url' => ['/admin/share-manage']],
