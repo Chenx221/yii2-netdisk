@@ -2,11 +2,14 @@
 
 namespace app\controllers;
 
+use app\models\Announcements;
 use app\models\EntryForm;
 use Yii;
 use yii\filters\AccessControl;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
+use yii\web\NotFoundHttpException;
+use yii\web\Response;
 
 class SiteController extends Controller
 {
@@ -21,32 +24,35 @@ class SiteController extends Controller
                 'only' => ['logout'],
                 'rules' => [
                     [
-                        'actions' => ['logout'],
+                        'actions' => ['logout', 'get-announcement'],
                         'allow' => true,
                         'roles' => ['@'],
-                    ],
+                    ]
                 ],
             ],
             'verbs' => [
                 'class' => VerbFilter::class,
                 'actions' => [
                     'logout' => ['post'],
+                    'get-announcement' => ['get'],
                 ],
             ],
         ];
     }
+
     public function init(): void
     {
         parent::init();
 
         if (Yii::$app->user->can('admin')) {
             $this->layout = 'admin_main';
-        }elseif (Yii::$app->user->isGuest) {
+        } elseif (Yii::$app->user->isGuest) {
             $this->layout = 'guest_main';
         } else {
             $this->layout = 'main';
         }
     }
+
     /**
      * {@inheritdoc}
      */
@@ -70,9 +76,27 @@ class SiteController extends Controller
      */
     public function actionIndex(): string
     {
-        return $this->render('index');
+        if(Yii::$app->user->isGuest){
+            return $this->render('index');
+        }
+        //fetch latest 3 announcements
+        $latestAnnouncements = Announcements::fetchLatestAnnouncements();
+        return $this->render('index', [
+            'latestAnnouncements' => $latestAnnouncements
+        ]);
     }
 
+    /**
+     * @throws NotFoundHttpException
+     */
+    public function actionGetAnnouncement($id): ?Announcements
+    {
+        if (Yii::$app->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return Announcements::findOne($id);
+        }
+        throw new NotFoundHttpException();
+    }
 
     public function actionEntry(): string
     {

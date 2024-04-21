@@ -2,6 +2,8 @@
 
 namespace app\controllers;
 
+use app\models\Announcements;
+use app\models\AnnouncementsSearch;
 use app\models\CollectionSearch;
 use app\models\CollectionTasks;
 use app\models\CollectionUploadedSearch;
@@ -23,6 +25,7 @@ use RuntimeException;
 use Throwable;
 use Yii;
 use yii\base\Exception;
+use yii\db\StaleObjectException;
 use yii\filters\AccessControl;
 use yii\filters\VerbFilter;
 use yii\web\Controller;
@@ -49,7 +52,8 @@ class AdminController extends Controller
                             'actions' => ['system', 'user', 'info', 'user-view', 'user-create', 'user-update',
                                 'user-delete', 'user-totpoff', 'user-pwdreset', 'login-log', 'access-log', 'collection-up-log',
                                 'share-manage', 'share-manage-view', 'share-manage-delete', 'collection-manage', 'collection-manage-view',
-                                'collection-manage-delete', 'notice-manage', 'sysinfo', 'get-sysinfo', 'ticket-manage', 'ticket-view', 'ticket-delete', 'ticket-reply'],
+                                'collection-manage-delete', 'notice-manage', 'sysinfo', 'get-sysinfo', 'ticket-manage', 'ticket-view', 'ticket-delete',
+                                'ticket-reply', 'announcements-manage', 'announcements-view', 'announcements-create', 'announcements-update', 'announcements-delete'],
                             'roles' => ['admin'], // only admin can do these
                         ]
                     ],
@@ -82,6 +86,11 @@ class AdminController extends Controller
                         'ticket-view' => ['GET'],
                         'ticket-delete' => ['POST'],
                         'ticket-reply' => ['POST'],
+                        'announcements-manage' => ['GET'],
+                        'announcements-view' => ['GET'],
+                        'announcements-create' => ['GET', 'POST'],
+                        'announcements-update' => ['GET', 'POST'],
+                        'announcements-delete' => ['POST'],
                     ],
                 ],
             ]
@@ -722,5 +731,114 @@ class AdminController extends Controller
 
         // 如果不是POST请求，返回一个错误响应
         return $this->asJson(['status' => 'error', 'message' => 'Invalid request']);
+    }
+
+    /**
+     * Lists all Announcements models.
+     *
+     * @return string
+     */
+    public function actionAnnouncementsManage(): string
+    {
+        $searchModel = new AnnouncementsSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams);
+
+        return $this->render('announcements_index', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+        ]);
+    }
+
+    /**
+     * Displays a single Announcements model.
+     * @param int $id 公告ID
+     * @return string
+     * @throws NotFoundHttpException if the model cannot be found
+     */
+    public function actionAnnouncementsView(int $id): string
+    {
+        return $this->render('announcements_view', [
+            'model' => $this->findAnnouncementsModel($id),
+        ]);
+    }
+
+    /**
+     * Creates a new Announcements model.
+     * If creation is successful, the browser will be redirected to the 'view' page.
+     * @return string|Response
+     */
+    public function actionAnnouncementsCreate(): Response|string
+    {
+        $model = new Announcements();
+
+        if ($this->request->isPost) {
+            if ($model->load($this->request->post())) {
+                // set published_at to current time
+                $model->published_at = date('Y-m-d H:i:s');
+                if($model->save()){
+                    Yii::$app->session->setFlash('success', '公告发布成功');
+                    return $this->redirect(['announcements-view', 'id' => $model->id]);
+                }
+            }
+        } else {
+            $model->loadDefaultValues();
+        }
+
+        return $this->render('announcements_create', [
+            'model' => $model,
+        ]);
+    }
+
+    /**
+     * Updates an existing Announcements model.
+     * If update is successful, the browser will be redirected to the 'view' page.
+     * @param int $id 公告ID
+     * @return string|Response
+     * @throws NotFoundHttpException if the model cannot be found
+     */
+    public function actionAnnouncementsUpdate(int $id): Response|string
+    {
+        $model = $this->findAnnouncementsModel($id);
+
+        if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
+            Yii::$app->session->setFlash('success', '公告修改成功');
+            return $this->redirect(['announcements-view', 'id' => $model->id]);
+        }
+
+        return $this->render('announcements_update', [
+            'model' => $model,
+        ]);
+    }
+
+    /**
+     * Deletes an existing Announcements model.
+     * If deletion is successful, the browser will be redirected to the 'index' page.
+     * @param int $id 公告ID
+     * @return Response
+     * @throws NotFoundHttpException if the model cannot be found
+     * @throws \Throwable
+     * @throws StaleObjectException
+     */
+    public function actionAnnouncementsDelete(int $id): Response
+    {
+        $this->findAnnouncementsModel($id)->delete();
+        Yii::$app->session->setFlash('success', '公告删除成功');
+        return $this->redirect(['announcements-manage']);
+    }
+
+    /**
+     * Finds the Announcements model based on its primary key value.
+     * If the model is not found, a 404 HTTP exception will be thrown.
+     * @param int $id 公告ID
+     * @return Announcements the loaded model
+     * @throws NotFoundHttpException if the model cannot be found
+     */
+    protected function findAnnouncementsModel(int $id): Announcements
+    {
+        if (($model = Announcements::findOne(['id' => $id])) !== null) {
+            return $model;
+        }
+
+        throw new NotFoundHttpException('The requested page does not exist.');
     }
 }
