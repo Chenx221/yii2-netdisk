@@ -256,12 +256,7 @@ class UserController extends Controller
                             }
                             LoginLogs::addLog($user->id, Yii::$app->request->userIP, Yii::$app->request->userAgent, 1); //login success log
                             Yii::$app->user->login($user, $model->rememberMe ? 3600 * 24 * 30 : 0);
-                            // user to home page, admin to admin/index
-                            if (Yii::$app->user->can('admin')) {
-                                return $this->redirect(['admin/index']);
-                            } else {
-                                return $this->goHome();
-                            }
+                            return $this->goHome();
 
                         }
                     } else {
@@ -317,11 +312,7 @@ class UserController extends Controller
                     LoginLogs::addLog($user->id, Yii::$app->request->userIP, Yii::$app->request->userAgent, 1); //login success log
                     Yii::$app->user->login($user, $model->rememberMe ? 3600 * 24 * 30 : 0);
                     Yii::$app->session->remove('login_verification');
-                    if (Yii::$app->user->can('admin')) {
-                        return $this->redirect(['admin/index']);
-                    } else {
-                        return $this->goHome();
-                    }
+                    return $this->goHome();
                 } else {
                     LoginLogs::addLog($user->id, Yii::$app->request->userIP, Yii::$app->request->userAgent, 0); //login failed log
                     Yii::$app->session->setFlash('error', '二步验证代码错误');
@@ -341,11 +332,7 @@ class UserController extends Controller
                     LoginLogs::addLog($user->id, Yii::$app->request->userIP, Yii::$app->request->userAgent, 1); //login success log
                     Yii::$app->user->login($user, $model->rememberMe ? 3600 * 24 * 30 : 0);
                     Yii::$app->session->remove('login_verification');
-                    if (Yii::$app->user->can('admin')) {
-                        return $this->redirect(['admin/index']);
-                    } else {
-                        return $this->goHome();
-                    }
+                    return $this->goHome();
                 } else {
                     LoginLogs::addLog($user->id, Yii::$app->request->userIP, Yii::$app->request->userAgent, 0); //login failed log
                     Yii::$app->session->setFlash('error', '恢复代码错误');
@@ -928,9 +915,6 @@ class UserController extends Controller
             LoginLogs::addLog($user->id, Yii::$app->request->userIP, Yii::$app->request->userAgent, 1); //login success log
             Yii::$app->user->login($user, $remember === 1 ? 3600 * 24 * 30 : 0);
             $publicKeyCredentialSourceRepository1->saveCredential($publicKeyCredentialSource, '', false);
-            if (Yii::$app->user->can('admin')) {
-                return $this->asJson(['verified' => true, 'redirectTo' => 'index.php?r=admin%2Findex']);
-            }
             return $this->asJson(['verified' => true, 'redirectTo' => 'index.php']);
         }
         // Optional, but highly recommended, you can save the credential source as it may be modified

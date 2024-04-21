@@ -8,6 +8,6 @@ class TSParticlesAsset extends AssetBundle
 {
     public $sourcePath = '@npm/tsparticles--slim';
     public $js = [
-        'tsparticles.slim.bundle.js',
+        'tsparticles.slim.bundle.min.js',
     ];
 }
