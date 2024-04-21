@@ -103,11 +103,11 @@ Windows 11 Pro (22631.3374) / Debian 12
 
 PhpStorm 2024.1
 
-PHP 8.3.4 / 8.2.7 (这个项目需要PHP>=8.2)
+PHP 8.3.4 / 8.2.18 (这个项目需要PHP>=8.2)
 
 MariaDB 11.3.2 / 10.11.6
 
-Apache 2.4.59 / 2.4.57
+Apache 2.4.59
 
 ~~Memurai 4.1.1/~~ Garnet 1.0.5 / Redis 7.0.15
 

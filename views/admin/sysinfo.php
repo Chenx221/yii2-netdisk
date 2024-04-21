@@ -311,7 +311,12 @@ var option = {
     ]
 };
 if(needLoadGraph !== null){
-    var myChart1 = echarts.init(needLoadGraph);
+    var myChart1;
+    if ((window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)|| document.documentElement.getAttribute('data-bs-theme')==='dark') {
+        myChart1 = echarts.init(needLoadGraph,'dark');
+    }else{
+        myChart1 = echarts.init(needLoadGraph);
+    }
     var option1 = {
         legend: {
             data: ['Load']
