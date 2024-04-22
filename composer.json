@@ -23,7 +23,6 @@
     "bestyii/yii2-openapi-reader": "dev-master",
     "fortawesome/font-awesome": "^6.5",
     "ext-zip": "*",
-    "ext-rar": "*",
     "ext-json": "*",
     "ext-gmp": "*",
     "ext-bcmath": "*",

@@ -391,7 +391,7 @@ function updateButtons() {
     var checkboxes = $('.select-item:checked');
     var count = checkboxes.length;
     var isSingleFile = count === 1 && !checkboxes.first().data('isDirectory');
-    var isSingleZip = isSingleFile && checkboxes.first().closest('tr').find('.file_icon').hasClass('fa-file-zipper');
+    var isSingleZip = isSingleFile && checkboxes.first().closest('tr').find('.file_icon').hasClass('fa-file-zipper') && !checkboxes.first().closest('tr').find('.file_icon').hasClass('not-support-unzip');
     var hasOperation = sessionStorage.getItem('operation') !== null;  // 检查 sessionStorage 中是否存在 operation
     $('.single-open-btn').toggle(count === 1);
     $('.single-download-btn').toggle(isSingleFile);
