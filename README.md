@@ -131,8 +131,174 @@ git clone https://git.chenx221.cyou/chenx221/yii2-netdisk
 
 ### For Linux (以Debian 12为例)
 
+#### 安装依赖
+```bash
+sudo apt install php8.2 php8.2-zip php8.2-xsl php8.2-imagick php8.2-gmp php8.2-curl php8.2-bcmath php8.2-gd php8.2-mysql php8.2-imap php8.2-ldap php8.2-memcache php8.2-common php8.2-soap php8.2-xdebug php8.2-sqlite3 mariadb-server apache2 redis composer git
+```
+#### apache
+```bash
+sudo a2enmod rewrite
+sudo a2enmod ssl
+sudo nano /etc/apache2/sites-available/netdisk.conf
+```
+```apacheconf
+<VirtualHost *:8081>
+  ServerName env.chenx221.cyou
+	DocumentRoot "/var/www/netdisk/web"
+	<Directory  "/var/www/netdisk/web">
+	  Options +Indexes +Includes +FollowSymLinks +MultiViews
+	  AllowOverride All
+	  Require all granted
+      LimitRequestBody 2147483648
+	</Directory>
+  SSLEngine on
+  SSLCertificateFile "/var/www/fullchain1.pem"
+  SSLCertificateKeyFile "/var/www/privkey1.pem"
+</VirtualHost>
+```
+上传证书到`/var/www/`目录，别的不多说了
+```bash
+sudo a2ensite netdisk.conf
+sudo nano /etc/apache2/conf-available/netdisk-conf.conf
+```
+```apacheconf
+Listen 0.0.0.0:8081
+Listen [::0]:8081
+```
+```bash
+sudo a2enconf netdisk-conf.conf
+sudo systemctl restart apache2
+```
 
+#### php
+```bash
+sudo nano /etc/php/8.2/apache2/php.ini
+```
+修改
+```ini
+max_execution_time = 360
+memory_limit = 4G
+post_max_size = 2G
+upload_max_filesize = 2G
+```
+增加
+```ini
+date.timezone = "Asia/Shanghai"
+[xdebug]
+xdebug.mode =debug
+xdebug.output_dir ="/tmp"
+xdebug.show_local_vars=0
+xdebug.log="/tmp/xdebug.log"
+xdebug.log_level=7
+xdebug.profiler_output_name=trace.%H.%t.%p.cgrind
+xdebug.use_compression=false
+xdebug.discover_client_host = true
+xdebug.client_host = 127.0.0.1
+xdebug.client_port= 9003
+xdebug.remote_handler=dbgp
+```
+```bash
+sudo nano /etc/php/8.2/cli/php.ini
+```
+修改
+```ini
+max_execution_time = 360
+post_max_size = 2G
+upload_max_filesize = 2G
+```
+增加
+```ini
+date.timezone = "Asia/Shanghai"
+[xdebug]
+xdebug.mode =debug
+xdebug.output_dir ="/tmp"
+xdebug.show_local_vars=0
+xdebug.log="/tmp/xdebug.log"
+xdebug.log_level=7
+xdebug.profiler_output_name=trace.%H.%t.%p.cgrind
+xdebug.use_compression=false
+xdebug.discover_client_host = true
+xdebug.client_host = 127.0.0.1
+xdebug.client_port= 9003
+xdebug.remote_handler=dbgp
+```
+```bash
+sudo systemctl restart apache2
+```
 
+#### mariadb
+```bash
+sudo mariadb-secure-installation
+```
+```
+Enter current password for root (enter for none):
+Switch to unix_socket authentication [Y/n] n
+Change the root password? [Y/n] y
+Remove anonymous users? [Y/n] y
+Disallow root login remotely? [Y/n] y
+Remove test database and access to it? [Y/n] y
+Reload privilege tables now? [Y/n] y
+```
+上传sql文件到服务器，导入数据库
+```
+mysql -u root -p
+CREATE DATABASE yii2basic;
+CREATE USER 'chenx221'@'localhost' IDENTIFIED BY 'chenx221';
+GRANT ALL PRIVILEGES ON yii2basic.* TO 'chenx221'@'localhost';
+FLUSH PRIVILEGES;
+use yii2basic;
+source /home/chenx221/release.sql;
+```
+
+#### 其他配置
+```bash
+cd /var/www
+sudo mkdir .cache
+sudo chown -R www-data:www-data .cache
+sudo chmod -R 755 .cache
+sudo git clone https://git.chenx221.cyou/chenx221/yii2-netdisk.git
+//如果你看到这个README.md，那么这个项目已经公开了
+sudo mv yii2-netdisk netdisk
+sudo chown -R www-data:www-data /var/www/netdisk
+sudo chmod -R 755 /var/www/netdisk
+cd netdisk
+sudo -u www-data mkdir data
+sudo -u www-data cp .env.example .env
+```
+参照.env.example文件，修改.env文件中的配置，以下是基础结构
+```env
+SITE_TITLE=
+REGISTRATION_ENABLED=
+DOMAIN=
+DB_HOST=
+DB_NAME=
+DB_USERNAME=
+DB_PASSWORD=
+VERIFY_PROVIDER=
+RECAPTCHA_SITE_KEY=
+RECAPTCHA_SECRET=
+HCAPTCHA_SITE_KEY=
+HCAPTCHA_SECRET=
+TURNSTILE_SITE_KEY=
+TURNSTILE_SECRET=
+COOKIE_VALIDATION_KEY=
+ENABLE_IPINFO=
+IPINFO_TOKEN=
+CLARITY_ENABLED=
+CLARITY_ID=
+GA_ENABLED=
+GA_ID=
+```
+```bash
+sudo -u www-data composer install
+```
+
+#### 额外说明
+预留了一个管理员账户
+
+username:admin
+
+password:administrator
 
 TESTING
 -------
