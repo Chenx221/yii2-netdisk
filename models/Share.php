@@ -2,6 +2,7 @@
 
 namespace app\models;
 
+use Yii;
 use yii\db\ActiveQuery;
 use yii\db\ActiveRecord;
 
@@ -99,6 +100,20 @@ class Share extends ActiveRecord
     {
         $this->dl_count += 1;
         $this->save(true, ['dl_count']);
-
     }
+
+    /**
+     * Give me the file name of the shared file/folder.
+     * @return string
+     */
+    public function getShareFileName(): string
+    {
+        return basename($this->getAbsoluteFilePath());
+    }
+
+    public function getAbsoluteFilePath(): string
+    {
+        return Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . $this->sharer_id . '/' . $this->file_relative_path;
+    }
+
 }

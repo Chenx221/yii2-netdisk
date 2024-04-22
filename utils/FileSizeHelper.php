@@ -231,4 +231,18 @@ class FileSizeHelper
         return max(0, (int)$valueInMB);
     }
 
+    public static function getFormatFSize(string $absolutePath): string
+    {
+        //detect path is file or folder or not exist
+        if (!file_exists($absolutePath)) {
+            return 'ERROR 文件/文件夹不存在';
+        }
+
+        if (is_dir($absolutePath)) {
+            return self::formatBytes(self::getDirectorySize($absolutePath));
+        } else {
+            return self::formatBytes(filesize($absolutePath));
+        }
+    }
+
 }
