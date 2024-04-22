@@ -239,11 +239,11 @@ class AdminController extends Controller
                 $model->name = $model->username; //用户默认昵称为用户名，后期可以修改
                 if ($model->save(false)) { // save without validation
                     if ($model->role == 'user') {
-                        $userFolder = Yii::getAlias(Yii::$app->params['dataDirectory']) . ' / ' . $model->id;
+                        $userFolder = Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . $model->id;
                         if (!is_dir($userFolder)) {
                             mkdir($userFolder);
                         }
-                        $secretFolder = Yii::getAlias(Yii::$app->params['dataDirectory']) . ' / ' . $model->id . ' . secret';
+                        $secretFolder = Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . $model->id . ' . secret';
                         if (!is_dir($secretFolder)) {
                             mkdir($secretFolder);
                         }
