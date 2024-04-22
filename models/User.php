@@ -2,6 +2,7 @@
 
 namespace app\models;
 
+use Exception;
 use Yii;
 use yii\db\ActiveQuery;
 use yii\db\ActiveRecord;
@@ -300,7 +301,7 @@ class User extends ActiveRecord implements IdentityInterface
      * @param $insert
      * @param $changedAttributes
      * @return void
-     * @throws \Exception
+     * @throws Exception
      */
     public function afterSave($insert, $changedAttributes): void
     {

@@ -2,7 +2,6 @@
 
 use app\assets\FontAwesomeAsset;
 use app\models\PublicKeyCredentialSourceRepository;
-use app\models\User;
 use app\utils\FileSizeHelper;
 use app\utils\IPLocation;
 use kartik\editable\Editable;

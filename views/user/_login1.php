@@ -3,9 +3,7 @@
 use yii\bootstrap5\Html;
 use yii\bootstrap5\ActiveForm;
 use yii\helpers\Url;
-use yii\web\JqueryAsset;
-use yii\web\View;
-use yii\widgets\Pjax;
+
 
 /** @var yii\web\View $this */
 /** @var app\models\User $model */

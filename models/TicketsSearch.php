@@ -5,7 +5,6 @@ namespace app\models;
 use Yii;
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
-use app\models\Tickets;
 
 /**
  * TicketsSearch represents the model behind the search form of `app\models\Tickets`.
@@ -45,7 +44,6 @@ class TicketsSearch extends Tickets
 
         // add conditions that should always apply here
 
-        $dataProvider = null;
         if(Yii::$app->user->can('admin')) {
             $dataProvider = new ActiveDataProvider([
                 'query' => $query,

@@ -257,7 +257,7 @@ class AdminController extends Controller
                 }
             }
         }
-        $model->loadDefaultValues(true);
+        $model->loadDefaultValues();
         return $this->render('user_create', [
             'model' => $model,
         ]);
@@ -303,7 +303,6 @@ class AdminController extends Controller
             return 3;
         }
         if ($user->deleteAccount($operation == 1)) {
-            $logout_result = '';
             if ($operation == 0) {
                 AdminSword::forceUserLogout($id);
             }
@@ -321,7 +320,7 @@ class AdminController extends Controller
     {
         try {
             $user = $this->findModel($id);
-        } catch (NotFoundHttpException $e) {
+        } catch (NotFoundHttpException) {
             Yii::$app->session->setFlash('error', '用户不存在');
             return $this->redirect(['user']);
         }
@@ -331,11 +330,10 @@ class AdminController extends Controller
             $user->recovery_codes = null;
             $user->save(false);
             Yii::$app->session->setFlash('success', '二步验证已关闭');
-            return $this->redirect(['user-view', 'id' => $id]);
         } else {
             Yii::$app->session->setFlash('error', '二步验证未启用,无需关闭');
-            return $this->redirect(['user-view', 'id' => $id]);
         }
+        return $this->redirect(['user-view', 'id' => $id]);
     }
 
     /**
@@ -816,7 +814,7 @@ class AdminController extends Controller
      * @param int $id 公告ID
      * @return Response
      * @throws NotFoundHttpException if the model cannot be found
-     * @throws \Throwable
+     * @throws Throwable
      * @throws StaleObjectException
      */
     public function actionAnnouncementsDelete(int $id): Response

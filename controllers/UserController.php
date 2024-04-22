@@ -809,7 +809,6 @@ class UserController extends Controller
      */
     public function actionRequestAssertionOptions(string $username = null): Response
     {
-        $user = null;
         if ($username !== null) {
             $user = User::findOne(['username' => $username]);
             if ($user === null) {

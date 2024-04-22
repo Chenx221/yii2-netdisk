@@ -2,7 +2,6 @@
 
 use yii\grid\GridView;
 use yii\helpers\Html;
-use yii\helpers\Url;
 use yii\web\JqueryAsset;
 use yii\web\View;
 use yii\web\YiiAsset;

@@ -6,7 +6,6 @@ use app\models\TicketReplies;
 use app\models\Tickets;
 use app\models\TicketsSearch;
 use Yii;
-use yii\db\StaleObjectException;
 use yii\filters\AccessControl;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
