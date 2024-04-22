@@ -44,7 +44,7 @@ class FileTypeDetector
                 'epub', 'cpz' => 'fa-brands fa-leanpub',
                 'otf', 'tff', 'ttc', 'woff' => 'fa-regular fa-font',
                 'ico' => 'fa-solid fa-icons',
-                'lnk', 'url' => 'fa-regular fa-link',
+                'lnk', 'url' => 'fa-solid fa-link',
                 'ipa' => 'fa-brands fa-apple',
                 'so' => 'fa-brands fa-linux',
                 'rdp' => 'fa-solid fa-laptop-file',
