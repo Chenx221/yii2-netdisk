@@ -17,10 +17,12 @@
       commands/           contains console commands (controllers)
       config/             contains application configurations
       controllers/        contains Web controller classes
+      data/               contains data files
       mail/               contains view files for e-mails
       models/             contains model classes
       runtime/            contains files generated during runtime
       tests/              contains various tests for the basic application
+      utils/              contains some useful classes
       vendor/             contains dependent 3rd-party packages
       views/              contains view files for the Web application
       web/                contains the entry script and Web resources
@@ -102,32 +104,141 @@ Apache 2.4.59
 
 ~~Memurai 4.1.1/~~ Garnet 1.0.5 / Redis 7.0.15
 
-安装步骤（还没写完，有空再说）
+环境搭建
 ------------
 
 ### For Windows
 
-安装Web环境
+#### [Wampserver](https://wampserver.aviatechno.net/)
+wampserver3.3.5_x64.exe
+Tools->切换默认DBMS为MariaDB
+禁用Mysql
+切换PHP版本为8.3.6
 
-克隆项目到web根目录下
-```bash
-git clone https://git.chenx221.cyou/chenx221/yii2-netdisk
+#### PHP
+访问https://curl.se/docs/caextract.html，下载cacert.pem到C:\wamp64\bin\php\php8.3.6\extras\ssl
+
+编辑C:\wamp64\bin\php\php8.3.6\php.ini
+
+修改:
+```ini
+max_execution_time = 360
+memory_limit = 2G
+post_max_size = 512M
+upload_max_filesize = 512M
+xdebug.mode =debug
+curl.cainfo = G:\wamp64\bin\php\php8.3.6\extras\ssl\cacert.pem
+```
+新增:
+```ini
+xdebug.discover_client_host = true
+xdebug.client_host = 127.0.0.1
+xdebug.client_port= 9000
+xdebug.remote_handler=dbgp
+extension=php_imagick.dll
+extension=php_memcache.dll
 ```
 
-安装必要依赖，执行composer install
+编辑C:\wamp64\bin\php\php8.3.6\phpForApache.ini
+修改:
+```ini
+max_execution_time = 360
+memory_limit = 4G
+post_max_size = 2G
+upload_max_filesize = 2G
+extension=pdo_pgsql
+extension=sodium
+date.timezone = "Asia/Shanghai"
+xdebug.mode =debug
+curl.cainfo =c:\wamp64\bin\php\php8.3.6\extras\ssl\cacert.pem
 ```
- bcmath        calendar      com_dotnet    Core          ctype         curl
- date          dom           exif          fileinfo      filter        gd
- gettext       gmp           hash          iconv         imagick       imap
- intl          json          ldap          libxml        mbstring      memcache
- mysqli        mysqlnd       openssl       pcre          PDO           pdo_mysql
- pdo_pgsql     pdo_sqlite    Phar          random        rar           readline
- Reflection    session       SimpleXML     soap          sockets       sodium
- SPL           sqlite3       standard      tokenizer     xdebug        xml
- xmlreader     xmlwriter     xsl           Zend OPcache  zip           zlib
+新增:
+```ini
+xdebug.discover_client_host = true
+xdebug.client_host = 127.0.0.1
+xdebug.client_port= 9000
+xdebug.remote_handler=dbgp
+extension=php_imagick.dll
+extension=php_memcache.dll
 ```
 
-复制.env.example到.env，在`.env`文件中完成必要的系统设置：
+添加[php扩展](https://git.chenx221.cyou/chenx221/yii2-netdisk/releases/download/db.backup/php83.zip)
+
+#### Apache
+编辑httpd.conf
+
+修改:
+```apacheconf
+LoadModule ssl_module modules/mod_ssl.so
+```
+新增:
+```apacheconf
+Define MYPORT8081 8081
+Listen 0.0.0.0:${MYPORT8081}
+Listen [::0]:${MYPORT8081}
+```
+
+编辑httpd-vhosts.conf
+
+新增:
+```apacheconf
+<VirtualHost *:8081>
+ServerName env2.chenx221.cyou
+DocumentRoot "c:/wamp64/www/netdisk/web"
+<Directory  "c:/wamp64/www/netdisk/web/">
+Options +Indexes +Includes +FollowSymLinks +MultiViews
+AllowOverride All
+Require all granted
+LimitRequestBody 2147483648
+</Directory>
+SSLEngine on
+SSLCertificateFile "C:\wamp64\fullchain1.pem"
+SSLCertificateKeyFile "C:\wamp64\privkey1.pem"
+</VirtualHost>
+```
+
+#### mariadb
+phpmyadmin> root
+修改密码
+
+下载[DBeaver Community](https://dbeaver.io/download/)
+
+新建数据库yii2basic
+恢复数据库从release.sql
+
+#### redis(Garnet)
+[下载运行库](https://dotnet.microsoft.com/zh-cn/download/dotnet/thank-you/runtime-8.0.4-windows-x64-installer?cid=getdotnetcore)
+
+修改Garnet.xml路径
+```
+.\WinSW-x64.exe install .\Garnet.xml
+```
+服务 运行Garnet服务
+
+#### 其他
+安装[git](https://git-scm.com/download/win)
+```
+git clone https://git.chenx221.cyou/chenx221/yii2-netdisk.git
+```
+
+重命名yii2-netdisk为netdisk
+
+在netdisk中新建data文件夹
+
+修改环境变量path，追加`C:\wamp64\bin\php\php8.3.6`
+
+安装[composer](https://getcomposer.org/Composer-Setup.exe)
+
+在netdisk目录下`composer install`
+
+.env看下面linux部分配置
+
+#### 额外说明
+预留了一个管理员账户
+
+username:admin
+
+password:administrator
 
 ### For Linux (以Debian 12为例)
 
