@@ -30,6 +30,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
     <label for="uploader">要上传的文件:</label>
     <input type="file" multiple name="files[]" id="uploader">
+    <?= $form->field($model2, 'note')->textInput(['maxlength' => true]) ?>
 
     <?= $form->field($model, 'id')->hiddenInput()->label(false) ?>
 

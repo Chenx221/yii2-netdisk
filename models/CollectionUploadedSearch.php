@@ -16,8 +16,8 @@ class CollectionUploadedSearch extends CollectionUploaded
     public function rules(): array
     {
         return [
-            [['id', 'task_id'], 'integer'],
-            [['uploader_ip', 'uploaded_at', 'subfolder_name'], 'safe'],
+            [['id', 'user_id', 'task_id'], 'integer'],
+            [['uploader_ip', 'uploaded_at', 'subfolder_name', 'user_agent', 'note'], 'safe'],
         ];
     }
 
@@ -58,12 +58,15 @@ class CollectionUploadedSearch extends CollectionUploaded
         // grid filtering conditions
         $query->andFilterWhere([
             'id' => $this->id,
+            'user_id' => $this->user_id,
             'task_id' => $this->task_id,
             'uploaded_at' => $this->uploaded_at,
         ]);
 
         $query->andFilterWhere(['like', 'uploader_ip', $this->uploader_ip])
-            ->andFilterWhere(['like', 'subfolder_name', $this->subfolder_name]);
+            ->andFilterWhere(['like', 'subfolder_name', $this->subfolder_name])
+            ->andFilterWhere(['like', 'user_agent', $this->user_agent])
+            ->andFilterWhere(['like', 'note', $this->note]);
 
         return $dataProvider;
     }

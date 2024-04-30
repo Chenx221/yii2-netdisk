@@ -52,6 +52,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 'attribute' => 'user_agent',
                 'label' => 'User Agent',
             ],
+            'note'
         ],
         'pager' => [
             'class' => LinkPager::class,

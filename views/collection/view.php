@@ -55,6 +55,7 @@ $dataProvider->query->andWhere(['task_id' => $model->id]);
             'id',
             'uploader_ip',
             'uploaded_at',
+            'note',
             [
                 'attribute' => 'subfolder_name',
                 'format' => 'raw',

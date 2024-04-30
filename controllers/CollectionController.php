@@ -226,7 +226,7 @@ class CollectionController extends Controller
         // 获取POST请求中的参数
         $taskId = $request->post('CollectionTasks')['id'];
         $subfolderName = $request->post('CollectionUploaded')['subfolder_name'];
-
+        $note = $request->post('CollectionUploaded')['note'];
         // 获取发送POST请求的用户的IP地址
         $uploaderIp = $request->userIP;
 
@@ -245,6 +245,7 @@ class CollectionController extends Controller
         $model->uploaded_at = date('Y-m-d H:i:s'); // 设置上传时间为当前时间
         $model->subfolder_name = $subfolderName;
         $model->user_agent = $request->userAgent;
+        $model->note = $note;
         if ($model->validate()) {
             // 进行文件上传
             $targetDirectory = Yii::getAlias(Yii::$app->params['dataDirectory']) . '/' . $userId . '/' . $folderPath . '/' . $subfolderName;

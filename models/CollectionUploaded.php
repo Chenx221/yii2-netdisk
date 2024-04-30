@@ -15,6 +15,7 @@ use yii\db\ActiveRecord;
  * @property string $uploaded_at 上传时间
  * @property string $subfolder_name 对应的子文件夹名
  * @property string $user_agent 浏览器UA信息
+ * @property string|null $note 用户设置的备注
  *
  * @property CollectionTasks $task
  * @property User $user
@@ -39,7 +40,8 @@ class CollectionUploaded extends ActiveRecord
             [['user_id', 'task_id'], 'integer'],
             [['uploaded_at'], 'safe'],
             [['uploader_ip'], 'string', 'max' => 45],
-            [['subfolder_name'], 'string', 'max' => 255],
+            [['subfolder_name', 'user_agent'], 'string', 'max' => 255],
+            [['note'], 'string', 'max' => 100],
             [['task_id'], 'exist', 'skipOnError' => true, 'targetClass' => CollectionTasks::class, 'targetAttribute' => ['task_id' => 'id']],
             [['user_id'], 'exist', 'skipOnError' => true, 'targetClass' => User::class, 'targetAttribute' => ['user_id' => 'id']],
         ];
@@ -58,6 +60,7 @@ class CollectionUploaded extends ActiveRecord
             'uploaded_at' => '上传时间',
             'subfolder_name' => '所在位置',
             'user_agent' => '浏览器UA信息',
+            'note' => '用户设置的备注',
         ];
     }
 
