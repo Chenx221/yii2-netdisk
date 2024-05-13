@@ -92,17 +92,17 @@ init setup page(暂无计划)
 开发环境
 ------------
 
-Windows 11 Pro (22631.3374) / Debian 12
+Windows 11 Pro (22631.3527) / Debian 12
 
-PhpStorm 2024.1
+PhpStorm 2024.1.1
 
-PHP 8.3.4 / 8.2.18 (这个项目需要PHP>=8.2)
+PHP 8.3.7 / 8.2.18 (这个项目需要PHP>=8.2)
 
 MariaDB 11.3.2 / 10.11.6
 
 Apache 2.4.59
 
-~~Memurai 4.1.1/~~ Garnet 1.0.5 / Redis 7.0.15
+Garnet 1.0.8 / Redis 7.0.15
 
 环境搭建
 ------------
