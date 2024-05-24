@@ -112,6 +112,8 @@ Docker自己装
 
 ```bash
 sudo docker build -t chenx221-yii2-netdisk .
+
+docker network create my-network
 docker run -d --name mariadb-container \
     -v /root/db.sql:/docker-entrypoint-initdb.d/db.sql \
     -e MYSQL_ROOT_PASSWORD=chenx221 \
