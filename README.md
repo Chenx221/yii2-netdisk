@@ -123,14 +123,14 @@ docker run -d --name redis-container \
     --network=my-network \
     --restart always \
     redis
-docker run -d -p 80:80 -p 443:443 \
-    -v /home/chenx221/fullchain1.pem:/etc/ssl/fullchain1.pem \
-    -v /home/chenx221/privkey1.pem:/etc/ssl/privkey1.pem \
-    -v /home/chenx221/data:/var/www/html/data \
-    -v /home/chenx221/.env:/var/www/html/.env \
+docker run -d -p 9443:443 \
+    -v /root/cert/fullchain1.pem:/etc/ssl/fullchain1.pem \
+    -v /root/cert/privkey1.pem:/etc/ssl/privkey1.pem \
+    -v /root/data:/var/www/html/data \
+    -v /root/.env:/var/www/html/.env \
     --network=my-network \
     --restart always \
-    chenx221-yii2-netdisk
+    chenx2210/chenx221-yii2-netdisk
 ```
 .env
 ```
