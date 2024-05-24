@@ -106,6 +106,26 @@ Garnet 1.0.8 / Redis 7.0.15
 
 环境搭建
 ------------
+### Docker (测试)
+
+```bash
+docker network create my-network
+docker run -d --name mariadb-container \
+    -v /home/chenx221/db.sql:/docker-entrypoint-initdb.d/db.sql \
+    -e MYSQL_ROOT_PASSWORD=chenx221 \
+    --network=my-network \
+    mariadb:latest
+docker run -d --name redis-container \
+    --network=my-network \
+    redis
+docker run -d -p 80:80 -p 443:443 \
+    -v /home/chenx221/fullchain1.pem:/etc/ssl/fullchain1.pem \
+    -v /home/chenx221/privkey1.pem:/etc/ssl/privkey1.pem \
+    -v /home/chenx221/data:/var/www/html/data \
+    -v /home/chenx221/.env:/var/www/html/.env \
+    --network=my-network \
+    chenx221-yii2-netdisk
+```
 
 ### For Windows
 
@@ -308,31 +328,7 @@ xdebug.client_host = 127.0.0.1
 xdebug.client_port= 9003
 xdebug.remote_handler=dbgp
 ```
-```bash
-sudo nano /etc/php/8.2/cli/php.ini
-```
-修改
-```ini
-max_execution_time = 360
-post_max_size = 2G
-upload_max_filesize = 2G
-```
-增加
-```ini
-date.timezone = "Asia/Shanghai"
-[xdebug]
-xdebug.mode =debug
-xdebug.output_dir ="/tmp"
-xdebug.show_local_vars=0
-xdebug.log="/tmp/xdebug.log"
-xdebug.log_level=7
-xdebug.profiler_output_name=trace.%H.%t.%p.cgrind
-xdebug.use_compression=false
-xdebug.discover_client_host = true
-xdebug.client_host = 127.0.0.1
-xdebug.client_port= 9003
-xdebug.remote_handler=dbgp
-```
+
 ```bash
 sudo systemctl restart apache2
 ```
