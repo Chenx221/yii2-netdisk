@@ -108,7 +108,10 @@ Garnet 1.0.8 / Redis 7.0.15
 ------------
 ### Docker (测试)
 
+Docker自己装
+
 ```bash
+sudo docker build -t chenx221-yii2-netdisk .
 docker network create my-network
 docker run -d --name mariadb-container \
     -v /home/chenx221/db.sql:/docker-entrypoint-initdb.d/db.sql \
@@ -126,6 +129,12 @@ docker run -d -p 80:80 -p 443:443 \
     --network=my-network \
     chenx221-yii2-netdisk
 ```
+.env
+```
+DB_HOST=mariadb-container:3306
+RD_HOST=redis-container
+```
+.sql文件别忘了+x 和777
 
 ### For Windows
 
