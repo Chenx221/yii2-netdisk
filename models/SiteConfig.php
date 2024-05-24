@@ -175,8 +175,13 @@ class SiteConfig extends Model
             $data = array_map(function ($key, $value) {
                 return "$key=$value";
             }, array_keys($env), $env);
-            return !(file_put_contents(Yii::getAlias('@app/.env'), implode("\n", $data)) == false);
-        } catch (Exception) {
+            file_put_contents(Yii::getAlias('@app/.env.pending'), implode("\n", $data));
+            parse_ini_file(Yii::getAlias('@app/.env.pending'));
+            $result= file_put_contents(Yii::getAlias('@app/.env.pending'), implode("\n", $data)) == false;
+            unlink(Yii::getAlias('@app/.env.pending'));
+            return !($result);
+        } catch (Exception $e) {
+            unlink(Yii::getAlias('@app/.env.pending'));
             return false;
         }
     }
