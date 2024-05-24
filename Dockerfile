@@ -20,7 +20,8 @@ RUN echo "max_execution_time = 360" > /usr/local/etc/php/conf.d/custom-php.ini \
     && echo "memory_limit = 1G" >> /usr/local/etc/php/conf.d/custom-php.ini \
     && echo "post_max_size = 512M" >> /usr/local/etc/php/conf.d/custom-php.ini \
     && echo "upload_max_filesize = 512M" >> /usr/local/etc/php/conf.d/custom-php.ini \
-    && echo "expose_php = Off" >> /usr/local/etc/php/conf.d/custom-php.ini
+    && echo "expose_php = Off" >> /usr/local/etc/php/conf.d/custom-php.ini \
+    && echo 'date.timezone = "Asia/Shanghai"' >> /usr/local/etc/php/conf.d/custom-php.ink
 
 # 复制 PHP 源代码到容器中
 COPY . /var/www/html/
