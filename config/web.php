@@ -61,8 +61,8 @@ $config = [
         ],
         'redis' => [
             'class' => 'yii\redis\Connection',
-            'hostname' => 'localhost',
-            'port' => 6379,
+            'hostname' => $_ENV['RD_HOST'],
+            'port' => $_ENV['RD_PORT'],
             'database' => 0,
         ],
         'db' => $db,
