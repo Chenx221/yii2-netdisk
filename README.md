@@ -111,7 +111,7 @@ Garnet 1.0.8 / Redis 7.0.15
 Docker自己装
 
 ```bash
-sudo docker build -t chenx221-yii2-netdisk .
+sudo docker build -t chenx2210/chenx221-yii2-netdisk .
 
 sudo docker network create my-network
 sudo docker run -d --name mariadb-container \
