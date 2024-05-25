@@ -113,18 +113,18 @@ Docker自己装
 ```bash
 sudo docker build -t chenx221-yii2-netdisk .
 
-docker network create my-network
-docker run -d --name mariadb-container \
+sudo docker network create my-network
+sudo docker run -d --name mariadb-container \
     -v /root/db.sql:/docker-entrypoint-initdb.d/db.sql \
     -e MYSQL_ROOT_PASSWORD=chenx221 \
     --network=my-network \
     --restart always \
     mariadb:latest
-docker run -d --name redis-container \
+sudo docker run -d --name redis-container \
     --network=my-network \
     --restart always \
     redis
-docker run -d -p 9443:443 \
+sudo docker run -d -p 9443:443 \
     -v /root/cert/fullchain1.pem:/etc/ssl/fullchain1.pem \
     -v /root/cert/privkey1.pem:/etc/ssl/privkey1.pem \
     -v /root/data:/var/www/html/data \
