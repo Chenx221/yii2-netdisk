@@ -108,6 +108,10 @@ Garnet 1.0.8 / Redis 7.0.15
 
 环境搭建
 ------------
+### 数据库
+
+[下这个](https://git.chenx221.cyou/chenx221/yii2-netdisk/releases/download/1.0/releasev2.sql)
+
 ### Docker (测试)
 
 Docker自己装
