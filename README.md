@@ -9,6 +9,7 @@
 这是一个基于[Yii 2](https://www.yiiframework.com/) PHP框架设计的网盘系统，作为我的毕业设计作业，它具备一些网盘该有的功能。
 
 项目基于Yii 2 基础项目模板构建，部分使用了模板内容。
+[DEMO演示站](https://demo.chenx221.cyou:9443/)
 
 [![Yii2](https://img.shields.io/badge/Powered_by-Yii_Framework-green.svg?style=flat)](https://www.yiiframework.com/)
 
@@ -89,22 +90,22 @@ Google Analysis、Microsoft Clarify集成
 计划实现的功能
 -------------------
 
-init setup page(暂无计划)
+None
 
 开发环境
 ------------
 
-Windows 11 Pro (22631.3527) / Debian 12
+Windows 11 / Debian 12
 
-PhpStorm 2024.1.1
+PhpStorm 2024.1.3
 
-PHP 8.3.7 / 8.2.18 (这个项目需要PHP>=8.2)
+PHP 8.3.8 / 8.2.18 (这个项目需要PHP>=8.2)
 
 MariaDB 11.3.2 / 10.11.6
 
-Apache 2.4.59
+Apache 2.4.59.1
 
-Garnet 1.0.8 / Redis 7.0.15
+Garnet 1.0.13 / Redis 7.0.15
 
 环境搭建
 ------------
@@ -118,7 +119,9 @@ Docker自己装
 
 ```bash
 sudo docker build -t chenx2210/chenx221-yii2-netdisk .
+```
 
+```bash
 sudo docker network create my-network
 sudo docker run -d --name mariadb-container \
     -v /root/db.sql:/docker-entrypoint-initdb.d/db.sql \
@@ -139,7 +142,7 @@ sudo docker run -d -p 9443:443 \
     --restart always \
     chenx2210/chenx221-yii2-netdisk
 ```
-.env
+docker安装时.env
 ```
 DB_HOST=mariadb-container:3306
 RD_HOST=redis-container
@@ -420,112 +423,181 @@ sudo -u www-data composer install
 ```
 
 #### 额外说明
-预留了一个管理员账户
+
+SQL中留了个管理员账户
 
 username:admin
 
 password:administrator
 
-TESTING
--------
+#### 后面的内容还没写好，先注释
+[//]: # (TESTING)
 
-Tests are located in `tests` directory. They are developed with [Codeception PHP Testing Framework](https://codeception.com/).
-By default, there are 3 test suites:
+[//]: # (-------)
 
-- `unit`
-- `functional`
-- `acceptance`
+[//]: # ()
+[//]: # (Tests are located in `tests` directory. They are developed with [Codeception PHP Testing Framework]&#40;https://codeception.com/&#41;.)
 
-Tests can be executed by running
+[//]: # (By default, there are 3 test suites:)
 
-```
-vendor/bin/codecept run
-```
+[//]: # ()
+[//]: # (- `unit`)
 
-The command above will execute unit and functional tests. Unit tests are testing the system components, while functional
-tests are for testing user interaction. Acceptance tests are disabled by default as they require additional setup since
-they perform testing in real browser. 
+[//]: # (- `functional`)
 
+[//]: # (- `acceptance`)
 
-### Running  acceptance tests
+[//]: # ()
+[//]: # (Tests can be executed by running)
 
-To execute acceptance tests do the following:  
+[//]: # ()
+[//]: # (```)
 
-1. Rename `tests/acceptance.suite.yml.example` to `tests/acceptance.suite.yml` to enable suite configuration
+[//]: # (vendor/bin/codecept run)
 
-2. Replace `codeception/base` package in `composer.json` with `codeception/codeception` to install full-featured
-   version of Codeception
+[//]: # (```)
 
-3. Update dependencies with Composer 
+[//]: # ()
+[//]: # (The command above will execute unit and functional tests. Unit tests are testing the system components, while functional)
 
-    ```
-    composer update  
-    ```
+[//]: # (tests are for testing user interaction. Acceptance tests are disabled by default as they require additional setup since)
 
-4. Download [Selenium Server](https://www.seleniumhq.org/download/) and launch it:
+[//]: # (they perform testing in real browser. )
 
-    ```
-    java -jar ~/selenium-server-standalone-x.xx.x.jar
-    ```
+[//]: # ()
+[//]: # ()
+[//]: # (### Running  acceptance tests)
 
-    In case of using Selenium Server 3.0 with Firefox browser since v48 or Google Chrome since v53 you must download [GeckoDriver](https://github.com/mozilla/geckodriver/releases) or [ChromeDriver](https://sites.google.com/a/chromium.org/chromedriver/downloads) and launch Selenium with it:
+[//]: # ()
+[//]: # (To execute acceptance tests do the following:  )
 
-    ```
-    # for Firefox
-    java -jar -Dwebdriver.gecko.driver=~/geckodriver ~/selenium-server-standalone-3.xx.x.jar
-    
-    # for Google Chrome
-    java -jar -Dwebdriver.chrome.driver=~/chromedriver ~/selenium-server-standalone-3.xx.x.jar
-    ``` 
-    
-    As an alternative way you can use already configured Docker container with older versions of Selenium and Firefox:
-    
-    ```
-    docker run --net=host selenium/standalone-firefox:2.53.0
-    ```
+[//]: # ()
+[//]: # (1. Rename `tests/acceptance.suite.yml.example` to `tests/acceptance.suite.yml` to enable suite configuration)
 
-5. (Optional) Create `yii2basic_test` database and update it by applying migrations if you have them.
+[//]: # ()
+[//]: # (2. Replace `codeception/base` package in `composer.json` with `codeception/codeception` to install full-featured)
 
-   ```
-   tests/bin/yii migrate
-   ```
+[//]: # (   version of Codeception)
 
-   The database configuration can be found at `config/test_db.php`.
+[//]: # ()
+[//]: # (3. Update dependencies with Composer )
 
+[//]: # ()
+[//]: # (    ```)
 
-6. Start web server:
+[//]: # (    composer update  )
 
-    ```
-    tests/bin/yii serve
-    ```
+[//]: # (    ```)
 
-7. Now you can run all available tests
+[//]: # ()
+[//]: # (4. Download [Selenium Server]&#40;https://www.seleniumhq.org/download/&#41; and launch it:)
 
-   ```
-   # run all available tests
-   vendor/bin/codecept run
+[//]: # ()
+[//]: # (    ```)
 
-   # run acceptance tests
-   vendor/bin/codecept run acceptance
+[//]: # (    java -jar ~/selenium-server-standalone-x.xx.x.jar)
 
-   # run only unit and functional tests
-   vendor/bin/codecept run unit,functional
-   ```
+[//]: # (    ```)
 
-### Code coverage support
+[//]: # ()
+[//]: # (    In case of using Selenium Server 3.0 with Firefox browser since v48 or Google Chrome since v53 you must download [GeckoDriver]&#40;https://github.com/mozilla/geckodriver/releases&#41; or [ChromeDriver]&#40;https://sites.google.com/a/chromium.org/chromedriver/downloads&#41; and launch Selenium with it:)
 
-By default, code coverage is disabled in `codeception.yml` configuration file, you should uncomment needed rows to be able
-to collect code coverage. You can run your tests and collect coverage with the following command:
+[//]: # ()
+[//]: # (    ```)
 
-```
-#collect coverage for all tests
-vendor/bin/codecept run --coverage --coverage-html --coverage-xml
+[//]: # (    # for Firefox)
 
-#collect coverage only for unit tests
-vendor/bin/codecept run unit --coverage --coverage-html --coverage-xml
+[//]: # (    java -jar -Dwebdriver.gecko.driver=~/geckodriver ~/selenium-server-standalone-3.xx.x.jar)
 
-#collect coverage for unit and functional tests
-vendor/bin/codecept run functional,unit --coverage --coverage-html --coverage-xml
-```
+[//]: # (    )
+[//]: # (    # for Google Chrome)
 
-You can see code coverage output under the `tests/_output` directory.
+[//]: # (    java -jar -Dwebdriver.chrome.driver=~/chromedriver ~/selenium-server-standalone-3.xx.x.jar)
+
+[//]: # (    ``` )
+
+[//]: # (    )
+[//]: # (    As an alternative way you can use already configured Docker container with older versions of Selenium and Firefox:)
+
+[//]: # (    )
+[//]: # (    ```)
+
+[//]: # (    docker run --net=host selenium/standalone-firefox:2.53.0)
+
+[//]: # (    ```)
+
+[//]: # ()
+[//]: # (5. &#40;Optional&#41; Create `yii2basic_test` database and update it by applying migrations if you have them.)
+
+[//]: # ()
+[//]: # (   ```)
+
+[//]: # (   tests/bin/yii migrate)
+
+[//]: # (   ```)
+
+[//]: # ()
+[//]: # (   The database configuration can be found at `config/test_db.php`.)
+
+[//]: # ()
+[//]: # ()
+[//]: # (6. Start web server:)
+
+[//]: # ()
+[//]: # (    ```)
+
+[//]: # (    tests/bin/yii serve)
+
+[//]: # (    ```)
+
+[//]: # ()
+[//]: # (7. Now you can run all available tests)
+
+[//]: # ()
+[//]: # (   ```)
+
+[//]: # (   # run all available tests)
+
+[//]: # (   vendor/bin/codecept run)
+
+[//]: # ()
+[//]: # (   # run acceptance tests)
+
+[//]: # (   vendor/bin/codecept run acceptance)
+
+[//]: # ()
+[//]: # (   # run only unit and functional tests)
+
+[//]: # (   vendor/bin/codecept run unit,functional)
+
+[//]: # (   ```)
+
+[//]: # ()
+[//]: # (### Code coverage support)
+
+[//]: # ()
+[//]: # (By default, code coverage is disabled in `codeception.yml` configuration file, you should uncomment needed rows to be able)
+
+[//]: # (to collect code coverage. You can run your tests and collect coverage with the following command:)
+
+[//]: # ()
+[//]: # (```)
+
+[//]: # (#collect coverage for all tests)
+
+[//]: # (vendor/bin/codecept run --coverage --coverage-html --coverage-xml)
+
+[//]: # ()
+[//]: # (#collect coverage only for unit tests)
+
+[//]: # (vendor/bin/codecept run unit --coverage --coverage-html --coverage-xml)
+
+[//]: # ()
+[//]: # (#collect coverage for unit and functional tests)
+
+[//]: # (vendor/bin/codecept run functional,unit --coverage --coverage-html --coverage-xml)
+
+[//]: # (```)
+
+[//]: # ()
+[//]: # (You can see code coverage output under the `tests/_output` directory.)
