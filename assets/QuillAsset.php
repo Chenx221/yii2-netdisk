@@ -8,7 +8,7 @@ class QuillAsset extends AssetBundle
 {
     public $sourcePath = '@npm/quill/dist';
     public $js = [
-        'quill.js',
+        'quill.min.js',
     ];
     public $css = [
         'quill.snow.css',

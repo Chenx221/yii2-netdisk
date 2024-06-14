@@ -8,6 +8,6 @@ class EChartsAsset extends AssetBundle
 {
     public $sourcePath = '@npm/echarts/dist';
     public $js = [
-        'echarts.js',
+        'echarts.min.js',
     ];
 }

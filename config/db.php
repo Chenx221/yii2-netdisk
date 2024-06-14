@@ -11,10 +11,10 @@ return [
     'charset' => 'utf8',
     'schemaMap' => [
         'mysql' => SamIT\Yii2\MariaDb\Schema::class
-    ]
+    ],
 
     // Schema cache options (for production environment)
-    //'enableSchemaCache' => true,
-    //'schemaCacheDuration' => 60,
-    //'schemaCache' => 'cache',
+    'enableSchemaCache' => true,
+    'schemaCacheDuration' => 60,
+    'schemaCache' => 'cache',
 ];
