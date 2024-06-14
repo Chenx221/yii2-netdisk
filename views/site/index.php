@@ -9,7 +9,6 @@ use yii\helpers\Url;
 
 $this->title = '首页';
 TSParticlesAsset::register($this);
-//$latestAnnouncements = []; emulating empty data
 ?>
     <div id="tsparticles" style="position: absolute;z-index: -1"></div>
     <div class="site-index">
@@ -105,75 +104,144 @@ $(document).ready(function() {
     });
   });
 });
-async function loadParticles(options) {
-    
-  await tsParticles.load({ id: "tsparticles", options });
-}
+(async () => {
+  await loadSlim(tsParticles);
 
-const configs = {
-    fpsLimit: 60,
-    particles: {
-      number: {
-        value: 100,
-        density: {
-          enable: true,
-          area: 800
-        }
-      },
-      color: {
-        value: ["#2EB67D", "#ECB22E", "#E01E5B", "#36C5F0"]
-      },
-      shape: {
-        type: "circle"
-      },
-      opacity: {
-        value: 0.4
-      },
-      size: {
-        value: { min: 4, max: 8 }
-      },
-      links: {
-        enable: true,
-        distance: 150,
-        color: "#808080",
-        opacity: 0.4,
-        width: 1
-      },
-      move: {
-        enable: true,
-        speed: 1,
-        outModes: {
-          default: "out"
-        }
-      }
-    },
-    interactivity: {
-      events: {
-        onHover: {
-          enable: true,
-          mode: "grab"
+  await tsParticles.load({
+    id: "tsparticles",
+    options: {
+        fpsLimit: 60,
+        particles: {
+            number: {
+            value: 100,
+            density: {
+                enable: true,
+                area: 800
+            }
+            },
+            color: {
+            value: ["#2EB67D", "#ECB22E", "#E01E5B", "#36C5F0"]
+            },
+            shape: {
+            type: "circle"
+            },
+            opacity: {
+            value: 0.4
+            },
+            size: {
+            value: { min: 4, max: 8 }
+            },
+            links: {
+            enable: true,
+            distance: 150,
+            color: "#808080",
+            opacity: 0.4,
+            width: 1
+            },
+            move: {
+            enable: true,
+            speed: 1,
+            outModes: {
+                default: "out"
+            }
+            }
         },
-        onClick: {
-          enable: true,
-          mode: "push"
+        interactivity: {
+            events: {
+            onHover: {
+                enable: true,
+                mode: "grab"
+            },
+            onClick: {
+                enable: true,
+                mode: "push"
+            }
+            },
+            modes: {
+            grab: {
+                distance: 230,
+                links: {
+                opacity: 1,
+                color: "#808080"
+                }
+            },
+            push: {
+                quantity: 4
+            }
+            }
         }
-      },
-      modes: {
-        grab: {
-          distance: 230,
-          links: {
-            opacity: 1,
-            color: "#808080"
-          }
-        },
-        push: {
-          quantity: 4
-        }
-      }
     }
-  };
-
-loadParticles(configs).then(r => console.log("Particles loaded"));
+  });
+})();
+// async function loadParticles(options) {
+//    
+//   await tsParticles.load({ id: "tsparticles", options });
+// }
+//
+// const configs = {
+//     fpsLimit: 60,
+//     particles: {
+//       number: {
+//         value: 100,
+//         density: {
+//           enable: true,
+//           area: 800
+//         }
+//       },
+//       color: {
+//         value: ["#2EB67D", "#ECB22E", "#E01E5B", "#36C5F0"]
+//       },
+//       shape: {
+//         type: "circle"
+//       },
+//       opacity: {
+//         value: 0.4
+//       },
+//       size: {
+//         value: { min: 4, max: 8 }
+//       },
+//       links: {
+//         enable: true,
+//         distance: 150,
+//         color: "#808080",
+//         opacity: 0.4,
+//         width: 1
+//       },
+//       move: {
+//         enable: true,
+//         speed: 1,
+//         outModes: {
+//           default: "out"
+//         }
+//       }
+//     },
+//     interactivity: {
+//       events: {
+//         onHover: {
+//           enable: true,
+//           mode: "grab"
+//         },
+//         onClick: {
+//           enable: true,
+//           mode: "push"
+//         }
+//       },
+//       modes: {
+//         grab: {
+//           distance: 230,
+//           links: {
+//             opacity: 1,
+//             color: "#808080"
+//           }
+//         },
+//         push: {
+//           quantity: 4
+//         }
+//       }
+//     }
+//   };
+//
+// loadParticles(configs).then(r => console.log("Particles loaded"));
 
 JS;
 

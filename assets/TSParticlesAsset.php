@@ -6,8 +6,8 @@ use yii\web\AssetBundle;
 
 class TSParticlesAsset extends AssetBundle
 {
-    public $sourcePath = '@npm/tsparticles--slim';
+    //use remote js file instead of local file (for better performance?)
     public $js = [
-        'tsparticles.slim.bundle.min.js',
+        'https://cdn.jsdelivr.net/npm/@tsparticles/slim@3.4.0/tsparticles.slim.bundle.min.js'
     ];
 }
