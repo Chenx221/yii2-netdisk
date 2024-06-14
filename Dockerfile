@@ -1,5 +1,5 @@
 # 使用官方 PHP 镜像并指定版本
-FROM php:8.2-apache
+FROM php:8.3-apache
 
 # 安装 Redis 扩展和其他必要的 PHP 扩展
 RUN apt-get update && apt-get install -y ethtool iproute2 git sudo libmagickwand-dev libzip-dev unzip libxslt-dev libgmp-dev libcurl4-openssl-dev libpng-dev libjpeg-dev libfreetype6-dev libbz2-dev libldap2-dev zlib1g-dev libsqlite3-dev \
